@@ -1,0 +1,5 @@
+node_modules/
+/npm-debug.log
+dist/
+*.code-workspace
+.DS_Store

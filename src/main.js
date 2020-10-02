@@ -1,0 +1,9 @@
+export { DiagramFactory } from './diagram';
+export { LabelFactory } from './label';
+export { LinkFactory } from './link';
+export { MarqueeFactory } from './marquee';
+export { NoteFactory } from './note';
+export { SelectionFactory } from './selection';
+export { ShapeFactory } from './shape';
+export { StepFactory } from './step';
+export { SubflowFactory } from './subflow';

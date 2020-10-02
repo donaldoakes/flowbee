@@ -1,0 +1,33 @@
+{
+  "name": "flowbee",
+  "version": "0.0.1",
+  "description": "Flow Diagramming",
+  "main": "dist/flowbee.cjs.js",
+  "module": "dist/flowbee.esm.js",
+  "browser": "dist/flowbee.umd.js",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/donaldoakes/flowbee.git"
+  },
+  "keywords": [
+    "flow",
+    "diagram"
+  ],
+  "author": "Donald Oakes",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/donaldoakes/flowbee/issues"
+  },
+  "homepage": "https://github.com/donaldoakes/flowbee#readme",
+  "dependencies": {
+    "js-yaml": "^3.14.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^15.1.0",
+    "@rollup/plugin-node-resolve": "^9.0.0",
+    "rollup": "^2.28.2"
+  }
+}
