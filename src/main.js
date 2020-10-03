@@ -1,3 +1,4 @@
+export { Flow } from './flow';
 export { DiagramFactory } from './diagram';
 export { LabelFactory } from './label';
 export { LinkFactory } from './link';
