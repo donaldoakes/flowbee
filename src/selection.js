@@ -7,8 +7,9 @@ export class Selection {
 
   includes(obj) {
     for (var i = 0; i < this.selectObjs.length; i++) {
-      if (this.selectObjs[i] === obj)
+      if (this.selectObjs[i] === obj) {
         return true;
+      }
     }
     return false;
   }
@@ -18,11 +19,12 @@ export class Selection {
   }
 
   getSelectObj() {
-    if (this.selectObjs.length === 0)
+    if (this.selectObjs.length === 0) {
       return null;
-
-    else
+    }
+    else {
       return this.selectObjs[0];
+    }
   }
 
   setSelectObj(obj) {
@@ -44,8 +46,9 @@ export class Selection {
             let subflow = this.diagram.subflows[i];
             let step = subflow.getStep(obj.activity.id);
             stepLinks = subflow.getLinks(obj);
-            if (stepLinks)
+            if (stepLinks) {
               break;
+            }
           }
         }
 
@@ -73,8 +76,9 @@ export class Selection {
   remove(obj) {
     var newSel = [];
     for (var i = 0; i < this.selectObjs.length; i++) {
-      if (this.selectObjs[i] !== obj)
+      if (this.selectObjs[i] !== obj) {
         newSel.push(this.selectObjs[i]);
+      }
     }
     this.selectObjs = newSel;
   }
@@ -82,14 +86,18 @@ export class Selection {
   doDelete() {
     for (var i = 0; i < this.selectObjs.length; i++) {
       var selObj = this.selectObjs[i];
-      if (selObj.isStep)
+      if (selObj.isStep) {
         this.diagram.deleteStep(selObj);
-      else if (selObj.isLink)
+      }
+      else if (selObj.isLink) {
         this.diagram.deleteLink(selObj);
-      else if (selObj.isSubflow)
+      }
+      else if (selObj.isSubflow) {
         this.diagram.deleteSubflow(selObj);
-      else if (selObj.isNote)
+      }
+      else if (selObj.isNote) {
         this.diagram.deleteNote(selObj);
+      }
     }
   }
 
@@ -105,8 +113,9 @@ export class Selection {
         if (!this.getSelectObj()) {
           for (var i = 0; i < this.diagram.subflows.length; i++) {
             this.setSelectObj(this.diagram.subflows[i].get(id));
-            if (this.getSelectObj())
+            if (this.getSelectObj()) {
               break;
+            }
           }
         }
       }
@@ -135,8 +144,9 @@ export class Selection {
             selObj.move(deltaX, deltaY);
             let links = this.diagram.getLinks(step);
             for (let j = 0; j < links.length; j++) {
-              if (!this.includes(links[j]))
+              if (!this.includes(links[j])) {
                 links[j].recalc(step);
+              }
             }
           }
           else {
@@ -149,8 +159,9 @@ export class Selection {
                 selObj.move(deltaX, deltaY, subflow.display);
                 let links = subflow.getLinks(step);
                 for (let k = 0; k < links.length; k++) {
-                  if (!this.includes(links[k]))
+                  if (!this.includes(links[k])) {
                     links[k].recalc(step);
+                  }
                 }
               }
             }
@@ -181,15 +192,13 @@ export class Selection {
   find(obj) {
     if (obj.workflowItem && obj.workflowItem.id) {
       var found = this.diagram.get(obj.workflowItem.id);
-      if (found)
-        return found;
+      if (found) return found;
 
       // try subflows
       for (let i = 0; i < this.diagram.subflows.length; i++) {
         let subflow = this.diagram.subflows[i];
         found = subflow.get(obj.workflowItem.id);
-        if (found)
-          return found;
+        if (found) return found;
       }
     }
   }

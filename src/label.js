@@ -18,8 +18,9 @@ export class Label extends Shape {
   }
 
   draw(color) {
-    if (this.font)
+    if (this.font) {
       this.diagram.context.font = this.font.FONT;
+    }
     this.diagram.context.fillStyle = color ? color : this.diagram.options.DEFAULT_COLOR;
     this.diagram.context.clearRect(this.display.x, this.display.y, this.display.w, this.display.h);
     this.diagram.context.fillText(this.text, this.display.x, this.display.y + this.display.h / 1.33);
@@ -32,8 +33,9 @@ export class Label extends Shape {
   }
 
   prepareDisplay() {
-    if (this.font)
+    if (this.font) {
       this.diagram.context.font = this.font.FONT;
+    }
     var textMetrics = this.diagram.context.measureText(this.text);
     this.display.w = textMetrics.width;
     this.display.h = this.font.SIZE;

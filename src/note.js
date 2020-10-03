@@ -32,10 +32,12 @@ export class Note extends Shape {
     this.display = this.getDisplay();
 
     // boundaries
-    if (this.display.x + this.display.w > maxDisplay.w)
+    if (this.display.x + this.display.w > maxDisplay.w) {
       maxDisplay.w = this.display.x + this.display.w;
-    if (this.display.y + this.display.h > maxDisplay.h)
+    }
+    if (this.display.y + this.display.h > maxDisplay.h) {
       maxDisplay.h = this.display.y + this.display.h;
+    }
 
     return maxDisplay;
   }

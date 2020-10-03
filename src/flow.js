@@ -38,7 +38,8 @@ const DEFAULT_OPTIONS = {
     {status: 'Hold', color: 'cyan'},
     {status: 'Waiting', color: 'yellow'},
     {status: 'Unknown', color: 'transparent'}
-  ]
+  ],
+  websocketUrl: null
 };
 
 export class Flow {

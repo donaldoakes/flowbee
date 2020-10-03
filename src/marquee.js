@@ -28,11 +28,13 @@ export class Marquee extends Shape {
 
   resize(x, y, deltaX, deltaY) {
     var newX = deltaX > 0 ? x : x + deltaX;
-    if (newX < 0)
+    if (newX < 0) {
       newX = 0;
+    }
     var newY = deltaY > 0 ? y : y + deltaY;
-    if (newY < 0)
+    if (newY < 0) {
       newY = 0;
+    }
     var newW = deltaX > 0 ? deltaX : -deltaX;
     var newH = deltaY > 0 ? deltaY : -deltaY;
 
@@ -47,18 +49,21 @@ export class Marquee extends Shape {
     var selObjs = [];
     for (let i = 0; i < this.diagram.steps.length; i++) {
       var step = this.diagram.steps[i];
-      if (this.isContained(step))
+      if (this.isContained(step)) {
         selObjs.push(step);
+      }
     }
     for (let i = 0; i < this.diagram.subflows.length; i++) {
       var subflow = this.diagram.subflows[i];
-      if (this.isContained(subflow))
+      if (this.isContained(subflow)) {
         selObjs.push(subflow);
+      }
     }
     for (let i = 0; i < this.diagram.notes.length; i++) {
       var note = this.diagram.notes[i];
-      if (this.isContained(note))
+      if (this.isContained(note)) {
         selObjs.push(note);
+      }
     }
     return selObjs;
   }

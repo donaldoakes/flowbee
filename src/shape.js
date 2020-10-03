@@ -18,14 +18,18 @@ export class Shape {
     if (displayAttr) {
       var vals = displayAttr.split(',');
       vals.forEach(function (val) {
-        if (val.startsWith('x='))
+        if (val.startsWith('x=')) {
           display.x = parseInt(val.substring(2));
-        else if (val.startsWith('y='))
+        }
+        else if (val.startsWith('y=')) {
           display.y = parseInt(val.substring(2));
-        else if (val.startsWith('w='))
+        }
+        else if (val.startsWith('w=')) {
           display.w = parseInt(val.substring(2));
-        else if (val.startsWith('h='))
+        }
+        else if (val.startsWith('h=')) {
           display.h = parseInt(val.substring(2));
+        }
       });
     }
     return display;
@@ -33,15 +37,17 @@ export class Shape {
 
   setDisplayAttr(x, y, w, h) {
     var attr = 'x=' + x + ',y=' + y;
-    if (w)
+    if (w) {
       attr += ',w=' + w + ',h=' + h;
+    }
     this.workflowItem.attributes.WORK_DISPLAY_INFO = attr;
   }
 
   getAttr(display) {
     var attr = 'x=' + display.x + ',y=' + display.y;
-    if (display.w)
+    if (display.w) {
       attr += ',w=' + display.w + ',h=' + display.h;
+    }
     return attr;
   }
 
@@ -62,16 +68,21 @@ export class Shape {
   }
 
   getAnchor(x, y) {
-    if (Math.abs(this.display.x - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y - y) <= this.options.ANCHOR_HIT_W)
+    if (Math.abs(this.display.x - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y - y) <= this.options.ANCHOR_HIT_W) {
       return 0;
-    else if (Math.abs(this.display.x + this.display.w - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y - y) <= this.options.ANCHOR_HIT_W)
+    }
+    else if (Math.abs(this.display.x + this.display.w - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y - y) <= this.options.ANCHOR_HIT_W) {
       return 1;
-    else if (Math.abs(this.display.x + this.display.w - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y + this.display.h - y) <= this.options.ANCHOR_HIT_W)
+    }
+    else if (Math.abs(this.display.x + this.display.w - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y + this.display.h - y) <= this.options.ANCHOR_HIT_W) {
       return 2;
-    else if (Math.abs(this.display.x - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y + this.display.h - y) <= this.options.ANCHOR_HIT_W)
+    }
+    else if (Math.abs(this.display.x - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y + this.display.h - y) <= this.options.ANCHOR_HIT_W) {
       return 3;
-    else
+    }
+    else {
       return -1;
+    }
   }
 
   resizeDisplay(x, y, deltaX, deltaY, min, limDisplay) {
@@ -83,51 +94,63 @@ export class Shape {
       t2 = display.y + display.h;
       display.x = x + deltaX;
       display.y = y + deltaY;
-      if (t1 - display.x < min)
+      if (t1 - display.x < min) {
         display.x = t1 - min;
-      if (t2 - display.y < min)
+      }
+      if (t2 - display.y < min) {
         display.y = t2 - min;
+      }
       display.w = t1 - display.x;
       display.h = t2 - display.y;
     }
-    else if (anchor == 1) {
+    else if (anchor === 1) {
       t2 = display.y + display.h;
       display.y = y + deltaY;
-      if (t2 - display.y < min)
+      if (t2 - display.y < min) {
         display.y = t2 - min;
+      }
       display.w = x - (display.x - deltaX);
-      if (display.w < min)
+      if (display.w < min) {
         display.w = min;
+      }
       display.h = t2 - display.y;
     }
-    else if (anchor == 2) {
+    else if (anchor === 2) {
       display.w = x - (display.x - deltaX);
       display.h = y - (display.y - deltaY);
-      if (display.w < min)
+      if (display.w < min) {
         display.w = min;
-      if (display.h < min)
+      }
+      if (display.h < min) {
         display.h = min;
+      }
     }
-    else if (anchor == 3) {
+    else if (anchor === 3) {
       t1 = display.x + display.w;
       display.x = x + deltaX;
-      if (t1 - display.x < min)
+      if (t1 - display.x < min) {
         display.x = t1 - min;
+      }
       display.w = t1 - display.x;
       display.h = y - (display.y - deltaY);
-      if (display.h < min)
+      if (display.h < min) {
         display.h = min;
+      }
     }
 
     if (limDisplay) {
-      if (display.x < limDisplay.x)
+      if (display.x < limDisplay.x) {
         display.x = limDisplay.x;
-      if (display.x + display.w > limDisplay.x + limDisplay.w)
+      }
+      if (display.x + display.w > limDisplay.x + limDisplay.w) {
         display.w = limDisplay.x + limDisplay.w - display.x;
-      if (display.y < limDisplay.y)
+      }
+      if (display.y < limDisplay.y) {
         display.y = limDisplay.y;
-      if (display.y + display.h > limDisplay.y + limDisplay.h)
+      }
+      if (display.y + display.h > limDisplay.y + limDisplay.h) {
         display.h = limDisplay.y + limDisplay.h - display.y;
+      }
     }
 
     return display;

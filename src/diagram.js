@@ -7,6 +7,8 @@ import { Subflow } from './subflow';
 import { Note } from './note';
 import { Marquee } from './marquee';
 
+const Toolbox = null; // TODO
+
 export class Diagram extends Shape {
 
   static BOUNDARY_DIM = 25;
@@ -27,14 +29,15 @@ export class Diagram extends Shape {
     this.isDiagram = true;
     this.context = this.canvas.getContext("2d");
     this.anchor = -1;
-    this.drawBoxes = process.attributes.NodeStyle == 'BoxIcon';
+    this.drawBoxes = process.attributes.NodeStyle === 'BoxIcon';
     this.selection = new Selection(this);
     if (activity) {
-      if (instance)
+      if (instance) {
         this.activityInstanceId = activity;
-
-      else
+      }
+      else {
         this.activityId = activity;
+      }
     }
     this.instanceEdit = instanceEdit && instanceEdit.toString() === 'true';
     this.data = data;
@@ -99,10 +102,12 @@ export class Diagram extends Shape {
         if (e.ctrlKey) {
           e.preventDefault();
           var z = diagram.zoom - e.deltaY;
-          if (z < 20)
+          if (z < 20) {
             z = 20;
-          else if (z > 200)
+          }
+          else if (z > 200) {
             z = 200;
+          }
           diagram.zoomCanvas(z);
           rangeInput.value = diagram.zoom;
           diagram.adjustSection();
@@ -137,15 +142,18 @@ export class Diagram extends Shape {
       var mdwPanels = document.getElementsByClassName('mdw-panel-full-width');
       if (mdwPanels.length) {
         // don't shrink width smaller than original panel width
-        if (!this.origPanelWidth)
+        if (!this.origPanelWidth) {
           this.origPanelWidth = mdwPanels[0].offsetWidth;
-        if (w < this.origPanelWidth - 37)
+        }
+        if (w < this.origPanelWidth - 37) {
           w = this.origPanelWidth - 37;
+        }
       }
       var ch = this.canvas.style.height.substring(0, this.canvas.style.height.length - 2);
       var h = (ch ? parseInt(ch) : this.canvas.height) * scale;
-      if (h < 540)
+      if (h < 540) {
         h = 540;
+      }
       section.style.width = (w + 20) + 'px';
       section.style.height = (h + 20) + 'px';
     }
@@ -166,11 +174,12 @@ export class Diagram extends Shape {
       var linkCt = 0;
       var nonLinkCt = 0;
       sequence.forEach(function (it) {
-        if (it instanceof Link)
+        if (it instanceof Link) {
           linkCt++;
-
-        else
+        }
+        else {
           nonLinkCt++;
+        }
       });
       var nonLinkSlice = totalTime / (nonLinkCt + 2 * linkCt);
       var linkSlice = Diagram.ANIMATION_LINK_FACTOR * nonLinkSlice;
@@ -220,8 +229,8 @@ export class Diagram extends Shape {
         diagram.notes.forEach(function (note) {
           note.draw();
         });
-        if ($mdwWebSocketUrl && $mdwWebSocketUrl !== '${mdwWebSocketUrl}') {
-          const socket = new WebSocket($mdwWebSocketUrl);
+        if (this.options.webSocketUrl) {
+          const socket = new WebSocket(this.options.webSocketUrl);
           socket.addEventListener('open', function (event) {
             socket.send(diagram.instance.id);
           });
@@ -230,8 +239,9 @@ export class Diagram extends Shape {
             if (message.subtype === 'a') {
               var step = diagram.getStep('A' + message.id);
               if (step) {
-                if (!step.instances)
+                if (!step.instances) {
                   step.instances = [];
+                }
                 var actInst = step.instances.find(function (inst) {
                   return inst.id === message.instId;
                 });
@@ -254,8 +264,9 @@ export class Diagram extends Shape {
             else if (message.subtype === 't') {
               var link = diagram.getLink('T' + message.id);
               if (link) {
-                if (!link.instances)
+                if (!link.instances) {
                   link.instances = [];
+                }
                 var linkInst = link.instances.find(function (inst) {
                   return inst.id === message.instId;
                 });
@@ -304,8 +315,9 @@ export class Diagram extends Shape {
     var label = this.instance && this.instance.template ? this.instance.packageName + '/' + this.instance.processName : this.process.name;
     var font = this.instance && this.instance.template ? this.options.TEMPLATE_FONT : this.options.TITLE_FONT;
     diagram.label = new Label(this, label, this.getDisplay(), font);
-    if (this.process.instanceId)
+    if (this.process.instanceId) {
       diagram.label.subtext = this.process.instanceId;
+    }
     diagram.makeRoom(canvasDisplay, diagram.label.prepareDisplay());
 
     // activities
@@ -352,8 +364,9 @@ export class Diagram extends Shape {
     }
 
     // marquee
-    if (this.marquee)
+    if (this.marquee) {
       diagram.makeRoom(canvasDisplay, this.marquee.prepareDisplay());
+    }
 
     // allow extra room
     canvasDisplay.w += Diagram.BOUNDARY_DIM;
@@ -363,19 +376,22 @@ export class Diagram extends Shape {
       var toolbox = Toolbox.getToolbox();
       // fill available
       var parentWidth = this.canvas.parentElement.offsetWidth;
-      if (toolbox)
+      if (toolbox) {
         parentWidth -= toolbox.getWidth();
-      if (canvasDisplay.w < parentWidth)
+      }
+      if (canvasDisplay.w < parentWidth) {
         canvasDisplay.w = parentWidth;
-      if (toolbox && canvasDisplay.h < toolbox.getHeight())
+      }
+      if (toolbox && canvasDisplay.h < toolbox.getHeight()) {
         canvasDisplay.h = toolbox.getHeight();
+      }
     }
 
     var dpRatio = 1;
     if (window.devicePixelRatio) {
       dpRatio = window.devicePixelRatio;
     }
-    if (dpRatio == 1) {
+    if (dpRatio === 1) {
       this.canvas.width = canvasDisplay.w;
       this.canvas.height = canvasDisplay.h;
     }
@@ -443,7 +459,7 @@ export class Diagram extends Shape {
           }
           if (diagram.activityInstanceId) {
             it.instances.forEach(function (inst) {
-              if (inst.id == diagram.activityInstanceId) {
+              if (inst.id === diagram.activityInstanceId) {
                 highlight = true;
               }
             });
@@ -460,11 +476,12 @@ export class Diagram extends Shape {
         var linkCt = 0;
         var nonLinkCt = 0;
         sequence.forEach(function (it) {
-          if (it instanceof Link)
+          if (it instanceof Link) {
             linkCt++;
-
-          else
+          }
+          else {
             nonLinkCt++;
+          }
         });
         var totalTime = sequence.length * 1000 / Diagram.ANIMATION_SPEED;
         var nonLinkSlice = totalTime / (nonLinkCt + 2 * linkCt);
@@ -531,8 +548,9 @@ export class Diagram extends Shape {
       this.addSequence(start, seq, runtime);
       var subflows = this.subflows.slice();
       subflows.sort(function (sf1, sf2) {
-        if (Math.abs(sf1.display.y - sf2.display.y) > 100)
+        if (Math.abs(sf1.display.y - sf2.display.y) > 100) {
           return sf1.y - sf2.y;
+        }
         // otherwise closest to top-left of canvas
         return Math.sqrt(Math.pow(sf1.display.x, 2) + Math.pow(sf1.display.y, 2)) -
           Math.sqrt(Math.pow(sf2.display.x, 2) + Math.pow(sf2.display.y, 2));
@@ -582,8 +600,9 @@ export class Diagram extends Shape {
           return s1.instances[0].startDate.localeCompare(s2.instances[0].startDate);
         }
       }
-      if (Math.abs(s1.display.y - s2.display.y) > 100)
+      if (Math.abs(s1.display.y - s2.display.y) > 100) {
         return s1.y - s2.y;
+      }
       // otherwise closest to top-left of canvas
       return Math.sqrt(Math.pow(s1.display.x, 2) + Math.pow(s1.display.y, 2)) -
         Math.sqrt(Math.pow(s2.display.x, 2) + Math.pow(s2.display.y, 2));
@@ -596,14 +615,15 @@ export class Diagram extends Shape {
       if (links) {
         links.forEach(function (link) {
           var l = sequence.find(function (it) {
-            return it.workflowItem.id == link.transition.id;
+            return it.workflowItem.id === link.transition.id;
           });
-          if (!l)
+          if (!l) {
             sequence.push(link);
+          }
         });
       }
       var s = sequence.find(function (it) {
-        return it.workflowItem.id == step.activity.id;
+        return it.workflowItem.id === step.activity.id;
       });
       if (!s) {
         sequence.push(step);
@@ -617,37 +637,43 @@ export class Diagram extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].activity.implementor == Step.START_IMPL)
+      if (this.steps[i].activity.implementor === Step.START_IMPL) {
         return this.steps[i];
+      }
     }
   }
 
   makeRoom(canvasDisplay, display) {
-    if (display.w > canvasDisplay.w)
+    if (display.w > canvasDisplay.w) {
       canvasDisplay.w = display.w;
-    if (display.h > canvasDisplay.h)
+    }
+    if (display.h > canvasDisplay.h) {
       canvasDisplay.h = display.h;
+    }
   }
 
   getStep(activityId) {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].activity.id == activityId)
+      if (this.steps[i].activity.id === activityId) {
         return this.steps[i];
+      }
     }
   }
 
   getLink(transitionId) {
     for (var i = 0; i < this.links.length; i++) {
-      if (this.links[i].transition.id == transitionId)
+      if (this.links[i].transition.id === transitionId) {
         return this.links[i];
+      }
     }
   }
 
   getLinks(step) {
     var links = [];
     for (var i = 0; i < this.links.length; i++) {
-      if (step.activity.id == this.links[i].to.activity.id || step.activity.id == this.links[i].from.activity.id)
+      if (step.activity.id === this.links[i].to.activity.id || step.activity.id === this.links[i].from.activity.id) {
         links.push(this.links[i]);
+      }
     }
     return links;
   }
@@ -655,8 +681,9 @@ export class Diagram extends Shape {
   getOutLinks(step) {
     var links = [];
     for (let i = 0; i < this.links.length; i++) {
-      if (step.activity.id == this.links[i].from.activity.id)
+      if (step.activity.id === this.links[i].from.activity.id) {
         links.push(this.links[i]);
+      }
     }
     this.subflows.forEach(function (subflow) {
       links = links.concat(subflow.getOutLinks(step));
@@ -666,27 +693,33 @@ export class Diagram extends Shape {
 
   getSubflow(subprocessId) {
     for (var i = 0; i < this.subflows.length; i++) {
-      if (this.subflows[i].subprocess.id == subprocessId)
+      if (this.subflows[i].subprocess.id === subprocessId) {
         return this.subflows[i];
+      }
     }
   }
 
   getNote(textNoteId) {
     for (var i = 0; i < this.notes.length; i++) {
-      if (this.notes[i].textNote.id == textNoteId)
+      if (this.notes[i].textNote.id === textNoteId) {
         return this.notes[i];
+      }
     }
   }
 
   get(id) {
-    if (id.startsWith('A'))
+    if (id.startsWith('A')) {
       return this.getStep(id);
-    else if (id.startsWith('T'))
+    }
+    else if (id.startsWith('T')) {
       return this.getLink(id);
-    else if (id.startsWith('P'))
+    }
+    else if (id.startsWith('P')) {
       return this.getSubflow(id);
-    else if (id.startsWith('N'))
+    }
+    else if (id.startsWith('N')) {
       return this.getNote(id);
+    }
   }
 
   /**
@@ -699,8 +732,7 @@ export class Diagram extends Shape {
       if (!obj && this.subflows) {
         for (let i = 0; i < this.subflows.length; i++) {
           obj = this.subflows[i].get(id);
-          if (obj)
-            break;
+          if (obj) break;
         }
       }
       if (obj) {
@@ -718,7 +750,7 @@ export class Diagram extends Shape {
     if (this.implementors) {
       for (var i = 0; i < this.implementors.length; i++) {
         var implementor = this.implementors[i];
-        if (implementor.implementorClass == className) {
+        if (implementor.implementorClass === className) {
           return implementor;
         }
       }
@@ -775,8 +807,9 @@ export class Diagram extends Shape {
     var destSubflow = null;
     if (this.subflows) {
       for (var i = 0; i < this.subflows.length; i++) {
-        if (this.subflows[i].get(to.activity.id))
+        if (this.subflows[i].get(to.activity.id)) {
           destSubflow = this.subflows[i];
+        }
       }
     }
     if (destSubflow) {
@@ -792,8 +825,9 @@ export class Diagram extends Shape {
     var startTransitionId = this.genId(this.links, 'transition');
     var subprocId = this.genId(this.subflows, 'subprocess');
     var subflow = Subflow.create(this, subprocId, startActivityId, startTransitionId, type, x, y);
-    if (!this.process.subprocesses)
+    if (!this.process.subprocesses) {
       this.process.subprocesses = [];
+    }
     this.process.subprocesses.push(subflow.subprocess);
     this.subflows.push(subflow);
   }
@@ -809,8 +843,9 @@ export class Diagram extends Shape {
     if (items) {
       items.forEach(function (item) {
         var itemId = parseInt(item[workflowType].id.substring(1));
-        if (itemId > maxId)
+        if (itemId > maxId) {
           maxId = itemId;
+        }
       });
     }
     return maxId + 1;
@@ -907,7 +942,7 @@ export class Diagram extends Shape {
       if (this.instance.activities) {
         var procInstId = this.instance.id;
         this.instance.activities.forEach(function (actInst) {
-          if ('A' + actInst.activityId == id) {
+          if ('A' + actInst.activityId === id) {
             actInst.processInstanceId = procInstId; // needed for subprocess & task instance retrieval
             insts.push(actInst);
           }
@@ -925,8 +960,9 @@ export class Diagram extends Shape {
       var insts = []; // should always return something, even if empty
       if (this.instance.transitions) {
         this.instance.transitions.forEach(function (transInst) {
-          if ('T' + transInst.transitionId == id)
+          if ('T' + transInst.transitionId === id) {
             insts.push(transInst);
+          }
         });
       }
       insts.sort(function (t1, t2) {
@@ -941,8 +977,9 @@ export class Diagram extends Shape {
       var insts = []; // should always return something, even if empty
       if (this.instance.subprocesses) {
         this.instance.subprocesses.forEach(function (subInst) {
-          if ('P' + subInst.processId == id)
+          if ('P' + subInst.processId === id) {
             insts.push(subInst);
+          }
         });
       }
       insts.sort(function (s1, s2) {
@@ -1007,8 +1044,9 @@ export class Diagram extends Shape {
               y1 = display.y + Step.OLD_INST_W * i + del;
               w1 = display.w - Step.OLD_INST_W * 2 * i - 2 * del;
               h1 = display.h - Step.OLD_INST_W * 2 * i - 2 * del;
-              if (w1 > 0 && h1 > 0)
+              if (w1 > 0 && h1 > 0) {
                 this.rect(x1, y1, w1, h1, statusColor, statusColor);
+              }
             }
             x1 += Step.OLD_INST_W - 1;
             y1 += Step.OLD_INST_W - 1;
@@ -1029,8 +1067,9 @@ export class Diagram extends Shape {
   }
 
   drawData(display, size, color, opacity) {
-    if (opacity)
+    if (opacity) {
       this.context.globalAlpha = opacity;
+    }
     var rounding = this.options.BOX_ROUNDING_RADIUS;
     var x1, y1, w1, h1;
     this.rect(
@@ -1047,10 +1086,12 @@ export class Diagram extends Shape {
     y1 += Step.OLD_INST_W;
     w1 -= 2 * Step.OLD_INST_W;
     h1 -= 2 * Step.OLD_INST_W;
-    if (w1 > 0 && h1 > 0)
+    if (w1 > 0 && h1 > 0) {
       this.context.clearRect(x1, y1, w1, h1);
-    if (opacity)
+    }
+    if (opacity) {
       this.context.globalAlpha = 1.0;
+    }
   }
 
   roundedRect(x, y, w, h, border, fill) {
@@ -1058,15 +1099,18 @@ export class Diagram extends Shape {
   }
 
   rect(x, y, w, h, border, fill, r) {
-    if (border)
+    if (border) {
       this.context.strokeStyle = border;
-    if (fill)
+    }
+    if (fill) {
       this.context.fillStyle = fill;
+    }
 
     if (!r) {
       this.context.strokeRect(x, y, w, h);
-      if (fill)
+      if (fill) {
         this.context.fillRect(x, y, w, h);
+      }
     }
     else {
       // rounded corners
@@ -1083,8 +1127,9 @@ export class Diagram extends Shape {
       this.context.closePath();
 
       this.context.stroke();
-      if (fill)
+      if (fill) {
         this.context.fill();
+      }
     }
 
     this.context.fillStyle = this.options.DEFAULT_COLOR;
@@ -1127,10 +1172,12 @@ export class Diagram extends Shape {
   }
 
   drawLine(segments, color, width) {
-    if (color)
+    if (color) {
       this.context.strokeStyle = color;
-    if (width)
+    }
+    if (width) {
       this.context.lineWidth = width;
+    }
     this.context.beginPath();
     var diagram = this;
     segments.forEach(function (seg) {
@@ -1157,7 +1204,7 @@ export class Diagram extends Shape {
         j = 0;
       }
       else {
-        var lastSeg = j == perSeg - 1;
+        var lastSeg = j === perSeg - 1;
         x2 = lastSeg ? segment.to.x : x1 + (segment.to.x - segment.from.x) / perSeg;
         y2 = lastSeg ? segment.to.y : y1 + (segment.to.y - segment.from.y) / perSeg;
         context.strokeStyle = color;
@@ -1209,8 +1256,9 @@ export class Diagram extends Shape {
 
   drawImage(src, x, y) {
     src = this.imgBase + '/' + src;
-    if (!this.images)
+    if (!this.images) {
       this.images = {};
+    }
     var img = this.images[src];
     if (!img) {
       img = new Image();
@@ -1291,11 +1339,12 @@ export class Diagram extends Shape {
 
     if (this.editable && e.ctrlKey) {
       if (selObj) {
-        if (this.selection.includes(selObj))
+        if (this.selection.includes(selObj)) {
           this.selection.remove(selObj);
-
-        else
+        }
+        else {
           this.selection.add(selObj);
+        }
         selObj.select();
       }
     }
@@ -1306,8 +1355,9 @@ export class Diagram extends Shape {
         this.unselect();
         if (this.selection.getSelectObj()) {
           this.selection.getSelectObj().select();
-          if (this.editable && e.shiftKey && this.selection.getSelectObj().isStep)
+          if (this.editable && e.shiftKey && this.selection.getSelectObj().isStep) {
             this.shiftDrag = true;
+          }
         }
       }
     }
@@ -1353,17 +1403,19 @@ export class Diagram extends Shape {
     this.anchor = -1;
     this.hoverObj = this.getHoverObj(x, y);
     if (this.hoverObj) {
-      if (this.editable && (this.hoverObj == this.selection.getSelectObj())) {
+      if (this.editable && (this.hoverObj === this.selection.getSelectObj())) {
         this.anchor = this.hoverObj.getAnchor(x, y);
         if (this.anchor >= 0) {
           if (this.hoverObj.isLink) {
             document.body.style.cursor = 'crosshair';
           }
           else {
-            if (this.anchor === 0 || this.anchor == 2)
+            if (this.anchor === 0 || this.anchor === 2) {
               document.body.style.cursor = 'nw-resize';
-            else if (this.anchor == 1 || this.anchor == 3)
+            }
+            else if (this.anchor === 1 || this.anchor === 3) {
               document.body.style.cursor = 'ne-resize';
+            }
           }
         }
         else {
@@ -1389,10 +1441,12 @@ export class Diagram extends Shape {
 
       if (Math.abs(deltaX) > this.options.MIN_DRAG || Math.abs(deltaY) > this.options.MIN_DRAG) {
 
-        if (x > rect.right - Diagram.BOUNDARY_DIM)
+        if (x > rect.right - Diagram.BOUNDARY_DIM) {
           this.canvas.width = this.canvas.width + Diagram.BOUNDARY_DIM;
-        if (y > rect.bottom - Diagram.BOUNDARY_DIM)
+        }
+        if (y > rect.bottom - Diagram.BOUNDARY_DIM) {
           this.canvas.height = this.canvas.height + Diagram.BOUNDARY_DIM;
+        }
 
         var selObj = this.selection.getSelectObj();
         if (selObj) {
@@ -1417,13 +1471,15 @@ export class Diagram extends Shape {
               link.moveAnchor(this.anchor, x - this.dragX, y - this.dragY);
               if (this.anchor === 0) {
                 let hovStep = this.getHoverStep(x, y);
-                if (hovStep && link.from.activity.id != hovStep.activity.id)
+                if (hovStep && link.from.activity.id !== hovStep.activity.id) {
                   link.setFrom(hovStep);
+                }
               }
-              else if (this.anchor == this.selection.getSelectObj().display.xs.length - 1) {
+              else if (this.anchor === this.selection.getSelectObj().display.xs.length - 1) {
                 var hovStep = this.getHoverStep(x, y);
-                if (hovStep && link.to.activity.id != hovStep.activity.id)
+                if (hovStep && link.to.activity.id !== hovStep.activity.id) {
                   link.setTo(hovStep);
+                }
               }
               this.draw();
             }
@@ -1456,8 +1512,9 @@ export class Diagram extends Shape {
               }
               this.draw();
               var obj = this.getHoverObj(x, y);
-              if (obj)
+              if (obj) {
                 obj.select();
+              }
               return true;
             }
           }
@@ -1465,8 +1522,9 @@ export class Diagram extends Shape {
             this.selection.move(this.dragX, this.dragY, deltaX, deltaY);
             // non-workflow selection may not be reselected after move
             var hovObj = this.diagram.getHoverObj(x, y);
-            if (hovObj)
+            if (hovObj) {
               hovObj.select();
+            }
             return true;
           }
         }
@@ -1488,10 +1546,10 @@ export class Diagram extends Shape {
     var rect = this.canvas.getBoundingClientRect();
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
-    if (item.category == 'subflow') {
+    if (item.category === 'subflow') {
       this.addSubflow(item.implementorClass, x, y);
     }
-    else if (item.category == 'note') {
+    else if (item.category === 'note') {
       this.addNote(x, y);
     }
     else {
@@ -1525,7 +1583,7 @@ export class Diagram extends Shape {
 
   getContextMenuItems(e) {
     var selObj = this.selection.getSelectObj();
-    if (selObj && selObj.workflowType == 'activity') {
+    if (selObj && selObj.workflowType === 'activity') {
       var actions = [];
       if (this.instance && (this.instance.status === 'In Progress' || this.instance.status === 'Waiting')) {
         var inst = this.getLatestInstance();
@@ -1553,19 +1611,21 @@ export class Diagram extends Shape {
   }
 
   getHoverObj(x, y) {
-    if (this.zoom != 100) {
+    if (this.zoom !== 100) {
       var scale = this.zoom / 100;
       x = x / scale;
       y = y / scale;
     }
 
-    if (this.label.isHover(x, y))
+    if (this.label.isHover(x, y)) {
       return this.label;
+    }
     // links checked before steps for better anchor selectability
     for (i = 0; i < this.subflows.length; i++) {
       var subflow = this.subflows[i];
-      if (subflow.title.isHover(x, y))
+      if (subflow.title.isHover(x, y)) {
         return subflow;
+      }
       if (subflow.isHover(x, y)) {
         for (j = 0; j < subflow.links.length; j++) {
           if (subflow.links[j].isHover(x, y)) {
@@ -1591,8 +1651,9 @@ export class Diagram extends Shape {
       }
     }
     for (i = 0; i < this.notes.length; i++) {
-      if (this.notes[i].isHover(x, y))
+      if (this.notes[i].isHover(x, y)) {
         return this.notes[i];
+      }
     }
   }
 
@@ -1601,14 +1662,16 @@ export class Diagram extends Shape {
       var subflow = this.subflows[i];
       if (subflow.isHover(x, y)) {
         for (var j = 0; j < subflow.steps.length; j++) {
-          if (subflow.steps[j].isHover(x, y))
+          if (subflow.steps[j].isHover(x, y)) {
             return subflow.steps[j];
+          }
         }
       }
     }
     for (let i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].isHover(x, y))
+      if (this.steps[i].isHover(x, y)) {
         return this.steps[i];
+      }
     }
   }
 
@@ -1627,11 +1690,12 @@ export class Diagram extends Shape {
       }
     }
 
-    if (bgObj == this)
+    if (bgObj === this) {
       this.label.select();
-
-    else
+    }
+    else {
       bgObj.select();
+    }
 
     return bgObj;
   }

@@ -1,3 +1,5 @@
+import { Label } from './label';
+
 export class Link {
 
   static INITIATED = 'blue';
@@ -62,11 +64,12 @@ export class Link {
     this.drawConnector(null, null, animationTimeSlice);
 
     if (this.label) {
-      if (this.diagram.instance && (!this.instances || this.instances.length === 0))
+      if (this.diagram.instance && (!this.instances || this.instances.length === 0)) {
         this.label.draw(Link.UNTRAVERSED);
-
-      else
+      }
+      else {
         this.label.draw();
+      }
     }
 
     this.diagram.context.strokeStyle = this.diagram.options.DEFAULT_COLOR;
@@ -99,10 +102,12 @@ export class Link {
       display.xs = [];
       display.ys = [];
       vals.forEach(function (val) {
-        if (val.startsWith('lx='))
+        if (val.startsWith('lx=')) {
           display.lx = parseInt(val.substring(3));
-        else if (val.startsWith('ly='))
+        }
+        else if (val.startsWith('ly=')) {
           display.ly = parseInt(val.substring(3));
+        }
         else if (val.startsWith('xs=')) {
           val.substring(3).split('&').forEach(function (x) {
             display.xs.push(parseInt(x));
@@ -113,16 +118,18 @@ export class Link {
             display.ys.push(parseInt(y));
           });
         }
-        else if (val.startsWith('type='))
+        else if (val.startsWith('type=')) {
           display.type = val.substring(5);
+        }
       });
     }
     return display;
   }
 
   setDisplay(display) {
-    if (!this.transition.attributes)
+    if (!this.transition.attributes) {
       this.transition.attributes = {};
+    }
     this.transition.attributes.TRANSITION_DISPLAY_INFO = this.getAttr(display);
   }
 
@@ -130,14 +137,16 @@ export class Link {
     var attr = 'type=' + display.type + ',lx=' + Math.round(display.lx) + ',ly=' + Math.round(display.ly);
     attr += ',xs=';
     for (var i = 0; i < display.xs.length; i++) {
-      if (i > 0)
+      if (i > 0) {
         attr += '&';
+      }
       attr += Math.round(display.xs[i]);
     }
     attr += ',ys=';
     for (i = 0; i < display.ys.length; i++) {
-      if (i > 0)
+      if (i > 0) {
         attr += '&';
+      }
       attr += Math.round(display.ys[i]);
     }
     return attr;
@@ -155,11 +164,12 @@ export class Link {
     if (this.diagram.instance) {
       if (this.instances && this.instances.length > 0) {
         var latest = this.instances[0];
-        if (latest.statusCode == 1)
+        if (latest.statusCode === 1) {
           color = Link.INITIATED;
-
-        else
+        }
+        else {
           color = Link.TRAVERSED;
+        }
       }
       else {
         color = Link.UNTRAVERSED;
@@ -192,32 +202,35 @@ export class Link {
     }
 
     if (!type || type.startsWith('Elbow')) {
-      if (xs.length == 2) {
+      if (xs.length === 2) {
         hit = this.drawAutoElbowConnector(context, hitX, hitY, animationTimeSlice);
       }
       else {
         // TODO: make use of Link.CORR
         context.beginPath();
-        var horizontal = ys[0] == ys[1] && (xs[0] != xs[1] || xs[1] == xs[2]);
+        var horizontal = ys[0] === ys[1] && (xs[0] !== xs[1] || xs[1] === xs[2]);
         context.moveTo(xs[0], ys[0]);
         for (var i = 1; i < xs.length; i++) {
           if (horizontal) {
             context.lineTo(xs[i] > xs[i - 1] ? xs[i] - Link.CR : xs[i] + Link.CR, ys[i]);
-            if (i < xs.length - 1)
+            if (i < xs.length - 1) {
               context.quadraticCurveTo(xs[i], ys[i], xs[i], ys[i + 1] > ys[i] ? ys[i] + Link.CR : ys[i] - Link.CR);
+            }
           }
           else {
             context.lineTo(xs[i], ys[i] > ys[i - 1] ? ys[i] - Link.CR : ys[i] + Link.CR);
-            if (i < xs.length - 1)
+            if (i < xs.length - 1) {
               context.quadraticCurveTo(xs[i], ys[i], xs[i + 1] > xs[i] ? xs[i] + Link.CR : xs[i] - Link.CR, ys[i]);
+            }
           }
           horizontal = !horizontal;
         }
-        if (hitX)
-          hit = context.isPointInStroke && (this.dpRatio == 1 ? context.isPointInStroke(hitX, hitY) : context.isPointInStroke(hitX * this.dpRatio, hitY * this.dpRatio));
-
-        else
+        if (hitX) {
+          hit = context.isPointInStroke && (this.dpRatio === 1 ? context.isPointInStroke(hitX, hitY) : context.isPointInStroke(hitX * this.dpRatio, hitY * this.dpRatio));
+        }
+        else {
           context.stroke();
+        }
       }
     }
     else if (type === Link.LINK_TYPES.STRAIGHT) {
@@ -246,7 +259,7 @@ export class Link {
             context.beginPath();
             context.moveTo(seg.from.x, seg.from.y);
             context.lineTo(seg.to.x, seg.to.y);
-            if (context.isPointInStroke && (dpRatio == 1 ? context.isPointInStroke(hitX, hitY) : context.isPointInStroke(hitX * dpRatio, hitY * dpRatio))) {
+            if (context.isPointInStroke && (dpRatio === 1 ? context.isPointInStroke(hitX, hitY) : context.isPointInStroke(hitX * dpRatio, hitY * dpRatio))) {
               hit = true;
             }
           });
@@ -257,8 +270,9 @@ export class Link {
       }
     }
 
-    if (!hit && !animationTimeSlice)
+    if (!hit && !animationTimeSlice) {
       hit = this.drawConnectorArrow(context, hitX, hitY);
+    }
 
     context.lineWidth = this.diagram.options.DEFAULT_LINE_WIDTH;
     context.strokeStyle = this.diagram.options.DEFAULT_COLOR;
@@ -408,8 +422,9 @@ export class Link {
     }
 
     if (hitX) {
-      if (context.isPointInStroke && (this.dpRatio == 1 ? context.isPointInStroke(hitX, hitY) : context.isPointInStroke(hitX * this.dpRatio, hitY * this.dpRatio)))
+      if (context.isPointInStroke && (this.dpRatio === 1 ? context.isPointInStroke(hitX, hitY) : context.isPointInStroke(hitX * this.dpRatio, hitY * this.dpRatio))) {
         return true;
+      }
     }
     else {
       context.stroke();
@@ -423,14 +438,14 @@ export class Link {
     var p = 12;
     var slope;
     var x, y;
-    if (type == Link.LINK_TYPES.STRAIGHT) {
+    if (type === Link.LINK_TYPES.STRAIGHT) {
       var p2 = xs.length - 1;
       var p1 = p2 - 1;
       x = xs[p2];
       y = ys[p2];
       slope = this.getSlope(xs[p1], ys[p1], xs[p2], ys[p2]);
     }
-    else if (xs.length == 2) {
+    else if (xs.length === 2) {
       // auto ELBOW/ELBOWH/ELBOWV type
       switch (this.getAutoElbowLinkType()) {
         case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_V:
@@ -452,7 +467,7 @@ export class Link {
     else {
       // ELBOW/ELBOWH/ELBOWV, control points > 2
       var k = xs.length - 1;
-      if (xs[k] == xs[k - 1] && (ys[k] != ys[k - 1] || ys[k - 1] == ys[k - 2])) {
+      if (xs[k] === xs[k - 1] && (ys[k] !== ys[k - 1] || ys[k - 1] === ys[k - 2])) {
         // verticle arrow
         x = xs[k];
         y = ys[k] > ys[k - 1] ? ys[k] + Link.GAP : ys[k] - Link.GAP;
@@ -474,7 +489,7 @@ export class Link {
     context.lineTo(Math.round(Math.cos(dr) * p + x), Math.round(Math.sin(dr) * p + y));
     context.lineTo(x, y);
     if (hitX) {
-      return (context.isPointInStroke && (this.dpRatio == 1 ? context.isPointInStroke(hitX, hitY) : context.isPointInStroke(hitX * this.dpRatio, hitY * this.dpRatio)));
+      return (context.isPointInStroke && (this.dpRatio === 1 ? context.isPointInStroke(hitX, hitY) : context.isPointInStroke(hitX * this.dpRatio, hitY * this.dpRatio)));
     }
     else {
       context.fill();
@@ -486,11 +501,11 @@ export class Link {
     var xs = this.display.xs;
     var ys = this.display.ys;
 
-    if (type == Link.LINK_TYPES.ELBOWH) {
-      if (xs[0] == xs[1]) {
+    if (type === Link.LINK_TYPES.ELBOWH) {
+      if (xs[0] === xs[1]) {
         return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_V;
       }
-      else if (ys[0] == ys[1]) {
+      else if (ys[0] === ys[1]) {
         return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_H;
       }
       else if (Math.abs(this.to.display.x - this.from.display.x) > Link.ELBOW_VH_THRESHOLD) {
@@ -501,10 +516,10 @@ export class Link {
       }
     }
     else if (type === Link.LINK_TYPES.ELBOWV) {
-      if (xs[0] == xs[1]) {
+      if (xs[0] === xs[1]) {
         return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_V;
       }
-      else if (ys[0] == ys[1]) {
+      else if (ys[0] === ys[1]) {
         return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_H;
       }
       else if (Math.abs(this.to.display.y - this.from.display.y) > Link.ELBOW_VH_THRESHOLD) {
@@ -515,10 +530,10 @@ export class Link {
       }
     }
     else {
-      if (xs[0] == xs[1]) {
+      if (xs[0] === xs[1]) {
         return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_V;
       }
-      else if (ys[0] == ys[1]) {
+      else if (ys[0] === ys[1]) {
         return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_H;
       }
       else if (Math.abs(this.to.display.x - this.from.display.x) < Math.abs(this.to.display.y - this.from.display.y) * Link.ELBOW_THRESHOLD) {
@@ -545,41 +560,50 @@ export class Link {
     // remember relative label position
     var labelSlope = this.getSlope(xs[0], ys[0], lx, ly) - this.getSlope(xs[0], ys[0], xs[n - 1], ys[n - 1]);
     var labelDist = this.getDist(xs[0], ys[0], xs[n - 1], ys[n - 1]);
-    if (labelDist < 5.0)
+    if (labelDist < 5.0) {
       labelDist = 0.5;
-
-    else
+    }
+    else {
       labelDist = this.getDist(xs[0], ys[0], lx, ly) / labelDist;
+    }
 
-    if (type == Link.LINK_TYPES.STRAIGHT) {
-      if (n == 2) {
+    if (type === Link.LINK_TYPES.STRAIGHT) {
+      if (n === 2) {
         this.calc();
       }
       else {
-        if (step == this.from) {
-          if (xs[1] > step.display.x + step.display.w + Link.GAP)
+        if (step === this.from) {
+          if (xs[1] > step.display.x + step.display.w + Link.GAP) {
             xs[0] = step.display.x + step.display.w + Link.GAP;
-          else if (xs[1] < step.display.x - Link.GAP)
+          }
+          else if (xs[1] < step.display.x - Link.GAP) {
             xs[0] = step.display.x - Link.GAP;
-          if (ys[1] > step.display.y + step.display.h + Link.GAP)
+          }
+          if (ys[1] > step.display.y + step.display.h + Link.GAP) {
             ys[0] = step.display.y + step.display.h + Link.GAP;
-          else if (ys[1] < step.display.y - Link.GAP)
+          }
+          else if (ys[1] < step.display.y - Link.GAP) {
             ys[0] = step.display.y - Link.GAP;
+          }
         }
         else {
           k = n - 1;
-          if (xs[k - 1] > step.display.x + step.display.w + Link.GAP)
+          if (xs[k - 1] > step.display.x + step.display.w + Link.GAP) {
             xs[k] = step.display.x + step.display.w + Link.GAP;
-          else if (xs[k - 1] < step.display.x - Link.GAP)
+          }
+          else if (xs[k - 1] < step.display.x - Link.GAP) {
             xs[k] = step.display.x - Link.GAP;
-          if (ys[k - 1] > step.display.y + step.display.h + Link.GAP)
+          }
+          if (ys[k - 1] > step.display.y + step.display.h + Link.GAP) {
             ys[k] = step.display.y + step.display.h + Link.GAP;
-          else if (ys[k - 1] < step.display.y - Link.GAP)
+          }
+          else if (ys[k - 1] < step.display.y - Link.GAP) {
             ys[k] = step.display.y - Link.GAP;
+          }
         }
       }
     }
-    else if (n == 2) {
+    else if (n === 2) {
       // automatic ELBOW, ELBOWH, ELBOWV
       this.calcAutoElbow();
     }
@@ -587,54 +611,65 @@ export class Link {
       // controlled ELBOW, ELBOWH, ELBOWV
       var wasHorizontal = !this.isAnchorHorizontal(0);
       var horizontalFirst = (Math.abs(this.from.display.x - this.to.display.x) >= Math.abs(this.from.display.y - this.to.display.y));
-      if (type == Link.LINK_TYPES.ELBOW && wasHorizontal != horizontalFirst) {
+      if (type === Link.LINK_TYPES.ELBOW && wasHorizontal !== horizontalFirst) {
         this.calc();
       }
-      else if (step == this.from) {
-        if (xs[1] > step.display.x + step.display.w)
+      else if (step === this.from) {
+        if (xs[1] > step.display.x + step.display.w) {
           xs[0] = step.display.x + step.display.w + Link.GAP;
-        else if (xs[1] < step.display.x)
+        }
+        else if (xs[1] < step.display.x) {
           xs[0] = step.display.x - Link.GAP;
-
-        else
+        }
+        else {
           xs[0] = xs[1];
+        }
 
-        if (ys[1] > step.display.y + step.display.h)
+        if (ys[1] > step.display.y + step.display.h) {
           ys[0] = step.display.y + step.display.h + Link.GAP;
-        else if (ys[1] < step.display.y)
+        }
+        else if (ys[1] < step.display.y) {
           ys[0] = step.display.y - Link.GAP;
-        else
+        }
+        else {
           ys[0] = ys[1];
+        }
 
-        if (wasHorizontal)
+        if (wasHorizontal) {
           ys[1] = ys[0];
-
-        else
+        }
+        else{
           xs[1] = xs[0];
+        }
       }
       else {
         k = n - 1;
-        if (xs[k - 1] > step.display.x + step.display.w)
+        if (xs[k - 1] > step.display.x + step.display.w) {
           xs[k] = step.display.x + step.display.w + Link.GAP;
-        else if (xs[k - 1] < step.display.x)
+        }
+        else if (xs[k - 1] < step.display.x) {
           xs[k] = step.display.x - Link.GAP;
-
-        else
+        }
+        else {
           xs[k] = xs[k - 1];
+        }
 
-        if (ys[k - 1] > step.display.y + step.display.h)
+        if (ys[k - 1] > step.display.y + step.display.h) {
           ys[k] = step.display.y + step.display.h + Link.GAP;
-        else if (ys[k - 1] < step.display.y)
+        }
+        else if (ys[k - 1] < step.display.y) {
           ys[k] = step.display.y - Link.GAP;
-
-        else
+        }
+        else {
           ys[k] = ys[k - 1];
+        }
 
-        if ((wasHorizontal && n % 2 === 0) || (!wasHorizontal && n % 2 !== 0))
+        if ((wasHorizontal && n % 2 === 0) || (!wasHorizontal && n % 2 !== 0)) {
           ys[k - 1] = ys[k];
-
-        else
+        }
+        else {
           xs[k - 1] = xs[k];
+        }
       }
     }
 
@@ -663,7 +698,7 @@ export class Link {
     var n = points ? points : (xs.length < 2 ? 2 : xs.length);
     var i;
 
-    if (type == Link.LINK_TYPES.STRAIGHT) {
+    if (type === Link.LINK_TYPES.STRAIGHT) {
       xs = this.display.xs = [];
       ys = this.display.ys = [];
       for (i = 0; i < n; i++) {
@@ -706,7 +741,7 @@ export class Link {
         }
       }
     }
-    else if (n == 2) {
+    else if (n === 2) {
       // auto ELBOW, ELBOWH, ELBOWV
       xs = this.display.xs = [0, 0];
       ys = this.display.ys = [0, 0];
@@ -714,7 +749,7 @@ export class Link {
     }
     else {
       // ELBOW, ELBOWH, ELBOWV with middle control points
-      var horizontalFirst = type == Link.LINK_TYPES.ELBOWH || (type == Link.LINK_TYPES.ELBOW && Math.abs(x1 - x2) >= Math.abs(y1 - y2));
+      var horizontalFirst = type === Link.LINK_TYPES.ELBOWH || (type === Link.LINK_TYPES.ELBOW && Math.abs(x1 - x2) >= Math.abs(y1 - y2));
       var evenN = n % 2 === 0;
       var horizontalLast = (horizontalFirst && evenN) || (!horizontalFirst && !evenN);
       xs = this.display.xs = [];
@@ -771,10 +806,10 @@ export class Link {
   isAnchorHorizontal(anchor) {
     var p = anchor - 1;
     var n = anchor + 1;
-    if (p >= 0 && this.display.xs[p] != this.display.xs[anchor] && this.display.ys[p] == this.display.ys[anchor]) {
+    if (p >= 0 && this.display.xs[p] !== this.display.xs[anchor] && this.display.ys[p] === this.display.ys[anchor]) {
       return true;
     }
-    else if (n < this.display.xs.length && this.display.xs[n] == this.display.xs[anchor] && this.display.ys[n] != this.display.ys[anchor]) {
+    else if (n < this.display.xs.length && this.display.xs[n] === this.display.xs[anchor] && this.display.ys[n] !== this.display.ys[anchor]) {
       return true;
     }
     else {
@@ -793,18 +828,18 @@ export class Link {
 
     var n = xs.length;
 
-    if (type == Link.LINK_TYPES.STRAIGHT) {
+    if (type === Link.LINK_TYPES.STRAIGHT) {
       this.display.lx = (xs[0] + xs[n - 1]) / 2;
       this.display.ly = (ys[0] + ys[n - 1]) / 2;
     }
-    else if (n == 2) {
+    else if (n === 2) {
       // auto ELBOW, ELBOWH, ELBOWV
       this.display.lx = (xs[0] + xs[n - 1]) / 2;
       this.display.ly = (ys[0] + ys[n - 1]) / 2;
     }
     else {
       // ELBOW, ELBOWH, ELBOWV with middle control points
-      var horizontalFirst = ys[0] == ys[1];
+      var horizontalFirst = ys[0] === ys[1];
       if (n <= 3) {
         if (horizontalFirst) {
           this.display.lx = (x1 + x2) / 2 - 40;
@@ -857,8 +892,8 @@ export class Link {
         xs[1] = this.to.display.x + this.to.display.w + Link.GAP;
       }
     }
-    else if ((type == Link.LINK_TYPES.ELBOW && Math.abs(this.to.display.x - this.from.display.x) < Math.abs(this.to.display.y - this.from.display.y) * Link.ELBOW_THRESHOLD) ||
-      (type == Link.LINK_TYPES.ELBOWV && Math.abs(this.to.display.y - this.from.display.y) > Link.ELBOW_VH_THRESHOLD)) {
+    else if ((type === Link.LINK_TYPES.ELBOW && Math.abs(this.to.display.x - this.from.display.x) < Math.abs(this.to.display.y - this.from.display.y) * Link.ELBOW_THRESHOLD) ||
+      (type === Link.LINK_TYPES.ELBOWV && Math.abs(this.to.display.y - this.from.display.y) > Link.ELBOW_VH_THRESHOLD)) {
       // VHV
       xs[0] = this.from.display.x + this.from.display.w / 2;
       xs[1] = this.to.display.x + this.to.display.w / 2;
@@ -871,8 +906,8 @@ export class Link {
         ys[1] = this.to.display.y + this.to.display.h + Link.GAP;
       }
     }
-    else if ((type == Link.LINK_TYPES.ELBOW && Math.abs(this.to.display.y - this.from.display.y) < Math.abs(this.to.display.x - this.from.display.x) * Link.ELBOW_THRESHOLD) ||
-      (type == Link.LINK_TYPES.ELBOWH && Math.abs(this.to.display.x - this.from.display.x) > Link.ELBOW_VH_THRESHOLD)) {
+    else if ((type === Link.LINK_TYPES.ELBOW && Math.abs(this.to.display.y - this.from.display.y) < Math.abs(this.to.display.x - this.from.display.x) * Link.ELBOW_THRESHOLD) ||
+      (type === Link.LINK_TYPES.ELBOWH && Math.abs(this.to.display.x - this.from.display.x) > Link.ELBOW_VH_THRESHOLD)) {
       // HVH
       ys[0] = this.from.display.y + this.from.display.h / 2;
       ys[1] = this.to.display.y + this.to.display.h / 2;
@@ -885,35 +920,39 @@ export class Link {
         xs[1] = this.to.display.x + this.to.display.w + Link.GAP;
       }
     }
-    else if (type == Link.LINK_TYPES.ELBOWV) {
+    else if (type === Link.LINK_TYPES.ELBOWV) {
       // VH
-      if (this.to.display.y > this.from.display.y)
+      if (this.to.display.y > this.from.display.y) {
         ys[0] = this.from.display.y + this.from.display.h + Link.GAP;
-
-      else
+      }
+      else {
         ys[0] = this.from.display.y - Link.GAP;
+      }
       xs[0] = this.from.display.x + this.from.display.w / 2;
       ys[1] = this.to.display.y + this.to.display.h / 2;
-      if (this.to.display.x > this.from.display.x)
+      if (this.to.display.x > this.from.display.x) {
         xs[1] = this.to.display.x - Link.GAP;
-
-      else
+      }
+      else {
         xs[1] = this.to.display.x + this.to.display.w + Link.GAP;
+      }
     }
     else {
       // HV
-      if (this.to.display.x > this.from.display.x)
+      if (this.to.display.x > this.from.display.x) {
         xs[0] = this.from.display.x + this.from.display.w + Link.GAP;
-
-      else
+      }
+      else {
         xs[0] = this.from.display.x - Link.GAP;
+      }
       ys[0] = this.from.display.y + this.from.display.h / 2;
       xs[1] = this.to.display.x + this.to.display.w / 2;
-      if (this.to.display.y > this.from.display.y)
+      if (this.to.display.y > this.from.display.y) {
         ys[1] = this.to.display.y - Link.GAP;
-
-      else
+      }
+      else {
         ys[1] = this.to.display.y + this.to.display.h + Link.GAP;
+      }
     }
   }
 
@@ -922,17 +961,19 @@ export class Link {
    */
   getSlope(x1, y1, x2, y2) {
     var slope;
-    if (x1 == x2)
+    if (x1 === x2) {
       slope = (y1 < y2) ? Math.PI / 2 : -Math.PI / 2;
-
-    else
+    }
+    else {
       slope = Math.atan((y2 - y1) / (x2 - x1));
+    }
     if (x1 > x2) {
-      if (slope > 0)
+      if (slope > 0) {
         slope -= Math.PI;
-
-      else
+      }
+      else {
         slope += Math.PI;
+      }
     }
     return slope;
   }
@@ -949,8 +990,9 @@ export class Link {
       var y = this.display.ys[i];
       context.fillRect(x - this.diagram.options.ANCHOR_W, y - this.diagram.options.ANCHOR_W, this.diagram.options.ANCHOR_W * 2, this.diagram.options.ANCHOR_W * 2);
     }
-    if (this.label)
+    if (this.label) {
       this.label.select();
+    }
     context.fillStyle = this.diagram.options.DEFAULT_COLOR;
   }
 
@@ -962,8 +1004,9 @@ export class Link {
     for (var i = 0; i < this.display.xs.length; i++) {
       var cx = this.display.xs[i];
       var cy = this.display.ys[i];
-      if (Math.abs(cx - x) <= this.diagram.options.ANCHOR_HIT_W && Math.abs(cy - y) <= this.diagram.options.ANCHOR_HIT_W)
+      if (Math.abs(cx - x) <= this.diagram.options.ANCHOR_HIT_W && Math.abs(cy - y) <= this.diagram.options.ANCHOR_HIT_W) {
         return i;
+      }
     }
     return -1;
   }
@@ -998,7 +1041,7 @@ export class Link {
       ys: []
     };
     for (var i = 0; i < this.display.xs.length; i++) {
-      if (i == anchor) {
+      if (i === anchor) {
         display.xs.push(this.display.xs[i] + deltaX);
         display.ys.push(this.display.ys[i] + deltaY);
       }
@@ -1008,18 +1051,22 @@ export class Link {
       }
     }
 
-    if (display.type.startsWith('Elbow') && display.xs.length != 2) {
+    if (display.type.startsWith('Elbow') && display.xs.length !== 2) {
       if (this.isAnchorHorizontal(anchor)) {
-        if (anchor > 0)
+        if (anchor > 0) {
           display.ys[anchor - 1] = this.display.ys[anchor] + deltaY;
-        if (anchor < display.xs.length - 1)
+        }
+        if (anchor < display.xs.length - 1) {
           display.xs[anchor + 1] = this.display.xs[anchor] + deltaX;
+        }
       }
       else {
-        if (anchor > 0)
+        if (anchor > 0) {
           display.xs[anchor - 1] = this.display.xs[anchor] + deltaX;
-        if (anchor < display.xs.length - 1)
+        }
+        if (anchor < display.xs.length - 1) {
           display.ys[anchor + 1] = this.display.ys[anchor] + deltaY;
+        }
       }
     }
 
@@ -1031,9 +1078,10 @@ export class Link {
     var newTransitions = [];
     for (let i = 0; i < this.from.activity.transitions.length; i++) {
       var fromTrans = this.from.activity.transitions[i];
-      if (this.transition.id == fromTrans.id) {
-        if (!fromStep.activity.transitions)
+      if (this.transition.id === fromTrans.id) {
+        if (!fromStep.activity.transitions) {
           fromStep.activity.transitions = [];
+        }
         fromStep.activity.transitions.push(fromTrans);
       }
       else {
@@ -1047,7 +1095,7 @@ export class Link {
   setTo(toStep) {
     for (let i = 0; i < this.from.activity.transitions.length; i++) {
       var fromTrans = this.from.activity.transitions[i];
-      if (this.transition.id == fromTrans.id) {
+      if (this.transition.id === fromTrans.id) {
         fromTrans.to = toStep.activity.id;
         break;
       }
@@ -1068,8 +1116,9 @@ export class Link {
   static create(diagram, idNum, from, to) {
     var transition = Link.newTransition(idNum, to.activity.id);
     var link = new Link(diagram, transition, from, to);
-    if (!from.activity.transitions)
+    if (!from.activity.transitions) {
       from.activity.transitions = [];
+    }
     from.activity.transitions.push(transition);
     link.display = { type: Link.LINK_TYPES.ELBOW, lx: 0, ly: 0, xs: [0, 0], ys: [0, 0] };
     link.calc();

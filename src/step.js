@@ -24,8 +24,9 @@ export class Step extends Shape {
   draw(animationTimeSlice) {
     var activity = this.workflowObj = this.activity;
     var shape;
-    if (this.implementor.icon && this.implementor.icon.startsWith('shape:'))
+    if (this.implementor.icon && this.implementor.icon.startsWith('shape:')) {
       shape = this.implementor.icon.substring(6);
+    }
 
     var title, fill;
     var milestoneGroups = sessionStorage.getItem('mdw-milestoneGroups');
@@ -49,11 +50,13 @@ export class Step extends Shape {
     // runtime state first
     if (this.instances) {
       var adj = 0;
-      if (shape == 'start' || shape == 'stop' || shape == 'pause')
+      if (shape === 'start' || shape === 'stop' || shape === 'pause') {
         adj = 2;
+      }
       var color = null;
-      if (shape == 'pause')
+      if (shape === 'pause') {
         color = '#ffea00';
+      }
       this.diagram.drawState(this.display, this.instances, !this.diagram.drawBoxes, adj, animationTimeSlice, color, fill);
       fill = null; // otherwise runtime info lost below
     }
@@ -64,32 +67,33 @@ export class Step extends Shape {
     var yAdjust = -2;
     if (this.implementor.icon) {
       if (shape) {
-        if ('start' == shape) {
+        if ('start' === shape) {
           this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, '#98fb98', 0.8);
         }
-        else if ('stop' == shape) {
+        else if ('stop' === shape) {
           this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, '#ff8c86', 0.8);
         }
-        else if ('pause' == shape) {
+        else if ('pause' === shape) {
           this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, '#fffd87', 0.8);
         }
-        else if ('decision' == shape) {
+        else if ('decision' === shape) {
           this.diagram.drawDiamond(this.display.x, this.display.y, this.display.w, this.display.h);
-          yAdjust = this.title.lines.length == 1 ? -2 : -8;
+          yAdjust = this.title.lines.length === 1 ? -2 : -8;
         }
-        else if ('activity' == shape) {
+        else if ('activity' === shape) {
           this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.BOX_OUTLINE_COLOR, fill);
           yAdjust = -8;
         }
       }
       else {
-        if (this.diagram.drawBoxes)
+        if (this.diagram.drawBoxes) {
           this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.BOX_OUTLINE_COLOR, fill);
+        }
         var iconSrc = 'asset/' + this.implementor.icon;
         var iconX = this.display.x + this.display.w / 2 - 12;
         var iconY = this.display.y + 5;
         this.diagram.drawImage(iconSrc, iconX, iconY);
-        yAdjust = this.title.lines.length == 1 ? 10 : 4;
+        yAdjust = this.title.lines.length === 1 ? 10 : 4;
       }
     }
     else {
@@ -106,8 +110,9 @@ export class Step extends Shape {
     // logical id
     this.diagram.context.fillStyle = this.diagram.options.META_COLOR;
     var showText = activity.id;
-    if (this.data && this.data.message)
+    if (this.data && this.data.message) {
       showText += ' (' + this.data.message + ')';
+    }
     this.diagram.context.fillText(showText, this.display.x + 2, this.display.y - 2);
     this.diagram.context.fillStyle = this.diagram.options.DEFAULT_COLOR;
   }
@@ -131,8 +136,9 @@ export class Step extends Shape {
               if (bracket >= 0) {
                 var g = mon[3].substring(bracket + 1);
                 bracket = g.indexOf(']');
-                if (bracket > 0)
+                if (bracket > 0) {
                   g = g.substring(0, bracket);
+                }
                 milestone.group = g.trim();
               }
             }
@@ -146,7 +152,7 @@ export class Step extends Shape {
   isWaiting() {
     if (this.instances && this.instances.length > 0) {
       let instance = this.instances[this.instances.length - 1];
-      return instance.statusCode == 7;
+      return instance.statusCode === 7;
     }
   }
 
@@ -160,10 +166,12 @@ export class Step extends Shape {
     var maxDisplay = { w: 0, h: 0 };
     var display = this.getDisplay();
 
-    if (display.x + display.w > maxDisplay.w)
+    if (display.x + display.w > maxDisplay.w) {
       maxDisplay.w = display.x + display.w;
-    if (display.y + display.h > maxDisplay.h)
+    }
+    if (display.y + display.h > maxDisplay.h) {
       maxDisplay.h = display.y + display.h;
+    }
 
     // step title
     var titleLines = [];
@@ -174,15 +182,18 @@ export class Step extends Shape {
     for (var i = 0; i < title.lines.length; i++) {
       var line = title.lines[i];
       var textMetrics = this.diagram.context.measureText(line.text);
-      if (textMetrics.width > title.w)
+      if (textMetrics.width > title.w) {
         title.w = textMetrics.width;
+      }
       title.h += this.diagram.options.DEFAULT_FONT.SIZE;
       line.x = display.x + display.w / 2 - textMetrics.width / 2;
       line.y = display.y + display.h / 2 + this.diagram.options.DEFAULT_FONT.SIZE * (i + 0.5);
-      if (line.x + textMetrics.width > maxDisplay.w)
+      if (line.x + textMetrics.width > maxDisplay.w) {
         maxDisplay.w = line.x + textMetrics.width;
-      if (line.y + this.diagram.options.DEFAULT_FONT.SIZE > maxDisplay.h)
+      }
+      if (line.y + this.diagram.options.DEFAULT_FONT.SIZE > maxDisplay.h) {
         maxDisplay.h = line.y + this.diagram.options.DEFAULT_FONT.SIZE;
+      }
     }
 
     this.display = display;
@@ -195,14 +206,18 @@ export class Step extends Shape {
     var x = this.display.x + deltaX;
     var y = this.display.y + deltaY;
     if (limDisplay) {
-      if (x < limDisplay.x)
+      if (x < limDisplay.x) {
         x = limDisplay.x;
-      else if (x > limDisplay.x + limDisplay.w - this.display.w)
+      }
+      else if (x > limDisplay.x + limDisplay.w - this.display.w) {
         x = limDisplay.x + limDisplay.w - this.display.w;
-      if (y < limDisplay.y)
+      }
+      if (y < limDisplay.y) {
         y = limDisplay.y;
-      else if (y > limDisplay.y + limDisplay.h - this.display.h)
+      }
+      else if (y > limDisplay.y + limDisplay.h - this.display.h) {
         y = limDisplay.y + limDisplay.h - this.display.h;
+      }
     }
     this.setDisplayAttr(x, y, this.display.w, this.display.h);
   }
@@ -240,15 +255,18 @@ export class Step extends Shape {
       }
     }
     var name = implementor.label;
-    if (implementor.implementorClass == Step.START_IMPL)
+    if (implementor.implementorClass === Step.START_IMPL) {
       name = 'Start';
-    else if (implementor.implementorClass == Step.STOP_IMPL)
+    }
+    else if (implementor.implementorClass === Step.STOP_IMPL) {
       name = 'Stop';
-    else if (implementor.implementorClass == Step.PAUSE_IMPL)
+    }
+    else if (implementor.implementorClass === Step.PAUSE_IMPL) {
       name = 'Pause';
-
-    else
+    }
+    else {
       name = 'New ' + name;
+    }
     var activity = {
       id: 'A' + idNum,
       name: name,

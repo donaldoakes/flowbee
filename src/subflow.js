@@ -1,4 +1,6 @@
 import { Shape } from './shape';
+import { Step } from './step';
+import { Link } from './link';
 
 export class Subflow extends Shape {
 
@@ -80,17 +82,21 @@ export class Subflow extends Shape {
     var textMetrics = this.diagram.context.measureText(title.text);
     title.w = textMetrics.width;
     title.h = this.diagram.options.DEFAULT_FONT.SIZE;
-    if (title.x + title.w > maxDisplay.w)
+    if (title.x + title.w > maxDisplay.w) {
       maxDisplay.w = title.x + title.w;
-    if (title.y + title.h > maxDisplay.h)
+    }
+    if (title.y + title.h > maxDisplay.h) {
       maxDisplay.h = title.y + title.h;
+    }
     this.title = title;
 
     // boundaries
-    if (this.display.x + this.display.w > maxDisplay.w)
+    if (this.display.x + this.display.w > maxDisplay.w) {
       maxDisplay.w = this.display.x + this.display.w;
-    if (this.display.y + this.display.h > maxDisplay.h)
+    }
+    if (this.display.y + this.display.h > maxDisplay.h) {
       maxDisplay.h = this.display.y + this.display.h;
+    }
 
     var subflow = this;
     // just prepare activities -- assume boundaries account for size
@@ -118,30 +124,34 @@ export class Subflow extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].activity.implementor == Step.START_IMPL)
+      if (this.steps[i].activity.implementor === Step.START_IMPL) {
         return this.steps[i];
+      }
     }
   }
 
   getStep(activityId) {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].activity.id == activityId)
+      if (this.steps[i].activity.id === activityId) {
         return this.steps[i];
+      }
     }
   }
 
   getLink(transitionId) {
     for (var i = 0; i < this.links.length; i++) {
-      if (this.links[i].transition.id == transitionId)
+      if (this.links[i].transition.id === transitionId) {
         return this.links[i];
+      }
     }
   }
 
   getOutLinks(step) {
     var links = [];
     for (let i = 0; i < this.links.length; i++) {
-      if (step.activity.id == this.links[i].from.activity.id)
+      if (step.activity.id === this.links[i].from.activity.id) {
         links.push(this.links[i]);
+      }
     }
     return links;
   }
@@ -149,17 +159,20 @@ export class Subflow extends Shape {
   getLinks(step) {
     var links = [];
     for (var i = 0; i < this.links.length; i++) {
-      if (step == this.links[i].to || step == this.links[i].from)
+      if (step === this.links[i].to || step === this.links[i].from) {
         links.push(this.links[i]);
+      }
     }
     return links;
   }
 
   get(id) {
-    if (id.startsWith('A'))
+    if (id.startsWith('A')) {
       return this.getStep(id);
-    else if (id.startsWith('T'))
+    }
+    else if (id.startsWith('T')) {
       return this.getLink(id);
+    }
   }
 
   deleteStep(step) {
@@ -215,7 +228,7 @@ export class Subflow extends Shape {
         if (inst.activities) {
           var procInstId = mainProcessInstanceId;
           inst.activities.forEach(function (actInst) {
-            if ('A' + actInst.activityId == id) {
+            if ('A' + actInst.activityId === id) {
               actInsts.push(actInst);
               // needed for subprocess & task instance retrieval
               actInst.processInstanceId = procInstId;
@@ -237,8 +250,9 @@ export class Subflow extends Shape {
       this.instances.forEach(function (inst) {
         if (inst.transitions) {
           inst.transitions.forEach(function (transInst) {
-            if ('T' + transInst.transitionId == id)
+            if ('T' + transInst.transitionId === id) {
               transInsts.push(transInst);
+            }
           });
         }
       });
@@ -286,7 +300,7 @@ export class Subflow extends Shape {
     activityId++;
 
     var task;
-    if (type == 'Exception Handler') {
+    if (type === 'Exception Handler') {
       activityX = x + 170;
       activityY = y + 30;
       task = Step.create(diagram, activityId, diagram.getImplementor(Step.TASK_IMPL), activityX, activityY);
