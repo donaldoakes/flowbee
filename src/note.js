@@ -2,12 +2,6 @@ import { Shape } from './shape';
 
 export class Note extends Shape {
 
-  static BOX_FILL_COLOR = '#ffc';
-  static BOX_OUTLINE_COLOR = 'gray';
-  static BOX_ROUNDING_RADIUS = 2;
-  static FONT_SIZE= 13;
-  static FONT= '13px monospace';
-
   constructor(diagram, textNote) {
     super(diagram.canvas.getContext("2d"), diagram.options, textNote);
     this.diagram = diagram;
@@ -17,12 +11,21 @@ export class Note extends Shape {
   }
 
   draw() {
-    this.diagram.rect(this.display.x, this.display.y, this.display.w, this.display.h, Note.BOX_OUTLINE_COLOR, Note.BOX_FILL_COLOR, Note.BOX_ROUNDING_RADIUS);
+    this.diagram.rect(
+      this.display.x,
+      this.display.y,
+      this.display.w,
+      this.display.h,
+      this.diagram.options.note.outlineColor,
+      this.diagram.options.note.fillColor,
+      this.diagram.options.note.roundingRadius
+    );
+
     if (this.textNote.content) {
       var lines = this.textNote.content.replace(/\r/g, '').split(/\n/);
-      this.diagram.context.font = Note.FONT;
+      this.diagram.context.font = this.diagram.options.note.font.name;
       for (var i = 0; i < lines.length; i++) {
-        this.diagram.context.fillText(lines[i], this.display.x + 4, this.display.y + 2 + Note.FONT_SIZE * (i + 1));
+        this.diagram.context.fillText(lines[i], this.display.x + 4, this.display.y + 2 + this.diagram.options.note.font.size * (i + 1));
       }
     }
   }
@@ -50,7 +53,7 @@ export class Note extends Shape {
   }
 
   resize(x, y, deltaX, deltaY) {
-    var display = this.resizeDisplay(x, y, deltaX, deltaY, Shape.MIN_SIZE);
+    var display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.note.minSize);
     this.setDisplayAttr(display.x, display.y, display.w, display.h);
   }
 

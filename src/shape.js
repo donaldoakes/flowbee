@@ -3,8 +3,6 @@
  */
 export class Shape {
 
-  static MIN_SIZE = 4;
-
   constructor(context, options, workflowItem) {
     this.context = context;
     this.options = options;
@@ -58,26 +56,26 @@ export class Shape {
 
   select() {
     var display = this.display;
-    this.context.fillStyle = this.options.ANCHOR_COLOR;
-    var s = this.options.ANCHOR_W;
+    this.context.fillStyle = this.options.anchor.color;
+    var s = this.options.anchor.width;
     this.context.fillRect(display.x - s, display.y - s, s * 2, s * 2);
     this.context.fillRect(display.x + display.w - s, display.y - s, s * 2, s * 2);
     this.context.fillRect(display.x + display.w - 2, display.y + display.h - s, s * 2, s * 2);
     this.context.fillRect(display.x - 2, display.y + display.h - s, s * 2, s * 2);
-    this.context.fillStyle = this.options.DEFAULT_COLOR;
+    this.context.fillStyle = this.options.defaultColor;
   }
 
   getAnchor(x, y) {
-    if (Math.abs(this.display.x - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y - y) <= this.options.ANCHOR_HIT_W) {
+    if (Math.abs(this.display.x - x) <= this.options.anchor.hitWidth && Math.abs(this.display.y - y) <= this.options.anchor.hitWidth) {
       return 0;
     }
-    else if (Math.abs(this.display.x + this.display.w - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y - y) <= this.options.ANCHOR_HIT_W) {
+    else if (Math.abs(this.display.x + this.display.w - x) <= this.options.anchor.hitWidth && Math.abs(this.display.y - y) <= this.options.anchor.hitWidth) {
       return 1;
     }
-    else if (Math.abs(this.display.x + this.display.w - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y + this.display.h - y) <= this.options.ANCHOR_HIT_W) {
+    else if (Math.abs(this.display.x + this.display.w - x) <= this.options.anchor.hitWidth && Math.abs(this.display.y + this.display.h - y) <= this.options.anchor.hitWidth) {
       return 2;
     }
-    else if (Math.abs(this.display.x - x) <= this.options.ANCHOR_HIT_W && Math.abs(this.display.y + this.display.h - y) <= this.options.ANCHOR_HIT_W) {
+    else if (Math.abs(this.display.x - x) <= this.options.anchor.hitWidth && Math.abs(this.display.y + this.display.h - y) <= this.options.anchor.hitWidth) {
       return 3;
     }
     else {

@@ -7,8 +7,6 @@ export class Link {
   static UNTRAVERSED = '#9e9e9e';
   static GAP = 4;
   static CR = 8;
-  static LINK_WIDTH = 3;
-  static LINK_HIT_WIDTH = 8;
   static CORR = 3; // offset for link start points
   static LABEL_CORR = 3;
 
@@ -72,8 +70,8 @@ export class Link {
       }
     }
 
-    this.diagram.context.strokeStyle = this.diagram.options.DEFAULT_COLOR;
-    this.diagram.context.fillStyle = this.diagram.options.DEFAULT_COLOR;
+    this.diagram.context.strokeStyle = this.diagram.options.defaultColor;
+    this.diagram.context.fillStyle = this.diagram.options.defaultColor;
   }
 
   /**
@@ -87,7 +85,7 @@ export class Link {
     var labelText = this.transition.event === 'FINISH' ? '' : this.transition.event + ':';
     labelText += this.transition.resultCode ? this.transition.resultCode : '';
     if (labelText.length > 0) {
-      this.label = new Label(this, labelText, { x: this.display.lx, y: this.display.ly + Link.LABEL_CORR }, this.diagram.options.DEFAULT_FONT);
+      this.label = new Label(this, labelText, { x: this.display.lx, y: this.display.ly + Link.LABEL_CORR }, this.diagram.options.defaultFont);
       this.label.prepareDisplay();
     }
 
@@ -194,11 +192,11 @@ export class Link {
     context.fillStyle = color;
 
     if (hitX) {
-      context.lineWidth = Link.LINK_HIT_WIDTH;
-      context.strokeStyle = this.diagram.options.TRANSPARENT;
+      context.lineWidth = this.options.diagram.link.hitWidth;
+      context.strokeStyle = 'rgba(0, 0, 0, 0)'; // transparent
     }
     else {
-      context.lineWidth = Link.LINK_WIDTH;
+      context.lineWidth = this.diagram.options.link.lineWidth;
     }
 
     if (!type || type.startsWith('Elbow')) {
@@ -248,9 +246,9 @@ export class Link {
         segments[xs.length - 2].lineEnd = function (context) {
           context.strokeStyle = linkThis.getColor();
           linkThis.drawConnectorArrow.call(linkThis, context);
-          context.strokeStyle = this.diagram.options.DEFAULT_COLOR;
+          context.strokeStyle = linkThis.diagram.options.defaultColor;
         };
-        this.diagram.animateLine(segments, this.getColor(), Link.LINK_WIDTH, animationTimeSlice);
+        this.diagram.animateLine(segments, this.getColor(), linkThis.diagram.options.link.lineWidth, animationTimeSlice);
       }
       else {
         if (hitX) {
@@ -265,7 +263,7 @@ export class Link {
           });
         }
         else {
-          this.diagram.drawLine(segments, this.getColor(), Link.LINK_WIDTH);
+          this.diagram.drawLine(segments, this.getColor(), this.diagram.options.link.lineWidth);
         }
       }
     }
@@ -274,9 +272,9 @@ export class Link {
       hit = this.drawConnectorArrow(context, hitX, hitY);
     }
 
-    context.lineWidth = this.diagram.options.DEFAULT_LINE_WIDTH;
-    context.strokeStyle = this.diagram.options.DEFAULT_COLOR;
-    context.fillStyle = this.diagram.options.DEFAULT_COLOR;
+    context.lineWidth = this.diagram.options.defaultLineWidth;
+    context.strokeStyle = this.diagram.options.defaultColor;
+    context.fillStyle = this.diagram.options.defaultColor;
 
     return hit;
   }
@@ -289,12 +287,13 @@ export class Link {
     var ycorr = ys[0] < ys[1] ? Link.CORR : -Link.CORR;
     var drawArrow = null;
     var segments = [];
+    var options = this.diagram.options;
     if (animationTimeSlice) {
       var linkThis = this;
       drawArrow = function (context) {
         context.strokeStyle = linkThis.getColor();
         linkThis.drawConnectorArrow.call(linkThis, context);
-        context.strokeStyle = this.diagram.options.DEFAULT_COLOR;
+        context.strokeStyle = options.defaultColor;
       };
     }
     context.beginPath();
@@ -306,7 +305,7 @@ export class Link {
             to: { x: xs[1], y: ys[1] },
             lineEnd: drawArrow
           });
-          this.diagram.animateLine(segments, this.getColor(), Link.LINK_WIDTH, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0] - xcorr, ys[0]);
@@ -320,7 +319,7 @@ export class Link {
             to: { x: xs[1], y: ys[1] },
             lineEnd: drawArrow
           });
-          this.diagram.animateLine(segments, this.getColor(), Link.LINK_WIDTH, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0], ys[0] - ycorr);
@@ -343,7 +342,7 @@ export class Link {
           from = curveTo;
           to = { x: xs[1], y: ys[1] };
           segments.push({ from: from, to: to, lineEnd: drawArrow });
-          this.diagram.animateLine(segments, this.getColor(), Link.LINK_WIDTH, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0] - xcorr, ys[0]);
@@ -370,7 +369,7 @@ export class Link {
           from = curveTo;
           to = { x: xs[1], y: ys[1] };
           segments.push({ from: from, to: to, lineEnd: drawArrow });
-          this.diagram.animateLine(segments, this.getColor(), Link.LINK_WIDTH, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0], ys[0] - ycorr);
@@ -391,7 +390,7 @@ export class Link {
           from = curveTo;
           to = { x: xs[1], y: ys[1] };
           segments.push({ from: from, to: to, lineEnd: drawArrow });
-          this.diagram.animateLine(segments, this.getColor(), Link.LINK_WIDTH, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0] - xcorr, ys[0]);
@@ -410,7 +409,7 @@ export class Link {
           from = curveTo;
           to = { x: xs[1], y: ys[1] };
           segments.push({ from: from, to: to, lineEnd: drawArrow });
-          this.diagram.animateLine(segments, this.getColor(), Link.LINK_WIDTH, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0], ys[0] - ycorr);
@@ -984,16 +983,21 @@ export class Link {
 
   select() {
     var context = this.diagram.context;
-    context.fillStyle = this.diagram.options.ANCHOR_COLOR;
+    context.fillStyle = this.diagram.options.anchor.color;
     for (var i = 0; i < this.display.xs.length; i++) {
       var x = this.display.xs[i];
       var y = this.display.ys[i];
-      context.fillRect(x - this.diagram.options.ANCHOR_W, y - this.diagram.options.ANCHOR_W, this.diagram.options.ANCHOR_W * 2, this.diagram.options.ANCHOR_W * 2);
+      context.fillRect(
+        x - this.diagram.options.anchor.width,
+        y - this.diagram.options.anchor.width,
+        this.diagram.options.anchor.width * 2,
+        this.diagram.options.anchor.width * 2
+      );
     }
     if (this.label) {
       this.label.select();
     }
-    context.fillStyle = this.diagram.options.DEFAULT_COLOR;
+    context.fillStyle = this.diagram.options.defaultColor;
   }
 
   isHover(x, y) {
@@ -1004,7 +1008,7 @@ export class Link {
     for (var i = 0; i < this.display.xs.length; i++) {
       var cx = this.display.xs[i];
       var cy = this.display.ys[i];
-      if (Math.abs(cx - x) <= this.diagram.options.ANCHOR_HIT_W && Math.abs(cy - y) <= this.diagram.options.ANCHOR_HIT_W) {
+      if (Math.abs(cx - x) <= this.diagram.options.anchor.hitWidth && Math.abs(cy - y) <= this.diagram.options.anchor.hitWidth) {
         return i;
       }
     }

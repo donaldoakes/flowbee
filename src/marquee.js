@@ -2,9 +2,6 @@ import { Shape } from './shape';
 
 export class Marquee extends Shape {
 
-  static BOX_OUTLINE_COLOR = 'cyan';
-  static BOX_ROUNDING_RADIUS = 2;
-
   constructor(diagram) {
     super(diagram.canvas.getContext("2d"), diagram.options);
     this.diagram = diagram;
@@ -13,7 +10,15 @@ export class Marquee extends Shape {
   }
 
   draw() {
-    this.diagram.rect(this.display.x, this.display.y, this.display.w, this.display.h, Marquee.BOX_OUTLINE_COLOR, null, Marquee.BOX_ROUNDING_RADIUS);
+    this.diagram.rect(
+      this.display.x,
+      this.display.y,
+      this.display.w,
+      this.display.h,
+      this.diagram.options.marquee.outlineColor,
+      null,
+      this.diagram.options.marquee.roundingRadius
+    );
   }
 
   prepareDisplay() {

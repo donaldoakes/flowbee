@@ -313,7 +313,7 @@ export class Diagram extends Shape {
 
     // label
     var label = this.instance && this.instance.template ? this.instance.packageName + '/' + this.instance.processName : this.process.name;
-    var font = this.instance && this.instance.template ? this.options.TEMPLATE_FONT : this.options.TITLE_FONT;
+    var font = this.instance && this.instance.template ? this.options.template.font : this.options.title.font;
     diagram.label = new Label(this, label, this.getDisplay(), font);
     if (this.process.instanceId) {
       diagram.label.subtext = this.process.instanceId;
@@ -994,9 +994,9 @@ export class Diagram extends Shape {
       var count = instances.length > Step.MAX_INSTS ? Step.MAX_INSTS : instances.length;
       for (var i = 0; i < count; i++) {
         var instance = instances[i];
-        var rounding = this.options.BOX_ROUNDING_RADIUS;
+        var rounding = this.options.defaultRoundingRadius;
         if (instance.statusCode) {
-          var status = this.options.WORKFLOW_STATUSES[instance.statusCode];
+          var status = this.options.statuses[instance.statusCode];
           instance.status = status.status;
           var statusColor = color ? color : status.color;
           var del = Step.INST_W - Step.OLD_INST_W;
@@ -1070,7 +1070,7 @@ export class Diagram extends Shape {
     if (opacity) {
       this.context.globalAlpha = opacity;
     }
-    var rounding = this.options.BOX_ROUNDING_RADIUS;
+    var rounding = this.options.defaultRoundingRadius;
     var x1, y1, w1, h1;
     this.rect(
       display.x,
@@ -1095,7 +1095,7 @@ export class Diagram extends Shape {
   }
 
   roundedRect(x, y, w, h, border, fill) {
-    this.rect(x, y, w, h, border, fill, this.options.BOX_ROUNDING_RADIUS);
+    this.rect(x, y, w, h, border, fill, this.options.defaultRoundingRadius);
   }
 
   rect(x, y, w, h, border, fill, r) {
@@ -1132,8 +1132,8 @@ export class Diagram extends Shape {
       }
     }
 
-    this.context.fillStyle = this.options.DEFAULT_COLOR;
-    this.context.strokeStyle = this.options.DEFAULT_COLOR;
+    this.context.fillStyle = this.options.defaultColor;
+    this.context.strokeStyle = this.options.defaultColor;
   }
 
   drawOval(x, y, w, h, color, fill) {
@@ -1147,7 +1147,7 @@ export class Diagram extends Shape {
 
     if (color) {
       this.context.strokeStyle = color;
-      this.context.lineWidth = this.options.OVAL_LINE_WIDTH;
+      this.context.lineWidth = this.options.oval.lineWidth;
     }
     this.context.beginPath();
     this.context.moveTo(x, ym);
@@ -1164,10 +1164,10 @@ export class Diagram extends Shape {
     else {
       this.context.stroke();
     }
-    this.context.fillStyle = this.options.DEFAULT_COLOR;
+    this.context.fillStyle = this.options.defaultColor;
     if (color) {
-      this.context.strokeStyle = this.options.DEFAULT_COLOR;
-      this.context.lineWidth = this.options.DEFAULT_LINE_WIDTH;
+      this.context.strokeStyle = this.options.defaultColor;
+      this.context.lineWidth = this.options.defaultLineWidth;
     }
   }
 
@@ -1185,8 +1185,8 @@ export class Diagram extends Shape {
       diagram.context.lineTo(seg.to.x, seg.to.y);
     });
     this.context.stroke();
-    this.context.strokeStyle = this.options.DEFAULT_COLOR;
-    this.context.lineWidth = this.options.DEFAULT_LINE_WIDTH;
+    this.context.strokeStyle = this.options.defaultColor;
+    this.context.lineWidth = this.options.defaultLineWidth;
   }
 
   animateLine(segments, color, width, slice) {
@@ -1224,12 +1224,12 @@ export class Diagram extends Shape {
             segment.lineEnd(context);
             context.lineWidth = width;
             context.strokeStyle = color;
-            context.fillStyle = this.options.DEFAULT_COLOR;
+            context.fillStyle = this.options.defaultColor;
           }
         }
         context.stroke();
-        context.lineWidth = this.options.DEFAULT_LINE_WIDTH;
-        context.strokeStyle = this.options.DEFAULT_COLOR;
+        context.lineWidth = this.options.defaultLineWidth;
+        context.strokeStyle = this.options.defaultColor;
         j++;
       }
       if (i < segments.length) {
@@ -1303,7 +1303,7 @@ export class Diagram extends Shape {
           return;
         }
         var winDelta = 0;
-        var bottomY = canvasTopY + shape.display.y + shape.display.h - vDelta + this.options.HIGHLIGHT_MARGIN * 2;
+        var bottomY = canvasTopY + shape.display.y + shape.display.h - vDelta + this.options.highlight.margin * 2;
         if (document.documentElement.clientHeight < bottomY) {
           winDelta = bottomY - document.documentElement.clientHeight;
         }
@@ -1439,7 +1439,7 @@ export class Diagram extends Shape {
       var deltaX = x - this.dragX;
       var deltaY = y - this.dragY;
 
-      if (Math.abs(deltaX) > this.options.MIN_DRAG || Math.abs(deltaY) > this.options.MIN_DRAG) {
+      if (Math.abs(deltaX) > this.options.minDrag || Math.abs(deltaY) > this.options.minDrag) {
 
         if (x > rect.right - Diagram.BOUNDARY_DIM) {
           this.canvas.width = this.canvas.width + Diagram.BOUNDARY_DIM;
@@ -1461,7 +1461,7 @@ export class Diagram extends Shape {
               this.drawLine([{
                 from: { x: this.dragX, y: this.dragY },
                 to: { x: x, y: y }
-              }], this.options.LINE_COLOR);
+              }], this.options.link.drawColor);
               return true;
             }
           }

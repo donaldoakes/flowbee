@@ -2,44 +2,81 @@ import * as jsYaml from 'js-yaml';
 import { Diagram } from './diagram';
 
 const DEFAULT_OPTIONS = {
-  DEFAULT_FONT: {
-    FONT: '12px sans-serif',
-    SIZE: 12,
+  websocketUrl: null,
+  defaultFont: {
+    name: '12px sans-serif',
+    size: 12,
   },
-  TITLE_FONT: {
-    FONT: 'bold 18px sans-serif',
-    SIZE: 18
+  defaultLineWidth: 1,
+  defaultColor: 'black',
+  metaColor: 'gray',
+  defaultRoundingRadius: 12,
+  minDrag: 3,
+  title: {
+    font: {
+      name: 'bold 18px sans-serif',
+      size: 18
+    }
   },
-  TEMPLATE_FONT: {
-    FONT: 'bold italic 18px sans-serif',
-    SIZE: 18
+  template: {
+    font: {
+      name: 'bold italic 18px sans-serif',
+      size: 18
+    }
   },
-  DEFAULT_LINE_WIDTH: 1,
-  DEFAULT_COLOR: 'black',
-  HYPERLINK_COLOR: '#1565c0',
-  LINE_COLOR: 'green',
-  META_COLOR: 'gray',
-  BOX_OUTLINE_COLOR: 'black',
-  TRANSPARENT: 'rgba(0, 0, 0, 0)',
-  BOX_ROUNDING_RADIUS: 12,
-  ANCHOR_W: 3,
-  ANCHOR_COLOR: '#ec407a',
-  ANCHOR_HIT_W: 8,
-  MIN_DRAG: 3,
-  OVAL_LINE_WIDTH: 3,
-  HIGHLIGHT_MARGIN: 10,
-  HIGHLIGHT_COLOR: '#03a9f4',
-  WORKFLOW_STATUSES: [
+  step: {
+    outlineColor: 'black',
+    minSize: 4
+  },
+  link: {
+    lineWidth: 3,
+    hitWidth: 8,
+    drawColor: 'green'
+  },
+  subflow: {
+    outlineColor: '#337ab7',
+    roundingRadius: 12,
+    hitWidth: 7
+  },
+  note: {
+    font: {
+      name: '13px monospace',
+      size: 13
+    },
+    outlineColor: 'gray',
+    roundingRadius: 2,
+    fillColor: '#ffc',
+    minSize: 4
+  },
+  marquee: {
+    outlineColor: 'cyan',
+    roundingRadius: 2
+  },
+  anchor: {
+    width: 3,
+    color: '#ec407a',
+    hitWidth: 8,
+  },
+  highlight: {
+    margin: 10,
+    color: '#03a9f4'
+  },
+  oval: {
+    lineWidth: 3
+  },
+  hyperlink: {
+    color: '#1565c0'
+  },
+  statuses: [
+    {status: 'Unknown', color: 'transparent'},
     {status: 'Pending', color: 'blue'},
     {status: 'In Progress', color: 'green'},
     {status: 'Failed', color: 'red'},
     {status: 'Completed', color: 'black'},
     {status: 'Canceled', color: 'darkgray'},
     {status: 'Hold', color: 'cyan'},
-    {status: 'Waiting', color: 'yellow'},
-    {status: 'Unknown', color: 'transparent'}
-  ],
-  websocketUrl: null
+    {status: 'Waiting', color: 'yellow'}
+  ]
 };
 
 export class Flow {

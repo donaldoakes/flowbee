@@ -19,28 +19,28 @@ export class Label extends Shape {
 
   draw(color) {
     if (this.font) {
-      this.diagram.context.font = this.font.FONT;
+      this.diagram.context.font = this.font.name;
     }
-    this.diagram.context.fillStyle = color ? color : this.diagram.options.DEFAULT_COLOR;
+    this.diagram.context.fillStyle = color ? color : this.diagram.options.defaultColor;
     this.diagram.context.clearRect(this.display.x, this.display.y, this.display.w, this.display.h);
     this.diagram.context.fillText(this.text, this.display.x, this.display.y + this.display.h / 1.33);
-    this.diagram.context.font = this.diagram.options.DEFAULT_FONT.FONT;
+    this.diagram.context.font = this.diagram.options.defaultFont.name;
     if (this.subtext) {
-      this.diagram.context.fillStyle = this.diagram.options.META_COLOR;
+      this.diagram.context.fillStyle = this.diagram.options.metaColor;
       this.diagram.context.fillText(this.subtext, this.display.x, this.display.y + this.display.h * 1.33);
     }
-    this.diagram.context.fillStyle = this.diagram.options.DEFAULT_COLOR;
+    this.diagram.context.fillStyle = this.diagram.options.defaultColor;
   }
 
   prepareDisplay() {
     if (this.font) {
-      this.diagram.context.font = this.font.FONT;
+      this.diagram.context.font = this.font.name;
     }
     var textMetrics = this.diagram.context.measureText(this.text);
     this.display.w = textMetrics.width;
-    this.display.h = this.font.SIZE;
+    this.display.h = this.font.size;
     var maxDisplay = { w: this.display.w + this.display.x, h: this.display.h + this.display.y };
-    this.diagram.context.font = this.diagram.options.DEFAULT_FONT.FONT;
+    this.diagram.context.font = this.diagram.options.defaultFont.name;
     return maxDisplay;
   }
 

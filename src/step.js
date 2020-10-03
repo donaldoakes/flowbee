@@ -5,7 +5,6 @@ export class Step extends Shape {
   static INST_W = 8;
   static OLD_INST_W = 4;
   static MAX_INSTS = 10;
-  static MIN_SIZE = 4;
 
   static START_IMPL = 'com.centurylink.mdw.workflow.activity.process.ProcessStartActivity';
   static STOP_IMPL = 'com.centurylink.mdw.workflow.activity.process.ProcessFinishActivity';
@@ -81,13 +80,13 @@ export class Step extends Shape {
           yAdjust = this.title.lines.length === 1 ? -2 : -8;
         }
         else if ('activity' === shape) {
-          this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.BOX_OUTLINE_COLOR, fill);
+          this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.step.outlineColor, fill);
           yAdjust = -8;
         }
       }
       else {
         if (this.diagram.drawBoxes) {
-          this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.BOX_OUTLINE_COLOR, fill);
+          this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.step.outlineColor, fill);
         }
         var iconSrc = 'asset/' + this.implementor.icon;
         var iconX = this.display.x + this.display.w / 2 - 12;
@@ -97,24 +96,24 @@ export class Step extends Shape {
       }
     }
     else {
-      this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.BOX_OUTLINE_COLOR, fill);
+      this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.step.outlineColor, fill);
     }
 
     // title
     var diagram = this.diagram;
-    diagram.context.font = this.diagram.options.DEFAULT_FONT.FONT;
+    diagram.context.font = this.diagram.options.defaultFont.name;
     this.title.lines.forEach(function (line) {
       diagram.context.fillText(line.text, line.x, line.y + yAdjust);
     });
 
     // logical id
-    this.diagram.context.fillStyle = this.diagram.options.META_COLOR;
+    this.diagram.context.fillStyle = this.diagram.options.metaColor;
     var showText = activity.id;
     if (this.data && this.data.message) {
       showText += ' (' + this.data.message + ')';
     }
     this.diagram.context.fillText(showText, this.display.x + 2, this.display.y - 2);
-    this.diagram.context.fillStyle = this.diagram.options.DEFAULT_COLOR;
+    this.diagram.context.fillStyle = this.diagram.options.defaultColor;
   }
 
   getMilestone() {
@@ -157,8 +156,8 @@ export class Step extends Shape {
   }
 
   highlight() {
-    this.diagram.drawOval(this.display.x - this.diagram.options.HIGHLIGHT_MARGIN, this.display.y - this.diagram.options.HIGHLIGHT_MARGIN,
-      this.display.w + (2 * this.diagram.options.HIGHLIGHT_MARGIN), this.display.h + (2 * this.diagram.options.HIGHLIGHT_MARGIN), this.diagram.options.HIGHLIGHT_COLOR);
+    this.diagram.drawOval(this.display.x - this.diagram.options.highlight.margin, this.display.y - this.diagram.options.highlight.margin,
+      this.display.w + (2 * this.diagram.options.highlight.margin), this.display.h + (2 * this.diagram.options.highlight.margin), this.diagram.options.highlight.color);
   }
 
   // sets display/title and returns an object with w and h for required size
@@ -185,14 +184,14 @@ export class Step extends Shape {
       if (textMetrics.width > title.w) {
         title.w = textMetrics.width;
       }
-      title.h += this.diagram.options.DEFAULT_FONT.SIZE;
+      title.h += this.diagram.options.defaultFont.size;
       line.x = display.x + display.w / 2 - textMetrics.width / 2;
-      line.y = display.y + display.h / 2 + this.diagram.options.DEFAULT_FONT.SIZE * (i + 0.5);
+      line.y = display.y + display.h / 2 + this.diagram.options.defaultFont.size * (i + 0.5);
       if (line.x + textMetrics.width > maxDisplay.w) {
         maxDisplay.w = line.x + textMetrics.width;
       }
-      if (line.y + this.diagram.options.DEFAULT_FONT.SIZE > maxDisplay.h) {
-        maxDisplay.h = line.y + this.diagram.options.DEFAULT_FONT.SIZE;
+      if (line.y + this.diagram.options.defaultFont.size > maxDisplay.h) {
+        maxDisplay.h = line.y + this.diagram.options.defaultFont.size;
       }
     }
 
@@ -223,7 +222,7 @@ export class Step extends Shape {
   }
 
   resize(x, y, deltaX, deltaY, limDisplay) {
-    var display = this.resizeDisplay(x, y, deltaX, deltaY, Step.MIN_SIZE, limDisplay);
+    var display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize, limDisplay);
     this.activity.attributes.WORK_DISPLAY_INFO = this.getAttr(display);
   }
 

@@ -4,9 +4,6 @@ import { Link } from './link';
 
 export class Subflow extends Shape {
 
-  static BOX_OUTLINE_COLOR = '#337ab7';
-  static HIT_WIDTH = 7;
-
   constructor(diagram, subprocess) {
     super(diagram.canvas.getContext("2d"), diagram.options, subprocess);
     this.diagram = diagram;
@@ -22,10 +19,10 @@ export class Subflow extends Shape {
       this.diagram.drawState(this.display, this.instances, true);
     }
 
-    this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, Subflow.BOX_OUTLINE_COLOR);
+    this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.subflow.outlineColor);
     this.diagram.context.clearRect(this.title.x - 1, this.title.y, this.title.w + 2, this.title.h);
-    this.diagram.context.font = this.diagram.options.DEFAULT_FONT.FONT;
-    this.diagram.context.fillText(this.title.text, this.title.x, this.title.y + this.diagram.options.DEFAULT_FONT.SIZE);
+    this.diagram.context.font = this.diagram.options.defaultFont.name;
+    this.diagram.context.fillText(this.title.text, this.title.x, this.title.y + this.diagram.options.defaultFont.size);
 
     // animation sequence controlled by diagram
     if (!animate) {
@@ -38,9 +35,9 @@ export class Subflow extends Shape {
     }
 
     // logical id
-    this.diagram.context.fillStyle = this.diagram.options.META_COLOR;
+    this.diagram.context.fillStyle = this.diagram.options.metaColor;
     this.diagram.context.fillText('[' + this.subprocess.id + ']', this.display.x + 10, this.display.y + this.display.h + 4);
-    this.diagram.context.fillStyle = this.diagram.options.DEFAULT_COLOR;
+    this.diagram.context.fillStyle = this.diagram.options.defaultColor;
   }
 
   prepareDisplay() {
@@ -52,15 +49,15 @@ export class Subflow extends Shape {
       subflow: this,
       text: this.subprocess.name,
       x: this.display.x + 10,
-      y: this.display.y + 4 - this.diagram.options.DEFAULT_FONT.SIZE,
+      y: this.display.y + 4 - this.diagram.options.defaultFont.size,
       isHover: function (x, y) {
         var hov = x >= this.x && x <= this.x + this.w &&
           y >= this.y && y <= this.y + this.h;
         if (!hov) {
           var context = subflow.diagram.context;
-          context.lineWidth = Subflow.HIT_WIDTH;
+          context.lineWidth = subflow.diagram.options.subflow.hitWidth;
           var display = this.subflow.display;
-          var r = this.diagram.options.BOX_ROUNDING_RADIUS;
+          var r = this.subflow.diagram.options.subflow.roundingRadius;
           context.beginPath();
           context.moveTo(display.x + r, display.y);
           context.lineTo(display.x + display.w - r, display.y);
@@ -73,7 +70,7 @@ export class Subflow extends Shape {
           context.quadraticCurveTo(display.x, display.y, display.x + r, display.y);
           context.closePath();
           hov = context.isPointInStroke(x, y);
-          context.lineWidth = this.diagram.options.DEFAULT_LINE_WIDTH;
+          context.lineWidth = this.subflow.diagram.options.defaultLineWidth;
         }
         return hov;
       }
@@ -81,7 +78,7 @@ export class Subflow extends Shape {
 
     var textMetrics = this.diagram.context.measureText(title.text);
     title.w = textMetrics.width;
-    title.h = this.diagram.options.DEFAULT_FONT.SIZE;
+    title.h = this.diagram.options.defaultFont.size;
     if (title.x + title.w > maxDisplay.w) {
       maxDisplay.w = title.x + title.w;
     }
@@ -277,7 +274,7 @@ export class Subflow extends Shape {
   }
 
   resize(x, y, deltaX, deltaY) {
-    var display = this.resizeDisplay(x, y, deltaX, deltaY, Step.MIN_SIZE);
+    var display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize);
     this.setDisplayAttr(display.x, display.y, display.w, display.h);
   }
 
