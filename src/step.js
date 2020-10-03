@@ -28,20 +28,23 @@ export class Step extends Shape {
     }
 
     var title, fill;
+    var opacity = null;
     var milestoneGroups = sessionStorage.getItem('mdw-milestoneGroups');
     if (milestoneGroups) {
       milestoneGroups = JSON.parse(milestoneGroups);
     }
     var milestone = this.getMilestone();
     if (milestone) {
-      fill = this.shade('#4cafea', 0.50);
+      fill = this.diagram.options.step.milestoneColor;
+      opacity = 0.5;
       title = milestone.label; // TODO use this
       if (milestone.group) {
         var foundGroup = !milestoneGroups ? null : milestoneGroups.find(function (mg) {
           return mg.name === milestone.group;
         });
         if (foundGroup && foundGroup.props && foundGroup.props.color) {
-          fill = this.shade(foundGroup.props.color, 0.50);
+          fill = foundGroup.props.color;
+          opacity = 0.5;
         }
       }
     }
@@ -56,7 +59,7 @@ export class Step extends Shape {
       if (shape === 'pause') {
         color = '#ffea00';
       }
-      this.diagram.drawState(this.display, this.instances, !this.diagram.drawBoxes, adj, animationTimeSlice, color, fill);
+      this.diagram.drawState(this.display, this.instances, !this.diagram.drawBoxes, adj, animationTimeSlice, color, fill, opacity);
       fill = null; // otherwise runtime info lost below
     }
     else if (this.data) {
@@ -67,26 +70,44 @@ export class Step extends Shape {
     if (this.implementor.icon) {
       if (shape) {
         if ('start' === shape) {
-          this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, '#98fb98', 0.8);
+          this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, this.diagram.options.step.startColor, 0.8);
         }
         else if ('stop' === shape) {
-          this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, '#ff8c86', 0.8);
+          this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, this.diagram.options.step.stopColor, 0.8);
         }
         else if ('pause' === shape) {
-          this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, '#fffd87', 0.8);
+          this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, this.diagram.options.step.pauseColor, 0.8);
         }
         else if ('decision' === shape) {
           this.diagram.drawDiamond(this.display.x, this.display.y, this.display.w, this.display.h);
           yAdjust = this.title.lines.length === 1 ? -2 : -8;
         }
         else if ('activity' === shape) {
-          this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.step.outlineColor, fill);
+          this.diagram.rect(
+            this.display.x,
+            this.display.y,
+            this.display.w,
+            this.display.h,
+            this.diagram.options.step.outlineColor,
+            this.diagram.options.step.roundingRadius,
+            fill,
+            opacity
+          );
           yAdjust = -8;
         }
       }
       else {
         if (this.diagram.drawBoxes) {
-          this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.step.outlineColor, fill);
+          this.diagram.rect(
+            this.display.x,
+            this.display.y,
+            this.display.w,
+            this.display.h,
+            this.diagram.options.step.outlineColor,
+            this.diagram.options.step.roundingRadius,
+            fill,
+            opacity
+          );
         }
         var iconSrc = 'asset/' + this.implementor.icon;
         var iconX = this.display.x + this.display.w / 2 - 12;
@@ -96,7 +117,16 @@ export class Step extends Shape {
       }
     }
     else {
-      this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.step.outlineColor, fill);
+      this.diagram.rect(
+        this.display.x,
+        this.display.y,
+        this.display.w,
+        this.display.h,
+        this.diagram.options.step.outlineColor,
+        this.diagram.options.step.roundingRadius,
+        fill,
+        opacity
+      );
     }
 
     // title
@@ -224,11 +254,6 @@ export class Step extends Shape {
   resize(x, y, deltaX, deltaY, limDisplay) {
     var display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize, limDisplay);
     this.activity.attributes.WORK_DISPLAY_INFO = this.getAttr(display);
-  }
-
-  shade(color, fraction) {
-    var f = parseInt(color.slice(1), 16), t = fraction < 0 ? 0 : 255, p = fraction < 0 ? fraction * -1 : fraction, R = f >> 16, G = f >> 8 & 0x00FF, B = f & 0x0000FF;
-    return "#" + (0x1000000 + (Math.round((t - R) * p) + R) * 0x10000 + (Math.round((t - G) * p) + G) * 0x100 + (Math.round((t - B) * p) + B)).toString(16).slice(1);
   }
 
   static create(diagram, idNum, implementor, x, y) {

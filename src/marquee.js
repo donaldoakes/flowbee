@@ -16,7 +16,6 @@ export class Marquee extends Shape {
       this.display.w,
       this.display.h,
       this.diagram.options.marquee.outlineColor,
-      null,
       this.diagram.options.marquee.roundingRadius
     );
   }

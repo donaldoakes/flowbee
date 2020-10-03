@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/donaldoakes/flowbee#readme",
   "dependencies": {
+    "deepmerge": "^4.2.2",
     "js-yaml": "^3.14.0"
   },
   "devDependencies": {

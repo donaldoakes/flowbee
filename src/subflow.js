@@ -19,7 +19,15 @@ export class Subflow extends Shape {
       this.diagram.drawState(this.display, this.instances, true);
     }
 
-    this.diagram.roundedRect(this.display.x, this.display.y, this.display.w, this.display.h, this.diagram.options.subflow.outlineColor);
+    this.diagram.rect(
+      this.display.x,
+      this.display.y,
+      this.display.w,
+      this.display.h,
+      this.diagram.options.subflow.outlineColor,
+      this.diagram.options.subflow.roundingRadius
+    );
+
     this.diagram.context.clearRect(this.title.x - 1, this.title.y, this.title.w + 2, this.title.h);
     this.diagram.context.font = this.diagram.options.defaultFont.name;
     this.diagram.context.fillText(this.title.text, this.title.x, this.title.y + this.diagram.options.defaultFont.size);

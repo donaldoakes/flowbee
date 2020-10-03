@@ -2,9 +2,6 @@ import { Label } from './label';
 
 export class Link {
 
-  static INITIATED = 'blue';
-  static TRAVERSED = 'black';
-  static UNTRAVERSED = '#9e9e9e';
   static GAP = 4;
   static CR = 8;
   static CORR = 3; // offset for link start points
@@ -63,7 +60,7 @@ export class Link {
 
     if (this.label) {
       if (this.diagram.instance && (!this.instances || this.instances.length === 0)) {
-        this.label.draw(Link.UNTRAVERSED);
+        this.label.draw(this.diagram.options.link.colors.default);
       }
       else {
         this.label.draw();
@@ -163,14 +160,14 @@ export class Link {
       if (this.instances && this.instances.length > 0) {
         var latest = this.instances[0];
         if (latest.statusCode === 1) {
-          color = Link.INITIATED;
+          color = this.diagram.options.link.colors.initiated;
         }
         else {
-          color = Link.TRAVERSED;
+          color = this.diagram.options.link.colors.traversed;
         }
       }
       else {
-        color = Link.UNTRAVERSED;
+        color = this.diagram.options.link.colors.default;
       }
     }
     return color;

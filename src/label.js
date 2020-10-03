@@ -49,7 +49,7 @@ export class Label extends Shape {
     var y = this.display.y - Label.SEL_PAD;
     var w = this.display.w + Label.SEL_PAD + 2;
     var h = this.display.h + Label.SEL_PAD;
-    this.diagram.rect(x, y, w, h, Label.SEL_COLOR, null, Label.SEL_ROUNDING_RADIUS);
+    this.diagram.rect(x, y, w, h, Label.SEL_COLOR, Label.SEL_ROUNDING_RADIUS);
   }
 
   move(deltaX, deltaY) {

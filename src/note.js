@@ -17,8 +17,8 @@ export class Note extends Shape {
       this.display.w,
       this.display.h,
       this.diagram.options.note.outlineColor,
-      this.diagram.options.note.fillColor,
-      this.diagram.options.note.roundingRadius
+      this.diagram.options.note.roundingRadius,
+      this.diagram.options.note.fillColor
     );
 
     if (this.textNote.content) {

@@ -1,89 +1,13 @@
 import * as jsYaml from 'js-yaml';
+import deepmerge from 'deepmerge';
 import { Diagram } from './diagram';
-
-const DEFAULT_OPTIONS = {
-  websocketUrl: null,
-  defaultFont: {
-    name: '12px sans-serif',
-    size: 12,
-  },
-  defaultLineWidth: 1,
-  defaultColor: 'black',
-  metaColor: 'gray',
-  defaultRoundingRadius: 12,
-  minDrag: 3,
-  title: {
-    font: {
-      name: 'bold 18px sans-serif',
-      size: 18
-    }
-  },
-  template: {
-    font: {
-      name: 'bold italic 18px sans-serif',
-      size: 18
-    }
-  },
-  step: {
-    outlineColor: 'black',
-    minSize: 4
-  },
-  link: {
-    lineWidth: 3,
-    hitWidth: 8,
-    drawColor: 'green'
-  },
-  subflow: {
-    outlineColor: '#337ab7',
-    roundingRadius: 12,
-    hitWidth: 7
-  },
-  note: {
-    font: {
-      name: '13px monospace',
-      size: 13
-    },
-    outlineColor: 'gray',
-    roundingRadius: 2,
-    fillColor: '#ffc',
-    minSize: 4
-  },
-  marquee: {
-    outlineColor: 'cyan',
-    roundingRadius: 2
-  },
-  anchor: {
-    width: 3,
-    color: '#ec407a',
-    hitWidth: 8,
-  },
-  highlight: {
-    margin: 10,
-    color: '#03a9f4'
-  },
-  oval: {
-    lineWidth: 3
-  },
-  hyperlink: {
-    color: '#1565c0'
-  },
-  statuses: [
-    {status: 'Unknown', color: 'transparent'},
-    {status: 'Pending', color: 'blue'},
-    {status: 'In Progress', color: 'green'},
-    {status: 'Failed', color: 'red'},
-    {status: 'Completed', color: 'black'},
-    {status: 'Canceled', color: 'darkgray'},
-    {status: 'Hold', color: 'cyan'},
-    {status: 'Waiting', color: 'yellow'}
-  ]
-};
+import { DEFAULT_LIGHT } from './options';
 
 export class Flow {
 
   constructor(canvas, options) {
     this.canvas = canvas;
-    this.options = options || DEFAULT_OPTIONS;
+    this.options = deepmerge(DEFAULT_LIGHT, options || {});
   }
 
   parse(text, file) {

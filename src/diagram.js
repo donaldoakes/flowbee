@@ -165,7 +165,7 @@ export class Diagram extends Shape {
     this.prepareDisplay();
     var diagram = this;
 
-    this.label.draw();
+    this.label.draw(this.options.title.color);
     var highlighted = null;
     if (animate && !this.instance) {
       var sequence = this.getSequence();
@@ -1008,7 +1008,7 @@ export class Diagram extends Shape {
                 display.y - Step.OLD_INST_W * rem - del,
                 display.w + Step.OLD_INST_W * 2 * rem + 2 * del,
                 display.h + Step.OLD_INST_W * 2 * rem + 2 * del,
-                statusColor, statusColor, rounding);
+                statusColor, rounding, statusColor);
             }
             else {
               this.rect(
@@ -1016,7 +1016,7 @@ export class Diagram extends Shape {
                 display.y - Step.OLD_INST_W * rem,
                 display.w + Step.OLD_INST_W * 2 * rem,
                 display.h + Step.OLD_INST_W * 2 * rem,
-                statusColor, statusColor, 0);
+                statusColor, 0, statusColor);
             }
             rem--;
             this.context.clearRect(
@@ -1033,7 +1033,7 @@ export class Diagram extends Shape {
                 display.y - adj,
                 display.w + 2 * adj,
                 display.h + 2 * adj,
-                statusColor, statusColor, rounding);
+                statusColor, rounding, statusColor);
               x1 = display.x + del;
               y1 = display.y + del;
               w1 = display.w - 2 * del;
@@ -1045,7 +1045,7 @@ export class Diagram extends Shape {
               w1 = display.w - Step.OLD_INST_W * 2 * i - 2 * del;
               h1 = display.h - Step.OLD_INST_W * 2 * i - 2 * del;
               if (w1 > 0 && h1 > 0) {
-                this.rect(x1, y1, w1, h1, statusColor, statusColor);
+                this.rect(x1, y1, w1, h1, statusColor, 0, statusColor);
               }
             }
             x1 += Step.OLD_INST_W - 1;
@@ -1054,7 +1054,7 @@ export class Diagram extends Shape {
             h1 -= 2 * Step.OLD_INST_W - 2;
             if (w1 > 0 && h1 > 0) {
               if (fill) {
-                this.rect(x1, y1, w1, h1, statusColor, fill);
+                this.rect(x1, y1, w1, h1, statusColor, 0, fill);
               }
               else {
                 this.context.clearRect(x1, y1, w1, h1);
@@ -1077,7 +1077,7 @@ export class Diagram extends Shape {
       display.y,
       display.w,
       display.h,
-      color, color, rounding);
+      color, rounding, color);
     x1 = display.x + size;
     y1 = display.y + size;
     w1 = display.w - 2 * size;
@@ -1094,11 +1094,10 @@ export class Diagram extends Shape {
     }
   }
 
-  roundedRect(x, y, w, h, border, fill) {
-    this.rect(x, y, w, h, border, fill, this.options.defaultRoundingRadius);
-  }
-
-  rect(x, y, w, h, border, fill, r) {
+  rect(x, y, w, h, border, r, fill, opacity) {
+    if (opacity) {
+      this.context.globalAlpha = opacity;
+    }
     if (border) {
       this.context.strokeStyle = border;
     }
@@ -1134,6 +1133,9 @@ export class Diagram extends Shape {
 
     this.context.fillStyle = this.options.defaultColor;
     this.context.strokeStyle = this.options.defaultColor;
+    if (opacity) {
+      this.context.globalAlpha = 1.0;
+    }
   }
 
   drawOval(x, y, w, h, color, fill) {
