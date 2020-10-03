@@ -1,9 +1,22 @@
-'use strict';
+import { Shape } from './shape';
+import { Selection } from './selection';
+import { Label } from './label';
+import { Step } from './step';
+import { Link } from './link';
+import { Subflow } from './subflow';
+import { Note } from './note';
+import { Marquee } from './marquee';
 
-var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marquee, Selection, Toolbox) {
-  var Diagram = function(canvas, dialog, process, implementors, imgBase, editable, instance, activity, instanceEdit, data) {
-    Shape.call(this, this, process);
+export class Diagram extends Shape {
+
+  static BOUNDARY_DIM = 25;
+  static ANIMATION_SPEED = 8; // segments/s;
+  static ANIMATION_LINK_FACTOR = 3; // relative link slice
+
+  constructor(canvas, options, dialog, process, implementors, imgBase, editable, instance, activity, instanceEdit, data) {
+    super(canvas.getContext("2d"), options, process);
     this.canvas = canvas;
+    this.options = options;
     this.dialog = dialog;
     this.process = process;
     this.implementors = implementors;
@@ -19,6 +32,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     if (activity) {
       if (instance)
         this.activityInstanceId = activity;
+
       else
         this.activityId = activity;
     }
@@ -36,13 +50,13 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         this.zoomControl.style.right = '270px';
       }
       var rangeInput = diagram.zoomControl.getElementsByTagName('input')[0];
-      this.zoomControl.oninput = function(e) {
+      this.zoomControl.oninput = function (e) {
         diagram.zoomCanvas(parseInt(e.target.value));
       };
-      this.zoomControl.onchange = function(e) {
+      this.zoomControl.onchange = function (e) {
         diagram.adjustSection();
       };
-      this.zoomControl.onclick = function(e) {
+      this.zoomControl.onclick = function (e) {
         e.preventDefault();
         if (e.target.className) {
           if (e.target.className.endsWith('zoom-in') && diagram.zoom < 200) {
@@ -58,7 +72,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         }
       };
       // zoom hover title
-      rangeInput.onmousemove = function(e) {
+      rangeInput.onmousemove = function (e) {
         var rect = rangeInput.getBoundingClientRect();
         var x = e.clientX - rect.left;
         var pct = (x / rangeInput.clientWidth) * 100;
@@ -70,18 +84,18 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       };
       // show/hide/close
       var closeBtn = this.zoomControl.getElementsByClassName('mdw-close')[0];
-      this.zoomControl.onmouseover = function(e) {
+      this.zoomControl.onmouseover = function (e) {
         closeBtn.style.visibility = 'visible';
       };
-      this.zoomControl.onmouseout = function(e) {
+      this.zoomControl.onmouseout = function (e) {
         closeBtn.style.visibility = 'hidden';
       };
-      closeBtn.onclick = function(e) {
+      closeBtn.onclick = function (e) {
         diagram.zoomControl.style.visibility = 'hidden';
         this.style.visibility = 'hidden';
       };
       // pinch gesture
-      window.addEventListener('wheel', function(e) {
+      window.addEventListener('wheel', function (e) {
         if (e.ctrlKey) {
           e.preventDefault();
           var z = diagram.zoom - e.deltaY;
@@ -93,33 +107,33 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
           rangeInput.value = diagram.zoom;
           diagram.adjustSection();
         }
-      }, {passive: false});
+      }, { passive: false });
     }
-  };
+  }
 
-  Diagram.prototype = new Shape();
+  get diagram() {
+    return this;
+  }
 
-  Diagram.BOUNDARY_DIM = 25;
-  Diagram.ANIMATION_SPEED = 8; // segments / s;
-  Diagram.ANIMATION_LINK_FACTOR = 3; // relative link slice
-
-  Diagram.prototype.zoomCanvas = function(zoom) {
+  zoomCanvas(zoom) {
     this.zoom = zoom;
     var scale = zoom / 100;
     var dw = this.canvas.width * scale - this.canvas.width;
     var dh = this.canvas.height * scale - this.canvas.height;
     var dpRatio = window.devicePixelRatio || 1;
     this.canvas.style.transform = 'translate(' + (dw / (2 * dpRatio)) + 'px,' + (dh / (2 * dpRatio)) + 'px) scale(' + scale + ')';
-  };
+  }
 
-  // adjust section to accommodate zoomed canvas
-  Diagram.prototype.adjustSection = function() {
+  /**
+   * adjust section to accommodate zoomed canvas
+   */
+  adjustSection() {
     var mdwSections = document.getElementsByClassName('mdw-section');
     if (mdwSections.length) {
       var section = mdwSections[0];
       var scale = this.zoom / 100;
       var cw = this.canvas.style.width.substring(0, this.canvas.style.width.length - 2);
-      var w =  (cw ? parseInt(cw) : this.canvas.width) * scale;  // canvas style width not populated on windows
+      var w = (cw ? parseInt(cw) : this.canvas.width) * scale; // canvas style width not populated on windows
       var mdwPanels = document.getElementsByClassName('mdw-panel-full-width');
       if (mdwPanels.length) {
         // don't shrink width smaller than original panel width
@@ -135,10 +149,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       section.style.width = (w + 20) + 'px';
       section.style.height = (h + 20) + 'px';
     }
-  };
+  }
 
-  Diagram.prototype.draw = function(animate) {
-
+  draw(animate) {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.prepareDisplay();
@@ -152,16 +165,17 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       var totalTime = sequence.length * 1000 / Diagram.ANIMATION_SPEED;
       var linkCt = 0;
       var nonLinkCt = 0;
-      sequence.forEach(function(it) {
+      sequence.forEach(function (it) {
         if (it instanceof Link)
           linkCt++;
+
         else
           nonLinkCt++;
       });
       var nonLinkSlice = totalTime / (nonLinkCt + 2 * linkCt);
       var linkSlice = Diagram.ANIMATION_LINK_FACTOR * nonLinkSlice;
       var timeSlice = nonLinkSlice;
-      var s = function() {
+      var s = function () {
         var it = sequence[i];
         it.draw(timeSlice);
         if (it instanceof Step && it.workflowItem.id === diagram.activityId) {
@@ -183,17 +197,17 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     }
     else {
       // draw quickly
-      this.steps.forEach(function(step) {
+      this.steps.forEach(function (step) {
         step.draw();
         if (step.workflowItem.id === diagram.activityId) {
           step.highlight();
           highlighted = step;
         }
       });
-      this.links.forEach(function(link) {
+      this.links.forEach(function (link) {
         link.draw();
       });
-      this.subflows.forEach(function(subflow) {
+      this.subflows.forEach(function (subflow) {
         subflow.draw();
       });
       if (highlighted) {
@@ -202,23 +216,23 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     }
 
     if (this.instance) {
-      this.applyState(animate, function() {
-        diagram.notes.forEach(function(note) {
+      this.applyState(animate, function () {
+        diagram.notes.forEach(function (note) {
           note.draw();
         });
         if ($mdwWebSocketUrl && $mdwWebSocketUrl !== '${mdwWebSocketUrl}') {
           const socket = new WebSocket($mdwWebSocketUrl);
-          socket.addEventListener('open', function(event) {
-             socket.send(diagram.instance.id);
+          socket.addEventListener('open', function (event) {
+            socket.send(diagram.instance.id);
           });
-          socket.addEventListener('message', function(event) {
+          socket.addEventListener('message', function (event) {
             var message = JSON.parse(event.data);
             if (message.subtype === 'a') {
               var step = diagram.getStep('A' + message.id);
               if (step) {
                 if (!step.instances)
                   step.instances = [];
-                var actInst = step.instances.find(function(inst) {
+                var actInst = step.instances.find(function (inst) {
                   return inst.id === message.instId;
                 });
                 if (actInst) {
@@ -242,7 +256,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
               if (link) {
                 if (!link.instances)
                   link.instances = [];
-                var linkInst = link.instances.find(function(inst) {
+                var linkInst = link.instances.find(function (inst) {
                   return inst.id === message.instId;
                 });
                 if (linkInst) {
@@ -267,7 +281,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       this.applyData();
     }
     else {
-      diagram.notes.forEach(function(note) {
+      diagram.notes.forEach(function (note) {
         note.draw();
       });
     }
@@ -275,18 +289,20 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     if (this.marquee) {
       this.marquee.draw();
     }
-  };
+  }
 
-  // sets display fields and returns a display with w and h for canvas size
-  // (for performance reasons, also initializes steps/links arrays and activity impls)
-  Diagram.prototype.prepareDisplay = function() {
+  /**
+   * sets display fields and returns a display with w and h for canvas size
+   * (for performance reasons, also initializes steps/links arrays and activity impls)
+   */
+  prepareDisplay() {
     var canvasDisplay = { w: 640, h: 480 };
 
     var diagram = this; // forEach inner access
 
     // label
     var label = this.instance && this.instance.template ? this.instance.packageName + '/' + this.instance.processName : this.process.name;
-    var font = this.instance && this.instance.template ? DC.TEMPLATE_FONT : DC.TITLE_FONT;
+    var font = this.instance && this.instance.template ? this.options.TEMPLATE_FONT : this.options.TITLE_FONT;
     diagram.label = new Label(this, label, this.getDisplay(), font);
     if (this.process.instanceId)
       diagram.label.subtext = this.process.instanceId;
@@ -295,7 +311,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     // activities
     diagram.steps = [];
     if (this.process.activities) {
-      this.process.activities.forEach(function(activity) {
+      this.process.activities.forEach(function (activity) {
         var step = new Step(diagram, activity);
         step.implementor = diagram.getImplementor(activity.implementor);
         diagram.makeRoom(canvasDisplay, step.prepareDisplay());
@@ -305,9 +321,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
 
     // transitions
     diagram.links = [];
-    diagram.steps.forEach(function(step) {
+    diagram.steps.forEach(function (step) {
       if (step.activity.transitions) {
-        step.activity.transitions.forEach(function(transition) {
+        step.activity.transitions.forEach(function (transition) {
           var link = new Link(diagram, transition, step, diagram.getStep(transition.to));
           diagram.makeRoom(canvasDisplay, link.prepareDisplay());
           diagram.links.push(link);
@@ -318,7 +334,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     // embedded subprocesses
     diagram.subflows = [];
     if (this.process.subprocesses) {
-      this.process.subprocesses.forEach(function(subproc) {
+      this.process.subprocesses.forEach(function (subproc) {
         var subflow = new Subflow(diagram, subproc);
         diagram.makeRoom(canvasDisplay, subflow.prepareDisplay());
         diagram.subflows.push(subflow);
@@ -328,7 +344,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     // notes
     diagram.notes = [];
     if (this.process.textNotes) {
-      this.process.textNotes.forEach(function(textNote) {
+      this.process.textNotes.forEach(function (textNote) {
         var note = new Note(diagram, textNote);
         diagram.makeRoom(canvasDisplay, note.prepareDisplay());
         diagram.notes.push(note);
@@ -372,40 +388,42 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       var ctx = this.canvas.getContext('2d');
       ctx.scale(dpRatio, dpRatio);
     }
-  };
+  }
 
-  // post-animation callback is the only way to prevent notes from screwing up context font (why?)
-  Diagram.prototype.applyState = function(animate, callback) {
+  /**
+   * post-animation callback is the only way to prevent notes from screwing up context font (why?)
+   */
+  applyState(animate, callback) {
     var diagram = this; // forEach inner access
 
     if (this.process.activities) {
-      this.process.activities.forEach(function(activity) {
+      this.process.activities.forEach(function (activity) {
         diagram.getStep(activity.id).instances = diagram.getActivityInstances(activity.id);
       });
     }
 
-    diagram.steps.forEach(function(step) {
+    diagram.steps.forEach(function (step) {
       if (step.activity.transitions) {
-        step.activity.transitions.forEach(function(transition) {
+        step.activity.transitions.forEach(function (transition) {
           diagram.getLink(transition.id).instances = diagram.getTransitionInstances(transition.id);
         });
       }
     });
 
     if (this.process.subprocesses) {
-      this.process.subprocesses.forEach(function(subproc) {
+      this.process.subprocesses.forEach(function (subproc) {
         var subflow = diagram.getSubflow(subproc.id);
         subflow.instances = diagram.getSubprocessInstances(subproc.id);
         // needed for subprocess & task instance retrieval
         subflow.mainProcessInstanceId = diagram.instance.id;
         if (subflow.subprocess.activities) {
-          subflow.subprocess.activities.forEach(function(activity) {
+          subflow.subprocess.activities.forEach(function (activity) {
             subflow.getStep(activity.id).instances = subflow.getActivityInstances(activity.id);
           });
         }
-        subflow.steps.forEach(function(step) {
+        subflow.steps.forEach(function (step) {
           if (step.activity.transitions) {
-            step.activity.transitions.forEach(function(transition) {
+            step.activity.transitions.forEach(function (transition) {
               subflow.getLink(transition.id).instances = subflow.getTransitionInstances(transition.id);
             });
           }
@@ -416,7 +434,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     var highlighted = null;
     var sequence = this.getSequence(true);
     if (sequence) {
-      var update = function(it, slice) {
+      var update = function (it, slice) {
         var highlight = false;
         if (it instanceof Step) {
           if (animate) {
@@ -424,7 +442,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
             diagram.scrollIntoView(it, slice);
           }
           if (diagram.activityInstanceId) {
-            it.instances.forEach(function(inst) {
+            it.instances.forEach(function (inst) {
               if (inst.id == diagram.activityInstanceId) {
                 highlight = true;
               }
@@ -441,9 +459,10 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       if (animate) {
         var linkCt = 0;
         var nonLinkCt = 0;
-        sequence.forEach(function(it) {
+        sequence.forEach(function (it) {
           if (it instanceof Link)
             linkCt++;
+
           else
             nonLinkCt++;
         });
@@ -452,7 +471,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         var linkSlice = Diagram.ANIMATION_LINK_FACTOR * nonLinkSlice;
         var timeSlice = nonLinkSlice;
         let i = 0;
-        var s = function() {
+        var s = function () {
           update(sequence[i], timeSlice);
           i++;
           if (i < sequence.length) {
@@ -474,27 +493,27 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         callback();
       }
     }
-  };
+  }
 
-  Diagram.prototype.applyData = function() {
+  applyData() {
     var diagram = this; // forEach inner access
 
     if (this.data.hotspots && this.data.hotspots.length) {
       let hottest = this.data.hotspots.reduce((max, cur) => cur.ms > max.ms ? cur : max);
-      diagram.steps.forEach(function(step) {
+      diagram.steps.forEach(function (step) {
         let hotspot = diagram.data.hotspots.find(hs => ('A' + hs.id) === step.activity.id);
         if (hotspot && hotspot.ms) {
-          step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms/hottest.ms };
+          step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
           step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
           step.draw();
         }
       });
       if (diagram.subflows) {
-        diagram.subflows.forEach(function(subflow) {
-          subflow.steps.forEach(function(step) {
+        diagram.subflows.forEach(function (subflow) {
+          subflow.steps.forEach(function (step) {
             let hotspot = diagram.data.hotspots.find(hs => ('A' + hs.id) === step.activity.id);
             if (hotspot && hotspot.ms) {
-              step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms/hottest.ms };
+              step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
               step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
               step.draw();
             }
@@ -502,24 +521,24 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         });
       }
     }
-  };
+  }
 
-  Diagram.prototype.getSequence = function(runtime) {
+  getSequence(runtime) {
     var seq = [];
     var start = this.getStart();
     if (start) {
       seq.push(start);
       this.addSequence(start, seq, runtime);
       var subflows = this.subflows.slice();
-      subflows.sort(function(sf1, sf2) {
+      subflows.sort(function (sf1, sf2) {
         if (Math.abs(sf1.display.y - sf2.display.y) > 100)
           return sf1.y - sf2.y;
         // otherwise closest to top-left of canvas
-        return Math.sqrt(Math.pow(sf1.display.x,2) + Math.pow(sf1.display.y,2)) -
-            Math.sqrt(Math.pow(sf2.display.x,2) + Math.pow(sf2.display.y,2));
+        return Math.sqrt(Math.pow(sf1.display.x, 2) + Math.pow(sf1.display.y, 2)) -
+          Math.sqrt(Math.pow(sf2.display.x, 2) + Math.pow(sf2.display.y, 2));
       });
       var diagram = this;
-      subflows.forEach(function(subflow) {
+      subflows.forEach(function (subflow) {
         if (!runtime || subflow.instances.length > 0) {
           seq.push(subflow);
           var substart = subflow.getStart();
@@ -531,12 +550,12 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       });
     }
     return seq;
-  };
+  }
 
-  Diagram.prototype.addSequence = function(step, sequence, runtime) {
+  addSequence(step, sequence, runtime) {
     var outSteps = [];
     var activityIdToInLinks = {};
-    this.getOutLinks(step).forEach(function(link) {
+    this.getOutLinks(step).forEach(function (link) {
       if (!runtime || link.instances.length > 0) {
         var outStep = link.to;
         var exist = activityIdToInLinks[outStep.activity.id];
@@ -550,7 +569,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       }
     });
 
-    outSteps.sort(function(s1, s2) {
+    outSteps.sort(function (s1, s2) {
       if (runtime) {
         if (!s1.instances[0]) {
           return s2.instances[0] ? 1 : 0;
@@ -566,24 +585,24 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       if (Math.abs(s1.display.y - s2.display.y) > 100)
         return s1.y - s2.y;
       // otherwise closest to top-left of canvas
-      return Math.sqrt(Math.pow(s1.display.x,2) + Math.pow(s1.display.y,2)) -
-          Math.sqrt(Math.pow(s2.display.x,2) + Math.pow(s2.display.y,2));
+      return Math.sqrt(Math.pow(s1.display.x, 2) + Math.pow(s1.display.y, 2)) -
+        Math.sqrt(Math.pow(s2.display.x, 2) + Math.pow(s2.display.y, 2));
     });
 
     var diagram = this;
-    var proceedSteps = [];  // those not already covered
-    outSteps.forEach(function(step) {
+    var proceedSteps = []; // those not already covered
+    outSteps.forEach(function (step) {
       var links = activityIdToInLinks[step.activity.id];
       if (links) {
-        links.forEach(function(link) {
-          var l = sequence.find(function(it) {
+        links.forEach(function (link) {
+          var l = sequence.find(function (it) {
             return it.workflowItem.id == link.transition.id;
           });
           if (!l)
             sequence.push(link);
         });
       }
-      var s = sequence.find(function(it) {
+      var s = sequence.find(function (it) {
         return it.workflowItem.id == step.activity.id;
       });
       if (!s) {
@@ -591,75 +610,75 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         proceedSteps.push(step);
       }
     });
-    proceedSteps.forEach(function(step) {
+    proceedSteps.forEach(function (step) {
       diagram.addSequence(step, sequence, runtime);
     });
-  };
+  }
 
-  Diagram.prototype.getStart = function() {
+  getStart() {
     for (var i = 0; i < this.steps.length; i++) {
       if (this.steps[i].activity.implementor == Step.START_IMPL)
         return this.steps[i];
     }
-  };
+  }
 
-  Diagram.prototype.makeRoom = function(canvasDisplay, display) {
+  makeRoom(canvasDisplay, display) {
     if (display.w > canvasDisplay.w)
       canvasDisplay.w = display.w;
     if (display.h > canvasDisplay.h)
       canvasDisplay.h = display.h;
-  };
+  }
 
-  Diagram.prototype.getStep = function(activityId) {
+  getStep(activityId) {
     for (var i = 0; i < this.steps.length; i++) {
       if (this.steps[i].activity.id == activityId)
         return this.steps[i];
     }
-  };
+  }
 
-  Diagram.prototype.getLink = function(transitionId) {
+  getLink(transitionId) {
     for (var i = 0; i < this.links.length; i++) {
       if (this.links[i].transition.id == transitionId)
         return this.links[i];
     }
-  };
+  }
 
-  Diagram.prototype.getLinks = function(step) {
+  getLinks(step) {
     var links = [];
     for (var i = 0; i < this.links.length; i++) {
       if (step.activity.id == this.links[i].to.activity.id || step.activity.id == this.links[i].from.activity.id)
         links.push(this.links[i]);
     }
     return links;
-  };
+  }
 
-  Diagram.prototype.getOutLinks = function(step) {
+  getOutLinks(step) {
     var links = [];
     for (let i = 0; i < this.links.length; i++) {
       if (step.activity.id == this.links[i].from.activity.id)
         links.push(this.links[i]);
     }
-    this.subflows.forEach(function(subflow) {
+    this.subflows.forEach(function (subflow) {
       links = links.concat(subflow.getOutLinks(step));
     });
     return links;
-  };
+  }
 
-  Diagram.prototype.getSubflow = function(subprocessId) {
+  getSubflow(subprocessId) {
     for (var i = 0; i < this.subflows.length; i++) {
       if (this.subflows[i].subprocess.id == subprocessId)
         return this.subflows[i];
     }
-  };
+  }
 
-  Diagram.prototype.getNote = function(textNoteId) {
+  getNote(textNoteId) {
     for (var i = 0; i < this.notes.length; i++) {
       if (this.notes[i].textNote.id == textNoteId)
         return this.notes[i];
     }
-  };
+  }
 
-  Diagram.prototype.get = function(id) {
+  get(id) {
     if (id.startsWith('A'))
       return this.getStep(id);
     else if (id.startsWith('T'))
@@ -668,11 +687,13 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       return this.getSubflow(id);
     else if (id.startsWith('N'))
       return this.getNote(id);
-  };
+  }
 
-  // Whether the obj can be edited at instance level.
-  // Cannot have instances and (TODO) must be reachable downstream of a currently paused activity.
-  Diagram.prototype.isInstanceEditable = function(id) {
+  /**
+   * Whether the obj can be edited at instance level.
+   * Cannot have instances and (TODO) must be reachable downstream of a currently paused activity.
+   */
+  isInstanceEditable(id) {
     if (this.instanceEdit) {
       var obj = this.get(id);
       if (!obj && this.subflows) {
@@ -691,9 +712,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         }
       }
     }
-  };
+  }
 
-  Diagram.prototype.getImplementor = function(className) {
+  getImplementor(className) {
     if (this.implementors) {
       for (var i = 0; i < this.implementors.length; i++) {
         var implementor = this.implementors[i];
@@ -704,9 +725,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     }
     // not found -- return placeholder
     return { implementorClass: className, category: 'com.centurylink.mdw.activity.types.GeneralActivity', icon: 'shape:activity', label: 'Unknown Implementer' };
-  };
+  }
 
-  Diagram.prototype.findInSubflows = function(x, y) {
+  findInSubflows(x, y) {
     if (this.subflows) {
       for (let i = 0; i < this.subflows.length; i++) {
         if (this.subflows[i].isHover(x, y)) {
@@ -714,9 +735,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         }
       }
     }
-  };
+  }
 
-  Diagram.prototype.addStep = function(impl, x, y) {
+  addStep(impl, x, y) {
     var implementor = this.getImplementor(impl);
     var steps = this.steps.slice(0);
     if (this.subflows) {
@@ -741,9 +762,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         this.steps.push(step);
       }
     }
-  };
+  }
 
-  Diagram.prototype.addLink = function(from, to) {
+  addLink(from, to) {
     var links = this.links.slice(0);
     if (this.subflows) {
       for (let i = 0; i < this.subflows.length; i++) {
@@ -764,9 +785,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     else {
       this.links.push(link);
     }
-  };
+  }
 
-  Diagram.prototype.addSubflow = function(type, x, y) {
+  addSubflow(type, x, y) {
     var startActivityId = this.genId(this.steps, 'activity');
     var startTransitionId = this.genId(this.links, 'transition');
     var subprocId = this.genId(this.subflows, 'subprocess');
@@ -775,27 +796,27 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       this.process.subprocesses = [];
     this.process.subprocesses.push(subflow.subprocess);
     this.subflows.push(subflow);
-  };
+  }
 
-  Diagram.prototype.addNote = function(x, y) {
+  addNote(x, y) {
     var note = Note.create(this, this.genId(this.notes, 'textNote'), x, y);
     this.process.textNotes.push(note.textNote);
     this.notes.push(note);
-  };
+  }
 
-  Diagram.prototype.genId = function(items, workflowType) {
+  genId(items, workflowType) {
     var maxId = 0;
     if (items) {
-      items.forEach(function(item) {
+      items.forEach(function (item) {
         var itemId = parseInt(item[workflowType].id.substring(1));
         if (itemId > maxId)
           maxId = itemId;
       });
     }
     return maxId + 1;
-  };
+  }
 
-  Diagram.prototype.deleteStep = function(step) {
+  deleteStep(step) {
     var idx = -1;
     for (let i = 0; i < this.steps.length; i++) {
       var s = this.steps[i];
@@ -819,9 +840,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         this.subflows[i].deleteStep(step);
       }
     }
-  };
+  }
 
-  Diagram.prototype.deleteLink = function(link) {
+  deleteLink(link) {
     var idx = -1;
     for (let i = 0; i < this.links.length; i++) {
       var l = this.links[i];
@@ -848,9 +869,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         this.subflows[i].deleteLink(link);
       }
     }
-  };
+  }
 
-  Diagram.prototype.deleteSubflow = function(subflow) {
+  deleteSubflow(subflow) {
     var idx = -1;
     for (let i = 0; i < this.subflows.length; i++) {
       var s = this.subflows[i];
@@ -863,9 +884,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       this.process.subprocesses.splice(idx, 1);
       this.subflows.splice(idx, 1);
     }
-  };
+  }
 
-  Diagram.prototype.deleteNote = function(note) {
+  deleteNote(note) {
     var idx = -1;
     for (let i = 0; i < this.notes.length; i++) {
       var n = this.notes[i];
@@ -878,67 +899,67 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       this.process.textNotes.splice(idx, 1);
       this.notes.splice(idx, 1);
     }
-  };
+  }
 
-  Diagram.prototype.getActivityInstances = function(id) {
+  getActivityInstances(id) {
     if (this.instance) {
-      var insts = [];  // should always return something, even if empty
+      var insts = []; // should always return something, even if empty
       if (this.instance.activities) {
         var procInstId = this.instance.id;
-        this.instance.activities.forEach(function(actInst) {
+        this.instance.activities.forEach(function (actInst) {
           if ('A' + actInst.activityId == id) {
             actInst.processInstanceId = procInstId; // needed for subprocess & task instance retrieval
             insts.push(actInst);
           }
         });
       }
-      insts.sort(function(a1, a2) {
+      insts.sort(function (a1, a2) {
         return a2.id - a1.id;
       });
       return insts;
     }
-  };
+  }
 
-  Diagram.prototype.getTransitionInstances = function(id) {
+  getTransitionInstances(id) {
     if (this.instance) {
-      var insts = [];  // should always return something, even if empty
+      var insts = []; // should always return something, even if empty
       if (this.instance.transitions) {
-        this.instance.transitions.forEach(function(transInst) {
+        this.instance.transitions.forEach(function (transInst) {
           if ('T' + transInst.transitionId == id)
             insts.push(transInst);
         });
       }
-      insts.sort(function(t1, t2) {
+      insts.sort(function (t1, t2) {
         return t2.id - t1.id;
       });
       return insts;
     }
-  };
+  }
 
-  Diagram.prototype.getSubprocessInstances = function(id) {
+  getSubprocessInstances(id) {
     if (this.instance) {
-      var insts = [];  // should always return something, even if empty
+      var insts = []; // should always return something, even if empty
       if (this.instance.subprocesses) {
-        this.instance.subprocesses.forEach(function(subInst) {
+        this.instance.subprocesses.forEach(function (subInst) {
           if ('P' + subInst.processId == id)
             insts.push(subInst);
         });
       }
-      insts.sort(function(s1, s2) {
+      insts.sort(function (s1, s2) {
         return s2.id - s1.id;
       });
       return insts;
     }
-  };
+  }
 
-  Diagram.prototype.drawState = function(display, instances, ext, adj, animationSlice /* not used */, color, fill) {
+  drawState(display, instances, ext, adj, animationSlice /* not used */, color, fill) {
     if (instances) {
       var count = instances.length > Step.MAX_INSTS ? Step.MAX_INSTS : instances.length;
       for (var i = 0; i < count; i++) {
         var instance = instances[i];
-        var rounding = DC.BOX_ROUNDING_RADIUS;
+        var rounding = this.options.BOX_ROUNDING_RADIUS;
         if (instance.statusCode) {
-          var status = Step.STATUSES[instance.statusCode];
+          var status = this.options.WORKFLOW_STATUSES[instance.statusCode];
           instance.status = status.status;
           var statusColor = color ? color : status.color;
           var del = Step.INST_W - Step.OLD_INST_W;
@@ -946,36 +967,36 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
             var rem = count - i;
             if (i === 0) {
               this.rect(
-                  display.x - Step.OLD_INST_W * rem - del,
-                  display.y - Step.OLD_INST_W * rem - del,
-                  display.w + Step.OLD_INST_W * 2* rem + 2 * del,
-                  display.h + Step.OLD_INST_W * 2 * rem + 2 * del,
-                  statusColor, statusColor, rounding);
+                display.x - Step.OLD_INST_W * rem - del,
+                display.y - Step.OLD_INST_W * rem - del,
+                display.w + Step.OLD_INST_W * 2 * rem + 2 * del,
+                display.h + Step.OLD_INST_W * 2 * rem + 2 * del,
+                statusColor, statusColor, rounding);
             }
             else {
               this.rect(
-                  display.x - Step.OLD_INST_W * rem,
-                  display.y - Step.OLD_INST_W * rem,
-                  display.w + Step.OLD_INST_W * 2 * rem,
-                  display.h + Step.OLD_INST_W * 2 * rem,
-                  statusColor, statusColor, 0);
+                display.x - Step.OLD_INST_W * rem,
+                display.y - Step.OLD_INST_W * rem,
+                display.w + Step.OLD_INST_W * 2 * rem,
+                display.h + Step.OLD_INST_W * 2 * rem,
+                statusColor, statusColor, 0);
             }
             rem--;
             this.context.clearRect(
-                display.x - Step.OLD_INST_W * rem - 1,
-                display.y - Step.OLD_INST_W * rem - 1,
-                display.w + Step.OLD_INST_W * 2 * rem + 2,
-                display.h + Step.OLD_INST_W * 2 * rem + 2);
+              display.x - Step.OLD_INST_W * rem - 1,
+              display.y - Step.OLD_INST_W * rem - 1,
+              display.w + Step.OLD_INST_W * 2 * rem + 2,
+              display.h + Step.OLD_INST_W * 2 * rem + 2);
           }
           else {
             var x1, y1, w1, h1;
             if (i === 0) {
               this.rect(
-                  display.x - adj,
-                  display.y - adj,
-                  display.w + 2 * adj,
-                  display.h + 2 * adj,
-                  statusColor, statusColor, rounding);
+                display.x - adj,
+                display.y - adj,
+                display.w + 2 * adj,
+                display.h + 2 * adj,
+                statusColor, statusColor, rounding);
               x1 = display.x + del;
               y1 = display.y + del;
               w1 = display.w - 2 * del;
@@ -1005,19 +1026,19 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         }
       }
     }
-  };
+  }
 
-  Diagram.prototype.drawData = function(display, size, color, opacity) {
+  drawData(display, size, color, opacity) {
     if (opacity)
       this.context.globalAlpha = opacity;
-    var rounding = DC.BOX_ROUNDING_RADIUS;
+    var rounding = this.options.BOX_ROUNDING_RADIUS;
     var x1, y1, w1, h1;
     this.rect(
-        display.x,
-        display.y,
-        display.w,
-        display.h,
-        color, color, rounding);
+      display.x,
+      display.y,
+      display.w,
+      display.h,
+      color, color, rounding);
     x1 = display.x + size;
     y1 = display.y + size;
     w1 = display.w - 2 * size;
@@ -1030,13 +1051,13 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       this.context.clearRect(x1, y1, w1, h1);
     if (opacity)
       this.context.globalAlpha = 1.0;
-  };
+  }
 
-  Diagram.prototype.roundedRect = function(x, y, w, h, border, fill) {
-    this.rect(x, y, w, h, border, fill, DC.BOX_ROUNDING_RADIUS);
-  };
+  roundedRect(x, y, w, h, border, fill) {
+    this.rect(x, y, w, h, border, fill, this.options.BOX_ROUNDING_RADIUS);
+  }
 
-  Diagram.prototype.rect = function(x, y, w, h, border, fill, r) {
+  rect(x, y, w, h, border, fill, r) {
     if (border)
       this.context.strokeStyle = border;
     if (fill)
@@ -1066,11 +1087,11 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         this.context.fill();
     }
 
-    this.context.fillStyle = DC.DEFAULT_COLOR;
-    this.context.strokeStyle = DC.DEFAULT_COLOR;
-  };
+    this.context.fillStyle = this.options.DEFAULT_COLOR;
+    this.context.strokeStyle = this.options.DEFAULT_COLOR;
+  }
 
-  Diagram.prototype.drawOval = function(x, y, w, h, color, fill) {
+  drawOval(x, y, w, h, color, fill) {
     var kappa = 0.5522848;
     var ox = (w / 2) * kappa; // control point offset horizontal
     var oy = (h / 2) * kappa; // control point offset vertical
@@ -1081,7 +1102,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
 
     if (color) {
       this.context.strokeStyle = color;
-      this.context.lineWidth = DC.OVAL_LINE_WIDTH;
+      this.context.lineWidth = this.options.OVAL_LINE_WIDTH;
     }
     this.context.beginPath();
     this.context.moveTo(x, ym);
@@ -1098,30 +1119,30 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     else {
       this.context.stroke();
     }
-    this.context.fillStyle = DC.DEFAULT_COLOR;
+    this.context.fillStyle = this.options.DEFAULT_COLOR;
     if (color) {
-      this.context.strokeStyle = DC.DEFAULT_COLOR;
-      this.context.lineWidth = DC.DEFAULT_LINE_WIDTH;
+      this.context.strokeStyle = this.options.DEFAULT_COLOR;
+      this.context.lineWidth = this.options.DEFAULT_LINE_WIDTH;
     }
-  };
+  }
 
-  Diagram.prototype.drawLine = function(segments, color, width) {
+  drawLine(segments, color, width) {
     if (color)
       this.context.strokeStyle = color;
     if (width)
       this.context.lineWidth = width;
     this.context.beginPath();
     var diagram = this;
-    segments.forEach(function(seg) {
+    segments.forEach(function (seg) {
       diagram.context.moveTo(seg.from.x, seg.from.y);
       diagram.context.lineTo(seg.to.x, seg.to.y);
     });
     this.context.stroke();
-    this.context.strokeStyle = DC.DEFAULT_COLOR;
-    this.context.lineWidth = DC.DEFAULT_LINE_WIDTH;
-  };
+    this.context.strokeStyle = this.options.DEFAULT_COLOR;
+    this.context.lineWidth = this.options.DEFAULT_LINE_WIDTH;
+  }
 
-  Diagram.prototype.animateLine = function(segments, color, width, slice) {
+  animateLine(segments, color, width, slice) {
     var x1 = segments[0].from.x;
     var y1 = segments[0].from.y;
     var x2, y2;
@@ -1129,7 +1150,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     var j = 0; // subsegment
     var context = this.context;
     var perSeg = Math.ceil(slice / (1000 / 60) / segments.length);
-    var d = function() {
+    var d = function () {
       var segment = segments[i];
       if (j >= perSeg) {
         i++;
@@ -1156,12 +1177,12 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
             segment.lineEnd(context);
             context.lineWidth = width;
             context.strokeStyle = color;
-            context.fillStyle = DC.DEFAULT_COLOR;
+            context.fillStyle = this.options.DEFAULT_COLOR;
           }
         }
         context.stroke();
-        context.lineWidth = DC.DEFAULT_LINE_WIDTH;
-        context.strokeStyle = DC.DEFAULT_COLOR;
+        context.lineWidth = this.options.DEFAULT_LINE_WIDTH;
+        context.strokeStyle = this.options.DEFAULT_COLOR;
         j++;
       }
       if (i < segments.length) {
@@ -1171,9 +1192,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       }
     };
     d();
-  };
+  }
 
-  Diagram.prototype.drawDiamond = function(x, y, w, h) {
+  drawDiamond(x, y, w, h) {
     var xh = x + w / 2;
     var yh = y + h / 2;
     this.context.beginPath();
@@ -1184,9 +1205,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     this.context.lineTo(x, yh);
     this.context.closePath();
     this.context.stroke();
-  };
+  }
 
-  Diagram.prototype.drawImage = function(src, x, y) {
+  drawImage(src, x, y) {
     src = this.imgBase + '/' + src;
     if (!this.images)
       this.images = {};
@@ -1196,7 +1217,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       img.src = src;
       var context = this.context;
       var images = this.images;
-      img.onload = function() {
+      img.onload = function () {
         context.drawImage(img, x, y);
         images[src] = img;
       };
@@ -1204,10 +1225,12 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     else {
       this.context.drawImage(img, x, y);
     }
-  };
+  }
 
-  // TODO: horizontal scroll
-  Diagram.prototype.scrollIntoView = function(shape, timeSlice) {
+  /**
+   * TODO: horizontal scroll
+   */
+  scrollIntoView(shape, timeSlice) {
     var centerX = shape.display.x + shape.display.w / 2;
     var centerY = shape.display.y + shape.display.h / 2;
 
@@ -1232,17 +1255,17 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
           return;
         }
         var winDelta = 0;
-        var bottomY = canvasTopY + shape.display.y + shape.display.h - vDelta + DC.HIGHLIGHT_MARGIN*2;
+        var bottomY = canvasTopY + shape.display.y + shape.display.h - vDelta + this.options.HIGHLIGHT_MARGIN * 2;
         if (document.documentElement.clientHeight < bottomY) {
           winDelta = bottomY - document.documentElement.clientHeight;
         }
         var slices = !timeSlice ? 1 : Math.ceil(timeSlice / (1000 / 60));
         var i = 0;
         var winScrollY = 0;
-        var scroll = function() {
-          container.scrollTop += vDelta/slices;
+        var scroll = function () {
+          container.scrollTop += vDelta / slices;
           if (winDelta > 0) {
-            winScrollY += winDelta/slices;
+            winScrollY += winDelta / slices;
             window.scroll(0, winScrollY);
           }
           i++;
@@ -1253,9 +1276,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         scroll();
       }
     }
-  };
+  }
 
-  Diagram.prototype.onMouseDown = function(e) {
+  onMouseDown(e) {
     var rect = this.canvas.getBoundingClientRect();
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
@@ -1270,6 +1293,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       if (selObj) {
         if (this.selection.includes(selObj))
           this.selection.remove(selObj);
+
         else
           this.selection.add(selObj);
         selObj.select();
@@ -1287,9 +1311,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         }
       }
     }
-  };
+  }
 
-  Diagram.prototype.onMouseUp = function(e) {
+  onMouseUp(e) {
     if (this.shiftDrag && this.dragX && this.dragY) {
       if (this.selection.getSelectObj() && this.selection.getSelectObj().isStep) {
         var rect = this.canvas.getBoundingClientRect();
@@ -1316,13 +1340,13 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     else {
       this.selection.reselect();
     }
-  };
+  }
 
-  Diagram.prototype.onMouseOut = function(e) {
+  onMouseOut(e) {
     document.body.style.cursor = 'default';
-  };
+  }
 
-  Diagram.prototype.onMouseMove = function(e) {
+  onMouseMove(e) {
     var rect = this.canvas.getBoundingClientRect();
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
@@ -1353,9 +1377,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     else {
       document.body.style.cursor = '';
     }
-  };
+  }
 
-  Diagram.prototype.onMouseDrag = function(e) {
+  onMouseDrag(e) {
     if (this.editable && this.dragX && this.dragY && !e.ctrlKey) {
       var rect = this.canvas.getBoundingClientRect();
       var x = e.clientX - rect.left;
@@ -1363,7 +1387,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       var deltaX = x - this.dragX;
       var deltaY = y - this.dragY;
 
-      if (Math.abs(deltaX) > DC.MIN_DRAG || Math.abs(deltaY) > DC.MIN_DRAG) {
+      if (Math.abs(deltaX) > this.options.MIN_DRAG || Math.abs(deltaY) > this.options.MIN_DRAG) {
 
         if (x > rect.right - Diagram.BOUNDARY_DIM)
           this.canvas.width = this.canvas.width + Diagram.BOUNDARY_DIM;
@@ -1381,9 +1405,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
             if (this.selection.getSelectObj().isStep) {
               this.draw();
               this.drawLine([{
-                from: {x: this.dragX, y: this.dragY},
-                to: {x: x, y: y}
-              }], DC.LINE_COLOR);
+                from: { x: this.dragX, y: this.dragY },
+                to: { x: x, y: y }
+              }], this.options.LINE_COLOR);
               return true;
             }
           }
@@ -1409,18 +1433,18 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
                 let step = this.getStep(activityId);
                 if (step) {
                   this.selection.getSelectObj().resize(this.dragX, this.dragY, x - this.dragX, y - this.dragY);
-                  this.getLinks(step).forEach(function(link) {
+                  this.getLinks(step).forEach(function (link) {
                     link.recalc(step);
                   });
                 }
                 else {
                   // try subflows
-                  this.subflows.forEach(function(subflow) {
+                  this.subflows.forEach(function (subflow) {
                     let step = subflow.getStep(activityId);
                     if (step) {
                       // only within bounds of subflow
                       diagram.selection.getSelectObj().resize(diagram.dragX, diagram.dragY, x - diagram.dragX, y - diagram.dragY, subflow.display);
-                      subflow.getLinks(step).forEach(function(link) {
+                      subflow.getLinks(step).forEach(function (link) {
                         link.recalc(step);
                       });
                     }
@@ -1458,9 +1482,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         }
       }
     }
-  };
+  }
 
-  Diagram.prototype.onDrop = function(e, item) {
+  onDrop(e, item) {
     var rect = this.canvas.getBoundingClientRect();
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
@@ -1475,14 +1499,14 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
     }
     this.draw();
     return true;
-  };
+  }
 
-  Diagram.prototype.onDelete = function(e, onChange) {
+  onDelete(e, onChange) {
     var selection = this.selection;
     var selObj = this.selection.getSelectObj();
     if (selObj && !selObj.isLabel) {
       var msg = this.selection.isMulti ? 'Delete selected items?' : 'Delete ' + selObj.workflowType + '?';
-      this.dialog.confirm('Confirm Delete', msg, function(res) {
+      this.dialog.confirm('Confirm Delete', msg, function (res) {
         if (res) {
           selection.doDelete();
           selection.diagram.draw();
@@ -1490,16 +1514,16 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
         }
       });
     }
-  };
+  }
 
-  Diagram.prototype.getLatestInstance = function() {
+  getLatestInstance() {
     var instances = this.selection.getSelectObj().instances;
     if (instances && instances.length) {
-      return instances[0];  // They are sorted descending
+      return instances[0]; // They are sorted descending
     }
-  };
+  }
 
-  Diagram.prototype.getContextMenuItems = function(e) {
+  getContextMenuItems(e) {
     var selObj = this.selection.getSelectObj();
     if (selObj && selObj.workflowType == 'activity') {
       var actions = [];
@@ -1515,7 +1539,7 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
             if (inst.status === 'Waiting') {
               actions.push('proceed');
               if (impl && impl.category && impl.category === 'com.centurylink.mdw.activity.types.PauseActivity') {
-                  actions.push('resume');
+                actions.push('resume');
               }
             }
             if (impl && impl.category && impl.category !== 'com.centurylink.mdw.activity.types.TaskActivity') {
@@ -1526,9 +1550,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       }
       return actions;
     }
-  };
+  }
 
-  Diagram.prototype.getHoverObj = function(x, y) {
+  getHoverObj(x, y) {
     if (this.zoom != 100) {
       var scale = this.zoom / 100;
       x = x / scale;
@@ -1570,9 +1594,9 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       if (this.notes[i].isHover(x, y))
         return this.notes[i];
     }
-  };
+  }
 
-  Diagram.prototype.getHoverStep = function(x, y) {
+  getHoverStep(x, y) {
     for (let i = 0; i < this.subflows.length; i++) {
       var subflow = this.subflows[i];
       if (subflow.isHover(x, y)) {
@@ -1586,10 +1610,12 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
       if (this.steps[i].isHover(x, y))
         return this.steps[i];
     }
-  };
+  }
 
-  // when nothing selectable is hovered
-  Diagram.prototype.getBackgroundObj = function(e) {
+  /**
+   * when nothing selectable is hovered
+   */
+  getBackgroundObj(e) {
     var rect = this.canvas.getBoundingClientRect();
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
@@ -1603,22 +1629,22 @@ var DiagramFactory = function(DC, Shape, Label, Step, Link, Subflow, Note, Marqu
 
     if (bgObj == this)
       this.label.select();
+
     else
       bgObj.select();
 
     return bgObj;
-  };
+  }
 
-  // removes anchors from currently selected obj, if any
-  Diagram.prototype.unselect = function() {
+  /**
+   * removes anchors from currently selected obj, if any
+   */
+  unselect() {
     this.draw();
-  };
+  }
 
-  Diagram.prototype.getAnchor = function(x, y) {
+  getAnchor(x, y) {
     return -1; // not applicable
-  };
+  }
+}
 
-  return Diagram;
-};
-
-export { DiagramFactory as DiagramFactory };

@@ -1,33 +1,32 @@
-'use strict';
+import { Shape } from './shape';
 
-var MarqueeFactory = function(DC, Shape) {
-  var Marquee = function(diagram) {
-    Shape.call(this, diagram);
+export class Marquee extends Shape {
+
+  static BOX_OUTLINE_COLOR = 'cyan';
+  static BOX_ROUNDING_RADIUS = 2;
+
+  constructor(diagram) {
+    super(diagram.canvas.getContext("2d"), diagram.options);
     this.diagram = diagram;
-    this.workflowItem = { attributes: { WORK_DISPLAY_INFO: {x: 0, y: 0, w: 0, h: 0} } }; // dummy to hold attrs
+    this.workflowItem = { attributes: { WORK_DISPLAY_INFO: { x: 0, y: 0, w: 0, h: 0 } } }; // dummy to hold attrs
     this.isMarquee = true;
-  };
+  }
 
-  Marquee.prototype = new Shape();
-
-  Marquee.BOX_OUTLINE_COLOR = 'cyan';
-  Marquee.BOX_ROUNDING_RADIUS = 2;
-
-  Marquee.prototype.draw = function() {
+  draw() {
     this.diagram.rect(this.display.x, this.display.y, this.display.w, this.display.h, Marquee.BOX_OUTLINE_COLOR, null, Marquee.BOX_ROUNDING_RADIUS);
-  };
+  }
 
-  Marquee.prototype.prepareDisplay = function() {
+  prepareDisplay() {
     this.display = this.getDisplay();
     return this.display;
-  };
+  }
 
-  Marquee.prototype.start = function(x, y) {
+  start(x, y) {
     this.setDisplayAttr(x, y, 2, 2);
     this.display = this.getDisplay();
-  };
+  }
 
-  Marquee.prototype.resize = function(x, y, deltaX, deltaY) {
+  resize(x, y, deltaX, deltaY) {
     var newX = deltaX > 0 ? x : x + deltaX;
     if (newX < 0)
       newX = 0;
@@ -38,13 +37,13 @@ var MarqueeFactory = function(DC, Shape) {
     var newH = deltaY > 0 ? deltaY : -deltaY;
 
     this.setDisplayAttr(newX, newY, newW, newH);
-  };
+  }
 
-  Marquee.prototype.getAnchor = function(x, y) {
+  getAnchor(x, y) {
     return -1;
-  };
+  }
 
-  Marquee.prototype.getSelectObjs = function() {
+  getSelectObjs() {
     var selObjs = [];
     for (let i = 0; i < this.diagram.steps.length; i++) {
       var step = this.diagram.steps[i];
@@ -62,15 +61,11 @@ var MarqueeFactory = function(DC, Shape) {
         selObjs.push(note);
     }
     return selObjs;
-  };
+  }
 
-  Marquee.prototype.isContained = function(shape) {
+  isContained(shape) {
     return shape.display.x >= this.display.x && shape.display.y > this.display.y &&
-        shape.display.x + shape.display.w <= this.display.x + this.display.w &&
-        shape.display.y + shape.display.h <= this.display.y + this.display.h;
-  };
-
-  return Marquee;
-};
-
-export { MarqueeFactory as MarqueeFactory };
+      shape.display.x + shape.display.w <= this.display.x + this.display.w &&
+      shape.display.y + shape.display.h <= this.display.y + this.display.h;
+  }
+}

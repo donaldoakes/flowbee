@@ -1,35 +1,35 @@
-'use strict';
+export class Selection {
 
-var SelectionFactory = function() {
-  var Selection = function(diagram) {
+  constructor(diagram) {
     this.diagram = diagram;
     this.selectObjs = [];
-  };
+  }
 
-  Selection.prototype.includes = function(obj) {
+  includes(obj) {
     for (var i = 0; i < this.selectObjs.length; i++) {
       if (this.selectObjs[i] === obj)
         return true;
     }
     return false;
-  };
+  }
 
-  Selection.prototype.isMulti = function() {
+  isMulti() {
     return this.selectObjs.length > 1;
-  };
+  }
 
-  Selection.prototype.getSelectObj = function() {
+  getSelectObj() {
     if (this.selectObjs.length === 0)
       return null;
+
     else
       return this.selectObjs[0];
-  };
+  }
 
-  Selection.prototype.setSelectObj = function(obj) {
+  setSelectObj(obj) {
     this.selectObjs = obj ? [obj] : [];
-  };
+  }
 
-  Selection.prototype.add = function(obj) {
+  add(obj) {
     if (!this.includes(obj)) {
       this.selectObjs.push(obj);
       if (obj.isStep) {
@@ -50,7 +50,7 @@ var SelectionFactory = function() {
         }
 
         if (stepLinks) {
-          for (let i = 0; i < stepLinks.length ; i++) {
+          for (let i = 0; i < stepLinks.length; i++) {
             var stepLink = stepLinks[i];
             if (stepLink.from === obj) {
               if (this.includes(stepLink.to)) {
@@ -68,18 +68,18 @@ var SelectionFactory = function() {
         }
       }
     }
-  };
+  }
 
-  Selection.prototype.remove = function(obj) {
+  remove(obj) {
     var newSel = [];
     for (var i = 0; i < this.selectObjs.length; i++) {
       if (this.selectObjs[i] !== obj)
         newSel.push(this.selectObjs[i]);
     }
     this.selectObjs = newSel;
-  };
+  }
 
-  Selection.prototype.doDelete = function() {
+  doDelete() {
     for (var i = 0; i < this.selectObjs.length; i++) {
       var selObj = this.selectObjs[i];
       if (selObj.isStep)
@@ -91,10 +91,12 @@ var SelectionFactory = function() {
       else if (selObj.isNote)
         this.diagram.deleteNote(selObj);
     }
-  };
+  }
 
-  // works for the primary (single) selection to reenable anchors
-  Selection.prototype.reselect = function() {
+  /**
+   * works for the primary (single) selection to reenable anchors
+   */
+  reselect() {
     if (this.getSelectObj() && !this.isMulti()) {
       var selObj = this.getSelectObj();
       var id = selObj.workflowItem ? selObj.workflowItem.id : null;
@@ -112,9 +114,9 @@ var SelectionFactory = function() {
         this.setSelectObj(this.diagram.label);
       }
     }
-  };
+  }
 
-  Selection.prototype.move = function(startX, startY, deltaX, deltaY) {
+  move(startX, startY, deltaX, deltaY) {
     var selection = this;
 
     if (!this.isMulti() && this.getSelectObj().isLink) {
@@ -171,10 +173,12 @@ var SelectionFactory = function() {
       }
     }
     // TODO: diagram label loses select
-  };
+  }
 
-  // re-find the selected object after it's been moved
-  Selection.prototype.find = function(obj) {
+  /**
+   * re-find the selected object after it's been moved
+   */
+  find(obj) {
     if (obj.workflowItem && obj.workflowItem.id) {
       var found = this.diagram.get(obj.workflowItem.id);
       if (found)
@@ -188,10 +192,5 @@ var SelectionFactory = function() {
           return found;
       }
     }
-  };
-
-  return Selection;
-};
-
-export { SelectionFactory as SelectionFactory };
-
+  }
+}
