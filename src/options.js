@@ -51,6 +51,7 @@ export const DEFAULT_LIGHT = {
       name: '13px monospace',
       size: 13
     },
+    textColor: '#101010',
     outlineColor: 'gray',
     roundingRadius: 2,
     fillColor: '#ffc',

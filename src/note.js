@@ -24,9 +24,11 @@ export class Note extends Shape {
     if (this.textNote.content) {
       var lines = this.textNote.content.replace(/\r/g, '').split(/\n/);
       this.diagram.context.font = this.diagram.options.note.font.name;
+      this.diagram.context.fillStyle = this.diagram.options.note.textColor ? this.diagram.options.note.textColor : this.diagram.options.defaultColor;
       for (var i = 0; i < lines.length; i++) {
         this.diagram.context.fillText(lines[i], this.display.x + 4, this.display.y + 2 + this.diagram.options.note.font.size * (i + 1));
       }
+      this.diagram.context.fillStyle = this.diagram.options.defaultColor;
     }
   }
 
