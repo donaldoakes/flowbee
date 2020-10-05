@@ -1,3 +1,5 @@
+// TODO: rollup/bundling is not used due to this issue:
+// https://github.com/rollup/plugins/issues/287
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import pkg from './package.json';

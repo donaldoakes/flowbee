@@ -2,11 +2,10 @@
   "name": "flowbee",
   "version": "0.0.1",
   "description": "Flow Diagramming",
-  "main": "dist/flowbee.cjs.js",
-  "module": "dist/flowbee.esm.js",
-  "browser": "dist/flowbee.umd.js",
+  "type": "module",
+  "main": "dist/main.js",
   "scripts": {
-    "build": "rollup -c"
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -29,8 +28,11 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",
     "@rollup/plugin-node-resolve": "^9.0.0",
-    "babel-eslint": "^10.1.0",
+    "@rollup/plugin-typescript": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.3.0",
+    "@typescript-eslint/parser": "^4.3.0",
     "eslint": "^7.10.0",
-    "rollup": "^2.28.2"
+    "rollup": "^2.28.2",
+    "typescript": "^4.0.3"
   }
 }
