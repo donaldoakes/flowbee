@@ -997,7 +997,7 @@ export class Diagram extends Shape {
         var rounding = this.options.defaultRoundingRadius;
         if (instance.statusCode) {
           var status = this.options.statuses[instance.statusCode];
-          instance.status = status.status;
+          instance.status = status.name;
           var statusColor = color ? color : status.color;
           var del = Step.INST_W - Step.OLD_INST_W;
           if (ext) {
