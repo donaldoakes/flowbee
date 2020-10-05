@@ -1,4 +1,4 @@
-export { Flow } from './flow';
-export { Specifier } from './specifier';
+export { FlowDiagram } from './diagram';
+export { Specifier, FlowSpecifier } from './specifier';
 export * from './options';
 

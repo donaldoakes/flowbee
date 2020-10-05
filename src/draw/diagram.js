@@ -15,13 +15,13 @@ export class Diagram extends Shape {
   static ANIMATION_SPEED = 8; // segments/s;
   static ANIMATION_LINK_FACTOR = 3; // relative link slice
 
-  constructor(canvas, options, dialog, process, implementors, imgBase, editable, instance, activity, instanceEdit, data) {
+  constructor(canvas, options, process, specifiers, imgBase, editable, instance, activity, instanceEdit, data) {
     super(canvas.getContext("2d"), options, process);
     this.canvas = canvas;
     this.options = options;
-    this.dialog = dialog;
+    this.dialog = null; // TODO: see this.onDelete()
     this.process = process;
-    this.implementors = implementors;
+    this.specifiers = specifiers;
     this.imgBase = imgBase;
     this.editable = editable && editable.toString() === 'true';
     this.instance = instance;
@@ -304,7 +304,7 @@ export class Diagram extends Shape {
 
   /**
    * sets display fields and returns a display with w and h for canvas size
-   * (for performance reasons, also initializes steps/links arrays and activity impls)
+   * (for performance reasons, also initializes steps/links arrays and activity specs)
    */
   prepareDisplay() {
     var canvasDisplay = { w: 640, h: 480 };
@@ -325,7 +325,7 @@ export class Diagram extends Shape {
     if (this.process.activities) {
       this.process.activities.forEach(function (activity) {
         var step = new Step(diagram, activity);
-        step.implementor = diagram.getImplementor(activity.implementor);
+        step.specifier = diagram.getSpecifier(activity.specifier);
         diagram.makeRoom(canvasDisplay, step.prepareDisplay());
         diagram.steps.push(step);
       });
@@ -637,7 +637,7 @@ export class Diagram extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].activity.implementor === Step.START_IMPL) {
+      if (this.steps[i].activity.specifier === Step.START_SPEC) {
         return this.steps[i];
       }
     }
@@ -746,17 +746,17 @@ export class Diagram extends Shape {
     }
   }
 
-  getImplementor(className) {
-    if (this.implementors) {
-      for (var i = 0; i < this.implementors.length; i++) {
-        var implementor = this.implementors[i];
-        if (implementor.implementorClass === className) {
-          return implementor;
+  getSpecifier(className) {
+    if (this.specifiers) {
+      for (var i = 0; i < this.specifiers.length; i++) {
+        var specifier = this.specifiers[i];
+        if (specifier.specifierClass === className) {
+          return specifier;
         }
       }
     }
     // not found -- return placeholder
-    return { implementorClass: className, category: 'com.centurylink.mdw.activity.types.GeneralActivity', icon: 'shape:activity', label: 'Unknown Implementer' };
+    return { specifierClass: className, category: 'com.centurylink.mdw.activity.types.GeneralActivity', icon: 'shape:activity', label: 'Unknown Specifier' };
   }
 
   findInSubflows(x, y) {
@@ -769,15 +769,15 @@ export class Diagram extends Shape {
     }
   }
 
-  addStep(impl, x, y) {
-    var implementor = this.getImplementor(impl);
+  addStep(spec, x, y) {
+    var specifier = this.getSpecifier(spec);
     var steps = this.steps.slice(0);
     if (this.subflows) {
       for (let i = 0; i < this.subflows.length; i++) {
         steps = steps.concat(this.subflows[i].steps);
       }
     }
-    var step = Step.create(this, this.genId(steps, 'activity'), implementor, x, y);
+    var step = Step.create(this, this.genId(steps, 'activity'), specifier, x, y);
     var hoverObj = this.getHoverObj(x, y);
     if (hoverObj && hoverObj.isSubflow) {
       hoverObj.subprocess.activities.push(step.activity);
@@ -1549,13 +1549,13 @@ export class Diagram extends Shape {
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
     if (item.category === 'subflow') {
-      this.addSubflow(item.implementorClass, x, y);
+      this.addSubflow(item.specifierClass, x, y);
     }
     else if (item.category === 'note') {
       this.addNote(x, y);
     }
     else {
-      this.addStep(item.implementorClass, x, y);
+      this.addStep(item.specifierClass, x, y);
     }
     this.draw();
     return true;
@@ -1595,14 +1595,14 @@ export class Diagram extends Shape {
             actions.push('proceed');
           }
           else if (inst.status === 'Waiting' || inst.status === 'In Progress') {
-            var impl = selObj.implementor;
+            var spec = selObj.specifier;
             if (inst.status === 'Waiting') {
               actions.push('proceed');
-              if (impl && impl.category && impl.category === 'com.centurylink.mdw.activity.types.PauseActivity') {
+              if (spec && spec.category && spec.category === 'com.centurylink.mdw.activity.types.PauseActivity') {
                 actions.push('resume');
               }
             }
-            if (impl && impl.category && impl.category !== 'com.centurylink.mdw.activity.types.TaskActivity') {
+            if (spec && spec.category && spec.category !== 'com.centurylink.mdw.activity.types.TaskActivity') {
               actions.push('fail');
             }
           }

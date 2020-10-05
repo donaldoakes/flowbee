@@ -109,7 +109,7 @@ export class Subflow extends Shape {
     if (this.subprocess.activities) {
       this.subprocess.activities.forEach(function (activity) {
         var step = new Step(subflow.diagram, activity);
-        step.implementor = subflow.diagram.getImplementor(activity.implementor);
+        step.specifier = subflow.diagram.getSpecifier(activity.specifier);
         step.prepareDisplay();
         subflow.steps.push(step);
       });
@@ -129,7 +129,7 @@ export class Subflow extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].activity.implementor === Step.START_IMPL) {
+      if (this.steps[i].activity.specifier === Step.START_SPEC) {
         return this.steps[i];
       }
     }
@@ -298,7 +298,7 @@ export class Subflow extends Shape {
     var activityY = y + 40;
     var transitionId = startTransitionId;
 
-    var start = Step.create(diagram, activityId, diagram.getImplementor(Step.START_IMPL), activityX, activityY);
+    var start = Step.create(diagram, activityId, diagram.getSpecifier(Step.START_SPEC), activityX, activityY);
     subprocess.activities.push(start.activity);
     subflow.steps.push(start);
 
@@ -308,7 +308,7 @@ export class Subflow extends Shape {
     if (type === 'Exception Handler') {
       activityX = x + 170;
       activityY = y + 30;
-      task = Step.create(diagram, activityId, diagram.getImplementor(Step.TASK_IMPL), activityX, activityY);
+      task = Step.create(diagram, activityId, diagram.getSpecifier(Step.TASK_SPEC), activityX, activityY);
       task.activity.attributes.TASK_PAGELET = Step.TASK_PAGELET;
       task.activity.attributes.STATUS_AFTER_EVENT = 'Cancelled';
       task.activity.name = diagram.process.name + ' Fallout';
@@ -321,7 +321,7 @@ export class Subflow extends Shape {
     activityId++;
     activityX = x + 340;
     activityY = y + 40;
-    var stop = Step.create(diagram, activityId, diagram.getImplementor(Step.STOP_IMPL), activityX, activityY);
+    var stop = Step.create(diagram, activityId, diagram.getSpecifier(Step.STOP_SPEC), activityX, activityY);
     subprocess.activities.push(stop.activity);
     subflow.steps.push(stop);
     let link = Link.create(diagram, transitionId, task ? task : start, stop);

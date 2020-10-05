@@ -80,6 +80,7 @@ export interface HyperlinkOptions {
 }
 
 export interface DrawingOptions {
+    iconBase?: string;
     websocketUrl?: string;
     defaultFont?: Font;
     defaultLineWidth?: number;
@@ -103,6 +104,7 @@ export interface DrawingOptions {
 }
 
 export const DEFAULT_OPTIONS: DrawingOptions = {
+    iconBase: null,
     websocketUrl: null,
     defaultFont: {
         name: '12px sans-serif',

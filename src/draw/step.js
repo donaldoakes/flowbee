@@ -6,10 +6,10 @@ export class Step extends Shape {
   static OLD_INST_W = 4;
   static MAX_INSTS = 10;
 
-  static START_IMPL = 'com.centurylink.mdw.workflow.activity.process.ProcessStartActivity';
-  static STOP_IMPL = 'com.centurylink.mdw.workflow.activity.process.ProcessFinishActivity';
-  static PAUSE_IMPL = 'com.centurylink.mdw.base.PauseActivity';
-  static TASK_IMPL = 'com.centurylink.mdw.workflow.activity.task.AutoFormManualTaskActivity';
+  static START_SPEC = 'com.centurylink.mdw.workflow.activity.process.ProcessStartActivity';
+  static STOP_SPEC = 'com.centurylink.mdw.workflow.activity.process.ProcessFinishActivity';
+  static PAUSE_SPEC = 'com.centurylink.mdw.base.PauseActivity';
+  static TASK_SPEC = 'com.centurylink.mdw.workflow.activity.task.AutoFormManualTaskActivity';
   static TASK_PAGELET = 'com.centurylink.mdw.base/AutoFormManualTask.pagelet';
 
   constructor(diagram, activity) {
@@ -23,8 +23,8 @@ export class Step extends Shape {
   draw(animationTimeSlice) {
     var activity = this.workflowObj = this.activity;
     var shape;
-    if (this.implementor.icon && this.implementor.icon.startsWith('shape:')) {
-      shape = this.implementor.icon.substring(6);
+    if (this.specifier.icon && this.specifier.icon.startsWith('shape:')) {
+      shape = this.specifier.icon.substring(6);
     }
 
     var title, fill;
@@ -67,7 +67,7 @@ export class Step extends Shape {
     }
 
     var yAdjust = -2;
-    if (this.implementor.icon) {
+    if (this.specifier.icon) {
       if (shape) {
         if ('start' === shape) {
           this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, this.diagram.options.step.startColor, 0.8);
@@ -109,7 +109,7 @@ export class Step extends Shape {
             opacity
           );
         }
-        var iconSrc = 'asset/' + this.implementor.icon;
+        var iconSrc = 'asset/' + this.specifier.icon;
         var iconX = this.display.x + this.display.w / 2 - 12;
         var iconY = this.display.y + 5;
         this.diagram.drawImage(iconSrc, iconX, iconY);
@@ -256,20 +256,20 @@ export class Step extends Shape {
     this.activity.attributes.WORK_DISPLAY_INFO = this.getAttr(display);
   }
 
-  static create(diagram, idNum, implementor, x, y) {
-    var activity = Step.newActivity(diagram, idNum, implementor, x, y);
+  static create(diagram, idNum, specifier, x, y) {
+    var activity = Step.newActivity(diagram, idNum, specifier, x, y);
     var step = new Step(diagram, activity);
-    step.implementor = implementor;
+    step.specifier = specifier;
     var disp = step.getDisplay();
     step.display = { x: disp.x, y: disp.y, w: disp.w, h: disp.h };
     return step;
   }
 
-  static newActivity(diagram, idNum, implementor, x, y) {
+  static newActivity(diagram, idNum, specifier, x, y) {
     var w = 24;
     var h = 24;
     if (diagram.drawBoxes) {
-      if (implementor.icon && implementor.icon.startsWith('shape:')) {
+      if (specifier.icon && specifier.icon.startsWith('shape:')) {
         w = 60;
         h = 40;
       }
@@ -278,14 +278,14 @@ export class Step extends Shape {
         h = 60;
       }
     }
-    var name = implementor.label;
-    if (implementor.implementorClass === Step.START_IMPL) {
+    var name = specifier.label;
+    if (specifier.specifierClass === Step.START_SPEC) {
       name = 'Start';
     }
-    else if (implementor.implementorClass === Step.STOP_IMPL) {
+    else if (specifier.specifierClass === Step.STOP_SPEC) {
       name = 'Stop';
     }
-    else if (implementor.implementorClass === Step.PAUSE_IMPL) {
+    else if (specifier.specifierClass === Step.PAUSE_SPEC) {
       name = 'Pause';
     }
     else {
@@ -294,7 +294,7 @@ export class Step extends Shape {
     var activity = {
       id: 'A' + idNum,
       name: name,
-      implementor: implementor.implementorClass,
+      specifier: specifier.specifierClass,
       attributes: { WORK_DISPLAY_INFO: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h },
       transitions: []
     };

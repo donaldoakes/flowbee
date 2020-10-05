@@ -1,5 +1,5 @@
 {
-    "editor.autoClosingBrackets": "never",
+    "editor.autoClosingBrackets": "beforeWhitespace",
     "[javascript]": {
         "editor.tabSize": 2
     },

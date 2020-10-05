@@ -1,0 +1,1 @@
+This directory contains files that are not part of the public API.
