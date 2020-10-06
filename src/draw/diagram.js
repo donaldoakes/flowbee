@@ -15,7 +15,7 @@ export class Diagram extends Shape {
   static ANIMATION_SPEED = 8; // segments/s;
   static ANIMATION_LINK_FACTOR = 3; // relative link slice
 
-  constructor(canvas, options, process, specifiers, imgBase, editable, instance, activity, instanceEdit, data) {
+  constructor(canvas, options, process, specifiers, imgBase, editable, activity, instance, instanceEdit, data) {
     super(canvas.getContext("2d"), options, process);
     this.canvas = canvas;
     this.options = options;
@@ -24,7 +24,7 @@ export class Diagram extends Shape {
     this.specifiers = specifiers;
     this.imgBase = imgBase;
     this.editable = editable && editable.toString() === 'true';
-    this.instance = instance;
+    console.log("EDITABLE: " + editable);
     this.workflowType = 'process';
     this.isDiagram = true;
     this.context = this.canvas.getContext("2d");
@@ -39,6 +39,7 @@ export class Diagram extends Shape {
         this.activityId = activity;
       }
     }
+    this.instance = instance;
     this.instanceEdit = instanceEdit && instanceEdit.toString() === 'true';
     this.data = data;
 
@@ -746,17 +747,17 @@ export class Diagram extends Shape {
     }
   }
 
-  getSpecifier(className) {
+  getSpecifier(id) {
     if (this.specifiers) {
       for (var i = 0; i < this.specifiers.length; i++) {
         var specifier = this.specifiers[i];
-        if (specifier.specifierClass === className) {
+        if (specifier.id && specifier.id === id) {
           return specifier;
         }
       }
     }
     // not found -- return placeholder
-    return { specifierClass: className, category: 'com.centurylink.mdw.activity.types.GeneralActivity', icon: 'shape:activity', label: 'Unknown Specifier' };
+    return { id, category: 'com.centurylink.mdw.activity.types.GeneralActivity', icon: 'shape:activity', label: 'Unknown Specifier' };
   }
 
   findInSubflows(x, y) {

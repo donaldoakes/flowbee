@@ -30,7 +30,7 @@ export class FlowDiagram {
         }
     }
 
-    render(text: string, file: string, animate = false) {
+    render(text: string, file: string, readonly = false, animate = false) {
         if (typeof text === 'string') {
             const flow = this.parse(text, file);
             if (file) {
@@ -40,20 +40,19 @@ export class FlowDiagram {
                     flow.name = flow.name.substring(0, lastDot);
                 }
             }
-            const editable = false;
-            const instance = null;
             const step = null; // highlighted step
+            const instance = null;
             const instanceEdit = false;
-            const data = null;
+            const data = null; // hotspots
             const diagram = new Diagram(
                 this.canvas,
                 this.options,
                 flow,
                 this.specifiers,
                 this.options.iconBase,
-                editable,
-                instance,
+                !readonly,
                 step,
+                instance,
                 instanceEdit,
                 data
             );

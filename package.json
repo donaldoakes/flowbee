@@ -7,8 +7,7 @@
   "module": "dist/main.js",
   "browser": "dist/index.js",
   "scripts": {
-    "build": "tsc && rollup -c",
-    "watch": "tsc -w"
+    "build": "tsc && rollup -c"
   },
   "repository": {
     "type": "git",
