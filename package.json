@@ -3,9 +3,11 @@
   "version": "0.0.1",
   "description": "Flow Diagramming",
   "type": "module",
-  "main": "dist/src/main.js",
+  "main": "dist/main.js",
+  "module": "dist/main.js",
+  "browser": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && rollup -c",
     "watch": "tsc -w"
   },
   "repository": {
@@ -23,7 +25,6 @@
   },
   "homepage": "https://github.com/donaldoakes/flowbee#readme",
   "dependencies": {
-    "glob": "^7.1.6",
     "js-yaml": "^3.14.0",
     "merge-anything": "^3.0.6"
   },
@@ -35,7 +36,6 @@
     "@typescript-eslint/parser": "^4.3.0",
     "eslint": "^7.10.0",
     "rollup": "^2.28.2",
-    "rollup-plugin-typescript2": "^0.27.3",
     "typescript": "^4.0.3"
   }
 }
