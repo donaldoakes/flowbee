@@ -37,12 +37,12 @@ export class Link {
   static ELBOW_THRESHOLD = 0.8;
   static ELBOW_VH_THRESHOLD = 60;
 
-  constructor(diagram, transition, from, to) {
+  constructor(diagram, link, from, to) {
     this.diagram = diagram;
-    this.transition = this.workflowItem = transition;
+    this.link = this.workflowItem = link;
     this.from = from;
     this.to = to;
-    this.workflowType = 'transition';
+    this.flowElementType = 'link';
     this.isLink = true;
     this.dpRatio = 1;
     if (window.devicePixelRatio) {
@@ -79,10 +79,10 @@ export class Link {
     this.display = this.getDisplay();
     // TODO determine effect on maxDisplay
     // label
-    var labelText = this.transition.event === 'FINISH' ? '' : this.transition.event + ':';
-    labelText += this.transition.resultCode ? this.transition.resultCode : '';
+    var labelText = this.link.event === 'FINISH' ? '' : this.link.event + ':';
+    labelText += this.link.result ? this.link.result : '';
     if (labelText.length > 0) {
-      this.label = new Label(this, labelText, { x: this.display.lx, y: this.display.ly + Link.LABEL_CORR }, this.diagram.options.defaultFont);
+      this.label = new Label(this, labelText, { x: this.display.x, y: this.display.y + Link.LABEL_CORR }, this.diagram.options.defaultFont);
       this.label.prepareDisplay();
     }
 
@@ -91,17 +91,17 @@ export class Link {
 
   getDisplay() {
     var display = {};
-    var displayAttr = this.transition.attributes.TRANSITION_DISPLAY_INFO;
+    var displayAttr = this.link.attributes.display;
     if (displayAttr) {
       var vals = displayAttr.split(',');
       display.xs = [];
       display.ys = [];
       vals.forEach(function (val) {
-        if (val.startsWith('lx=')) {
-          display.lx = parseInt(val.substring(3));
+        if (val.startsWith('x=')) {
+          display.x = parseInt(val.substring(2));
         }
-        else if (val.startsWith('ly=')) {
-          display.ly = parseInt(val.substring(3));
+        else if (val.startsWith('y=')) {
+          display.y = parseInt(val.substring(2));
         }
         else if (val.startsWith('xs=')) {
           val.substring(3).split('&').forEach(function (x) {
@@ -122,14 +122,14 @@ export class Link {
   }
 
   setDisplay(display) {
-    if (!this.transition.attributes) {
-      this.transition.attributes = {};
+    if (!this.link.attributes) {
+      this.link.attributes = {};
     }
-    this.transition.attributes.TRANSITION_DISPLAY_INFO = this.getAttr(display);
+    this.link.attributes.display = this.getAttr(display);
   }
 
   getAttr(display) {
-    var attr = 'type=' + display.type + ',lx=' + Math.round(display.lx) + ',ly=' + Math.round(display.ly);
+    var attr = 'type=' + display.type + ',x=' + Math.round(display.x) + ',y=' + Math.round(display.y);
     attr += ',xs=';
     for (var i = 0; i < display.xs.length; i++) {
       if (i > 0) {
@@ -150,12 +150,12 @@ export class Link {
   /**
    * only for the label
    */
-  setDisplayAttr(x, y, w, h) {
-    this.setDisplay({ lx: x, ly: y, type: this.display.type, xs: this.display.xs, ys: this.display.ys });
+  setDisplayAttr(x, y, _w, _h) {
+    this.setDisplay({ x, y, type: this.display.type, xs: this.display.xs, ys: this.display.ys });
   }
 
   getColor() {
-    var color = Link.EVENTS[this.transition.event].color;
+    var color = Link.EVENTS[this.link.event].color;
     if (this.diagram.instance) {
       if (this.instances && this.instances.length > 0) {
         var latest = this.instances[0];
@@ -230,7 +230,7 @@ export class Link {
     }
     else if (type === Link.LINK_TYPES.STRAIGHT) {
       var segments = [];
-      xs.forEach(function (x, i) {
+      xs.forEach(function (_x, i) {
         if (i < xs.length - 1) {
           segments.push({
             from: { x: xs[i], y: ys[i] },
@@ -548,19 +548,19 @@ export class Link {
     var type = this.display.type;
     var xs = this.display.xs;
     var ys = this.display.ys;
-    var lx = this.display.lx;
-    var ly = this.display.ly;
+    var x = this.display.x;
+    var y = this.display.y;
 
     var n = xs.length;
-    var i, k;
+    var k;
     // remember relative label position
-    var labelSlope = this.getSlope(xs[0], ys[0], lx, ly) - this.getSlope(xs[0], ys[0], xs[n - 1], ys[n - 1]);
+    var labelSlope = this.getSlope(xs[0], ys[0], x, y) - this.getSlope(xs[0], ys[0], xs[n - 1], ys[n - 1]);
     var labelDist = this.getDist(xs[0], ys[0], xs[n - 1], ys[n - 1]);
     if (labelDist < 5.0) {
       labelDist = 0.5;
     }
     else {
-      labelDist = this.getDist(xs[0], ys[0], lx, ly) / labelDist;
+      labelDist = this.getDist(xs[0], ys[0], x, y) / labelDist;
     }
 
     if (type === Link.LINK_TYPES.STRAIGHT) {
@@ -672,8 +672,8 @@ export class Link {
     // label position
     labelSlope = this.getSlope(xs[0], ys[0], xs[n - 1], ys[n - 1]) + labelSlope;
     labelDist = this.getDist(xs[0], ys[0], xs[n - 1], ys[n - 1]) * labelDist;
-    this.display.lx = Math.round(xs[0] + Math.cos(labelSlope) * labelDist);
-    this.display.ly = Math.round(ys[0] + Math.sin(labelSlope) * labelDist);
+    this.display.x = Math.round(xs[0] + Math.cos(labelSlope) * labelDist);
+    this.display.y = Math.round(ys[0] + Math.sin(labelSlope) * labelDist);
 
     this.setDisplay(this.display);
   }
@@ -819,41 +819,40 @@ export class Link {
     var ys = this.display.ys;
 
     var x1 = this.from.display.x;
-    var y1 = this.from.display.y;
     var x2 = this.to.display.x;
 
     var n = xs.length;
 
     if (type === Link.LINK_TYPES.STRAIGHT) {
-      this.display.lx = (xs[0] + xs[n - 1]) / 2;
-      this.display.ly = (ys[0] + ys[n - 1]) / 2;
+      this.display.x = (xs[0] + xs[n - 1]) / 2;
+      this.display.y = (ys[0] + ys[n - 1]) / 2;
     }
     else if (n === 2) {
       // auto ELBOW, ELBOWH, ELBOWV
-      this.display.lx = (xs[0] + xs[n - 1]) / 2;
-      this.display.ly = (ys[0] + ys[n - 1]) / 2;
+      this.display.x = (xs[0] + xs[n - 1]) / 2;
+      this.display.y = (ys[0] + ys[n - 1]) / 2;
     }
     else {
       // ELBOW, ELBOWH, ELBOWV with middle control points
       var horizontalFirst = ys[0] === ys[1];
       if (n <= 3) {
         if (horizontalFirst) {
-          this.display.lx = (x1 + x2) / 2 - 40;
-          this.display.ly = ys[0] - 4;
+          this.display.x = (x1 + x2) / 2 - 40;
+          this.display.y = ys[0] - 4;
         }
         else {
-          this.display.lx = xs[0] + 2;
-          this.display.ly = (ys[0] + ys[1]) / 2;
+          this.display.x = xs[0] + 2;
+          this.display.y = (ys[0] + ys[1]) / 2;
         }
       }
       else {
         if (horizontalFirst) {
-          this.display.lx = (x1 <= x2) ? (xs[(n - 1) / 2] + 2) : (xs[(n - 1) / 2 + 1] + 2);
-          this.display.ly = ys[n / 2] - 4;
+          this.display.x = (x1 <= x2) ? (xs[(n - 1) / 2] + 2) : (xs[(n - 1) / 2 + 1] + 2);
+          this.display.y = ys[n / 2] - 4;
         }
         else {
-          this.display.lx = (x1 <= x2) ? xs[n / 2 - 1] : xs[n / 2];
-          this.display.ly = ys[n / 2 - 1] - 4;
+          this.display.x = (x1 <= x2) ? xs[n / 2 - 1] : xs[n / 2];
+          this.display.y = ys[n / 2 - 1] - 4;
         }
       }
     }
@@ -1015,8 +1014,8 @@ export class Link {
   move(deltaX, deltaY) {
     var display = {
       type: this.display.type,
-      lx: this.display.lx + deltaX,
-      ly: this.display.ly + deltaY,
+      x: this.display.x + deltaX,
+      y: this.display.y + deltaY,
       xs: [],
       ys: []
     };
@@ -1036,8 +1035,8 @@ export class Link {
   moveAnchor(anchor, deltaX, deltaY) {
     var display = {
       type: this.display.type,
-      lx: this.display.lx,
-      ly: this.display.ly,
+      x: this.display.x,
+      y: this.display.y,
       xs: [],
       ys: []
     };
@@ -1076,28 +1075,28 @@ export class Link {
   }
 
   setFrom(fromStep) {
-    var newTransitions = [];
-    for (let i = 0; i < this.from.activity.transitions.length; i++) {
-      var fromTrans = this.from.activity.transitions[i];
-      if (this.transition.id === fromTrans.id) {
-        if (!fromStep.activity.transitions) {
-          fromStep.activity.transitions = [];
+    var newLinks = [];
+    for (let i = 0; i < this.from.step.links.length; i++) {
+      var fromTrans = this.from.step.links[i];
+      if (this.link.id === fromTrans.id) {
+        if (!fromStep.step.links) {
+          fromStep.step.links = [];
         }
-        fromStep.activity.transitions.push(fromTrans);
+        fromStep.step.links.push(fromTrans);
       }
       else {
-        newTransitions.push(fromTrans);
+        newLinks.push(fromTrans);
       }
     }
-    this.from.activity.transitions = newTransitions;
+    this.from.step.links = newLinks;
     this.from = fromStep;
   }
 
   setTo(toStep) {
-    for (let i = 0; i < this.from.activity.transitions.length; i++) {
-      var fromTrans = this.from.activity.transitions[i];
-      if (this.transition.id === fromTrans.id) {
-        fromTrans.to = toStep.activity.id;
+    for (let i = 0; i < this.from.step.links.length; i++) {
+      var fromTrans = this.from.step.links[i];
+      if (this.link.id === fromTrans.id) {
+        fromTrans.to = toStep.step.id;
         break;
       }
     }
@@ -1107,28 +1106,28 @@ export class Link {
   moveLabel(deltaX, deltaY) {
     this.setDisplay({
       type: this.display.type,
-      lx: this.display.lx + deltaX,
-      ly: this.display.ly + deltaY,
+      x: this.display.x + deltaX,
+      y: this.display.y + deltaY,
       xs: this.display.xs,
       ys: this.display.ys
     });
   }
 
   static create(diagram, idNum, from, to) {
-    var transition = Link.newTransition(idNum, to.activity.id);
-    var link = new Link(diagram, transition, from, to);
-    if (!from.activity.transitions) {
-      from.activity.transitions = [];
+    var flowLink = Link.flowLink(idNum, to.step.id);
+    var link = new Link(diagram, flowLink, from, to);
+    if (!from.step.links) {
+      from.step.links = [];
     }
-    from.activity.transitions.push(transition);
-    link.display = { type: Link.LINK_TYPES.ELBOW, lx: 0, ly: 0, xs: [0, 0], ys: [0, 0] };
+    from.step.links.push(flowLink);
+    link.display = { type: Link.LINK_TYPES.ELBOW, x: 0, y: 0, xs: [0, 0], ys: [0, 0] };
     link.calc();
     return link;
   }
 
-  static newTransition(idNum, toId) {
+  static flowLink(idNum, toId) {
     return {
-      id: 'T' + idNum,
+      id: 'L' + idNum,
       event: 'FINISH',
       to: toId
     };

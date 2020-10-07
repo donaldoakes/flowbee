@@ -11,7 +11,7 @@ export class Shape {
 
   // get a display object from an attribute value
   getDisplay() {
-    var displayAttr = this.workflowItem.attributes.WORK_DISPLAY_INFO;
+    var displayAttr = this.workflowItem.attributes.display;
     var display = {};
     if (displayAttr) {
       var vals = displayAttr.split(',');
@@ -38,7 +38,7 @@ export class Shape {
     if (w) {
       attr += ',w=' + w + ',h=' + h;
     }
-    this.workflowItem.attributes.WORK_DISPLAY_INFO = attr;
+    this.workflowItem.attributes.display = attr;
   }
 
   getAttr(display) {

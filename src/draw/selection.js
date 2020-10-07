@@ -37,14 +37,14 @@ export class Selection {
       if (obj.isStep) {
         // add any contained links
         var stepLinks;
-        let step = this.diagram.getStep(obj.activity.id);
+        let step = this.diagram.getStep(obj.step.id);
         if (step) {
           stepLinks = this.diagram.getLinks(obj);
         }
         else {
           for (let i = 0; i < this.diagram.subflows.length; i++) {
             let subflow = this.diagram.subflows[i];
-            let step = subflow.getStep(obj.activity.id);
+            let step = subflow.getStep(obj.step.id);
             stepLinks = subflow.getLinks(obj);
             if (stepLinks) {
               break;
@@ -139,7 +139,7 @@ export class Selection {
       for (let i = 0; i < this.selectObjs.length; i++) {
         let selObj = this.selectObjs[i];
         if (selObj.isStep) {
-          let step = this.diagram.getStep(selObj.activity.id);
+          let step = this.diagram.getStep(selObj.step.id);
           if (step) {
             selObj.move(deltaX, deltaY);
             let links = this.diagram.getLinks(step);
@@ -153,7 +153,7 @@ export class Selection {
             // try subflows
             for (let j = 0; j < this.diagram.subflows.length; j++) {
               let subflow = this.diagram.subflows[j];
-              let step = subflow.getStep(selObj.activity.id);
+              let step = subflow.getStep(selObj.step.id);
               if (step) {
                 // only within bounds of subflow
                 selObj.move(deltaX, deltaY, subflow.display);

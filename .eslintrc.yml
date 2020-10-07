@@ -21,5 +21,5 @@ rules: {
   curly: [warn, multi-line],
   no-unused-vars: 0,
   '@typescript-eslint/no-unused-vars':
-    [warn, { vars: all, args: all, argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
+    [warn, { vars: all, args: all, argsIgnorePattern: '^_|e', varsIgnorePattern: '^_|e' }]
 }

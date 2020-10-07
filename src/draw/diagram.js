@@ -15,28 +15,27 @@ export class Diagram extends Shape {
   static ANIMATION_SPEED = 8; // segments/s;
   static ANIMATION_LINK_FACTOR = 3; // relative link slice
 
-  constructor(canvas, options, process, specifiers, imgBase, editable, activity, instance, instanceEdit, data) {
-    super(canvas.getContext("2d"), options, process);
+  constructor(canvas, options, flow, specifiers, imgBase, editable, step, instance, instanceEdit, data) {
+    super(canvas.getContext("2d"), options, flow);
     this.canvas = canvas;
     this.options = options;
     this.dialog = null; // TODO: see this.onDelete()
-    this.process = process;
+    this.flow = flow;
     this.specifiers = specifiers;
     this.imgBase = imgBase;
     this.editable = editable && editable.toString() === 'true';
-    console.log("EDITABLE: " + editable);
-    this.workflowType = 'process';
+    this.flowElementType = 'flow';
     this.isDiagram = true;
     this.context = this.canvas.getContext("2d");
     this.anchor = -1;
-    this.drawBoxes = process.attributes.NodeStyle === 'BoxIcon';
+    this.drawBoxes = flow.attributes.NodeStyle === 'BoxIcon';
     this.selection = new Selection(this);
-    if (activity) {
+    if (step) {
       if (instance) {
-        this.activityInstanceId = activity;
+        this.stepInstanceId = step;
       }
       else {
-        this.activityId = activity;
+        this.stepId = step;
       }
     }
     this.instance = instance;
@@ -188,7 +187,7 @@ export class Diagram extends Shape {
       var s = function () {
         var it = sequence[i];
         it.draw(timeSlice);
-        if (it instanceof Step && it.workflowItem.id === diagram.activityId) {
+        if (it instanceof Step && it.workflowItem.id === diagram.stepId) {
           it.highlight();
           highlighted = it;
         }
@@ -209,7 +208,7 @@ export class Diagram extends Shape {
       // draw quickly
       this.steps.forEach(function (step) {
         step.draw();
-        if (step.workflowItem.id === diagram.activityId) {
+        if (step.workflowItem.id === diagram.stepId) {
           step.highlight();
           highlighted = step;
         }
@@ -221,7 +220,7 @@ export class Diagram extends Shape {
         subflow.draw();
       });
       if (highlighted) {
-        this.scrollIntoView(highlighted, diagram.activityId ? 0 : 500);
+        this.scrollIntoView(highlighted, diagram.stepId ? 0 : 500);
       }
     }
 
@@ -238,7 +237,7 @@ export class Diagram extends Shape {
           socket.addEventListener('message', function (event) {
             var message = JSON.parse(event.data);
             if (message.subtype === 'a') {
-              var step = diagram.getStep('A' + message.id);
+              var step = diagram.getStep('S' + message.id);
               if (step) {
                 if (!step.instances) {
                   step.instances = [];
@@ -251,19 +250,19 @@ export class Diagram extends Shape {
                 }
                 else {
                   var ai = {
-                    activityId: message.id,
+                    stepId: message.id,
                     id: message.instId,
                     statusCode: message.status
                   };
                   step.instances.push(ai);
-                  diagram.instance.activities.push(ai);
+                  diagram.instance.steps.push(ai);
                 }
                 step.draw();
                 diagram.scrollIntoView(step);
               }
             }
             else if (message.subtype === 't') {
-              var link = diagram.getLink('T' + message.id);
+              var link = diagram.getLink('L' + message.id);
               if (link) {
                 if (!link.instances) {
                   link.instances = [];
@@ -276,7 +275,7 @@ export class Diagram extends Shape {
                 }
                 else {
                   link.instances.push({
-                    transitionId: message.id,
+                    linkId: message.id,
                     id: message.instId,
                     statusCode: message.status
                   });
@@ -305,7 +304,7 @@ export class Diagram extends Shape {
 
   /**
    * sets display fields and returns a display with w and h for canvas size
-   * (for performance reasons, also initializes steps/links arrays and activity specs)
+   * (for performance reasons, also initializes steps/links arrays and step specs)
    */
   prepareDisplay() {
     var canvasDisplay = { w: 640, h: 480 };
@@ -313,41 +312,41 @@ export class Diagram extends Shape {
     var diagram = this; // forEach inner access
 
     // label
-    var label = this.instance && this.instance.template ? this.instance.packageName + '/' + this.instance.processName : this.process.name;
+    var label = this.instance && this.instance.template ? this.instance.packageName + '/' + this.instance.flowName : this.flow.name;
     var font = this.instance && this.instance.template ? this.options.template.font : this.options.title.font;
     diagram.label = new Label(this, label, this.getDisplay(), font);
-    if (this.process.instanceId) {
-      diagram.label.subtext = this.process.instanceId;
+    if (this.flow.instanceId) {
+      diagram.label.subtext = this.flow.instanceId;
     }
     diagram.makeRoom(canvasDisplay, diagram.label.prepareDisplay());
 
-    // activities
+    // steps
     diagram.steps = [];
-    if (this.process.activities) {
-      this.process.activities.forEach(function (activity) {
-        var step = new Step(diagram, activity);
-        step.specifier = diagram.getSpecifier(activity.specifier);
+    if (this.flow.steps) {
+      this.flow.steps.forEach(function (flowStep) {
+        var step = new Step(diagram, flowStep);
+        step.specifier = diagram.getSpecifier(flowStep.specifier);
         diagram.makeRoom(canvasDisplay, step.prepareDisplay());
         diagram.steps.push(step);
       });
     }
 
-    // transitions
+    // links
     diagram.links = [];
     diagram.steps.forEach(function (step) {
-      if (step.activity.transitions) {
-        step.activity.transitions.forEach(function (transition) {
-          var link = new Link(diagram, transition, step, diagram.getStep(transition.to));
+      if (step.step.links) {
+        step.step.links.forEach(function (flowLink) {
+          var link = new Link(diagram, flowLink, step, diagram.getStep(flowLink.to));
           diagram.makeRoom(canvasDisplay, link.prepareDisplay());
           diagram.links.push(link);
         });
       }
     });
 
-    // embedded subprocesses
+    // embedded subflows
     diagram.subflows = [];
-    if (this.process.subprocesses) {
-      this.process.subprocesses.forEach(function (subproc) {
+    if (this.flow.subflows) {
+      this.flow.subflows.forEach(function (subproc) {
         var subflow = new Subflow(diagram, subproc);
         diagram.makeRoom(canvasDisplay, subflow.prepareDisplay());
         diagram.subflows.push(subflow);
@@ -356,9 +355,9 @@ export class Diagram extends Shape {
 
     // notes
     diagram.notes = [];
-    if (this.process.textNotes) {
-      this.process.textNotes.forEach(function (textNote) {
-        var note = new Note(diagram, textNote);
+    if (this.flow.notes) {
+      this.flow.notes.forEach(function (flowNote) {
+        var note = new Note(diagram, flowNote);
         diagram.makeRoom(canvasDisplay, note.prepareDisplay());
         diagram.notes.push(note);
       });
@@ -413,35 +412,35 @@ export class Diagram extends Shape {
   applyState(animate, callback) {
     var diagram = this; // forEach inner access
 
-    if (this.process.activities) {
-      this.process.activities.forEach(function (activity) {
-        diagram.getStep(activity.id).instances = diagram.getActivityInstances(activity.id);
+    if (this.flow.steps) {
+      this.flow.steps.forEach(function (step) {
+        diagram.getStep(step.id).instances = diagram.getStepInstances(step.id);
       });
     }
 
     diagram.steps.forEach(function (step) {
-      if (step.activity.transitions) {
-        step.activity.transitions.forEach(function (transition) {
-          diagram.getLink(transition.id).instances = diagram.getTransitionInstances(transition.id);
+      if (step.step.links) {
+        step.step.links.forEach(function (link) {
+          diagram.getLink(link.id).instances = diagram.getLinkInstances(link.id);
         });
       }
     });
 
-    if (this.process.subprocesses) {
-      this.process.subprocesses.forEach(function (subproc) {
+    if (this.flow.subflows) {
+      this.flow.subflows.forEach(function (subproc) {
         var subflow = diagram.getSubflow(subproc.id);
-        subflow.instances = diagram.getSubprocessInstances(subproc.id);
-        // needed for subprocess & task instance retrieval
-        subflow.mainProcessInstanceId = diagram.instance.id;
-        if (subflow.subprocess.activities) {
-          subflow.subprocess.activities.forEach(function (activity) {
-            subflow.getStep(activity.id).instances = subflow.getActivityInstances(activity.id);
+        subflow.instances = diagram.getSubflowInstances(subproc.id);
+        // needed for subflow & task instance retrieval
+        subflow.mainFlowInstanceId = diagram.instance.id;
+        if (subflow.subflow.steps) {
+          subflow.subflow.steps.forEach(function (step) {
+            subflow.getStep(step.id).instances = subflow.getStepInstances(step.id);
           });
         }
         subflow.steps.forEach(function (step) {
-          if (step.activity.transitions) {
-            step.activity.transitions.forEach(function (transition) {
-              subflow.getLink(transition.id).instances = subflow.getTransitionInstances(transition.id);
+          if (step.step.links) {
+            step.step.links.forEach(function (link) {
+              subflow.getLink(link.id).instances = subflow.getLinkInstances(link.id);
             });
           }
         });
@@ -458,9 +457,9 @@ export class Diagram extends Shape {
             // TODO: more sensible live scrolling based on ultimate endpoint (esp highlight)
             diagram.scrollIntoView(it, slice);
           }
-          if (diagram.activityInstanceId) {
+          if (diagram.stepInstanceId) {
             it.instances.forEach(function (inst) {
-              if (inst.id === diagram.activityInstanceId) {
+              if (inst.id === diagram.stepInstanceId) {
                 highlight = true;
               }
             });
@@ -506,7 +505,7 @@ export class Diagram extends Shape {
       else {
         sequence.forEach(update);
         if (highlighted) {
-          this.scrollIntoView(highlighted, diagram.activityInstanceId ? 0 : 500);
+          this.scrollIntoView(highlighted, diagram.stepInstanceId ? 0 : 500);
         }
         callback();
       }
@@ -519,7 +518,7 @@ export class Diagram extends Shape {
     if (this.data.hotspots && this.data.hotspots.length) {
       let hottest = this.data.hotspots.reduce((max, cur) => cur.ms > max.ms ? cur : max);
       diagram.steps.forEach(function (step) {
-        let hotspot = diagram.data.hotspots.find(hs => ('A' + hs.id) === step.activity.id);
+        let hotspot = diagram.data.hotspots.find(hs => ('S' + hs.id) === step.step.id);
         if (hotspot && hotspot.ms) {
           step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
           step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
@@ -529,7 +528,7 @@ export class Diagram extends Shape {
       if (diagram.subflows) {
         diagram.subflows.forEach(function (subflow) {
           subflow.steps.forEach(function (step) {
-            let hotspot = diagram.data.hotspots.find(hs => ('A' + hs.id) === step.activity.id);
+            let hotspot = diagram.data.hotspots.find(hs => ('S' + hs.id) === step.step.id);
             if (hotspot && hotspot.ms) {
               step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
               step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
@@ -573,13 +572,13 @@ export class Diagram extends Shape {
 
   addSequence(step, sequence, runtime) {
     var outSteps = [];
-    var activityIdToInLinks = {};
+    var stepIdToInLinks = {};
     this.getOutLinks(step).forEach(function (link) {
       if (!runtime || link.instances.length > 0) {
         var outStep = link.to;
-        var exist = activityIdToInLinks[outStep.activity.id];
+        var exist = stepIdToInLinks[outStep.step.id];
         if (!exist) {
-          activityIdToInLinks[outStep.activity.id] = [link];
+          stepIdToInLinks[outStep.step.id] = [link];
           outSteps.push(outStep);
         }
         else {
@@ -612,11 +611,11 @@ export class Diagram extends Shape {
     var diagram = this;
     var proceedSteps = []; // those not already covered
     outSteps.forEach(function (step) {
-      var links = activityIdToInLinks[step.activity.id];
+      var links = stepIdToInLinks[step.step.id];
       if (links) {
         links.forEach(function (link) {
           var l = sequence.find(function (it) {
-            return it.workflowItem.id === link.transition.id;
+            return it.workflowItem.id === link.link.id;
           });
           if (!l) {
             sequence.push(link);
@@ -624,7 +623,7 @@ export class Diagram extends Shape {
         });
       }
       var s = sequence.find(function (it) {
-        return it.workflowItem.id === step.activity.id;
+        return it.workflowItem.id === step.step.id;
       });
       if (!s) {
         sequence.push(step);
@@ -638,7 +637,7 @@ export class Diagram extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].activity.specifier === Step.START_SPEC) {
+      if (this.steps[i].step.specifier === Step.START_SPEC) {
         return this.steps[i];
       }
     }
@@ -653,17 +652,17 @@ export class Diagram extends Shape {
     }
   }
 
-  getStep(activityId) {
+  getStep(stepId) {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].activity.id === activityId) {
+      if (this.steps[i].step.id === stepId) {
         return this.steps[i];
       }
     }
   }
 
-  getLink(transitionId) {
+  getLink(linkId) {
     for (var i = 0; i < this.links.length; i++) {
-      if (this.links[i].transition.id === transitionId) {
+      if (this.links[i].link.id === linkId) {
         return this.links[i];
       }
     }
@@ -672,7 +671,7 @@ export class Diagram extends Shape {
   getLinks(step) {
     var links = [];
     for (var i = 0; i < this.links.length; i++) {
-      if (step.activity.id === this.links[i].to.activity.id || step.activity.id === this.links[i].from.activity.id) {
+      if (step.step.id === this.links[i].to.step.id || step.step.id === this.links[i].from.step.id) {
         links.push(this.links[i]);
       }
     }
@@ -682,7 +681,7 @@ export class Diagram extends Shape {
   getOutLinks(step) {
     var links = [];
     for (let i = 0; i < this.links.length; i++) {
-      if (step.activity.id === this.links[i].from.activity.id) {
+      if (step.step.id === this.links[i].from.step.id) {
         links.push(this.links[i]);
       }
     }
@@ -692,30 +691,30 @@ export class Diagram extends Shape {
     return links;
   }
 
-  getSubflow(subprocessId) {
+  getSubflow(subflowId) {
     for (var i = 0; i < this.subflows.length; i++) {
-      if (this.subflows[i].subprocess.id === subprocessId) {
+      if (this.subflows[i].subflow.id === subflowId) {
         return this.subflows[i];
       }
     }
   }
 
-  getNote(textNoteId) {
+  getNote(noteId) {
     for (var i = 0; i < this.notes.length; i++) {
-      if (this.notes[i].textNote.id === textNoteId) {
+      if (this.notes[i].note.id === noteId) {
         return this.notes[i];
       }
     }
   }
 
   get(id) {
-    if (id.startsWith('A')) {
+    if (id.startsWith('S')) {
       return this.getStep(id);
     }
-    else if (id.startsWith('T')) {
+    else if (id.startsWith('L')) {
       return this.getLink(id);
     }
-    else if (id.startsWith('P')) {
+    else if (id.startsWith('F')) {
       return this.getSubflow(id);
     }
     else if (id.startsWith('N')) {
@@ -725,7 +724,7 @@ export class Diagram extends Shape {
 
   /**
    * Whether the obj can be edited at instance level.
-   * Cannot have instances and (TODO) must be reachable downstream of a currently paused activity.
+   * Cannot have instances and (TODO) must be reachable downstream of a currently paused step.
    */
   isInstanceEditable(id) {
     if (this.instanceEdit) {
@@ -757,7 +756,7 @@ export class Diagram extends Shape {
       }
     }
     // not found -- return placeholder
-    return { id, category: 'com.centurylink.mdw.activity.types.GeneralActivity', icon: 'shape:activity', label: 'Unknown Specifier' };
+    return { id, category: 'com.centurylink.mdw.step.types.GeneralStep', icon: 'shape:step', label: 'Unknown Specifier' };
   }
 
   findInSubflows(x, y) {
@@ -778,20 +777,20 @@ export class Diagram extends Shape {
         steps = steps.concat(this.subflows[i].steps);
       }
     }
-    var step = Step.create(this, this.genId(steps, 'activity'), specifier, x, y);
+    var step = Step.create(this, this.genId(steps, 'step'), specifier, x, y);
     var hoverObj = this.getHoverObj(x, y);
     if (hoverObj && hoverObj.isSubflow) {
-      hoverObj.subprocess.activities.push(step.activity);
+      hoverObj.subflow.steps.push(step.step);
       hoverObj.steps.push(step);
     }
     else {
       var subflow = this.findInSubflows(x, y);
       if (subflow) {
-        subflow.subprocess.activities.push(step.activity);
+        subflow.subflow.steps.push(step.step);
         subflow.steps.push(step);
       }
       else {
-        this.process.activities.push(step.activity);
+        this.flow.steps.push(step.step);
         this.steps.push(step);
       }
     }
@@ -804,11 +803,11 @@ export class Diagram extends Shape {
         links = links.concat(this.subflows[i].links);
       }
     }
-    var link = Link.create(this, this.genId(links, 'transition'), from, to);
+    var link = Link.create(this, this.genId(links, 'link'), from, to);
     var destSubflow = null;
     if (this.subflows) {
       for (var i = 0; i < this.subflows.length; i++) {
-        if (this.subflows[i].get(to.activity.id)) {
+        if (this.subflows[i].get(to.step.id)) {
           destSubflow = this.subflows[i];
         }
       }
@@ -822,28 +821,28 @@ export class Diagram extends Shape {
   }
 
   addSubflow(type, x, y) {
-    var startActivityId = this.genId(this.steps, 'activity');
-    var startTransitionId = this.genId(this.links, 'transition');
-    var subprocId = this.genId(this.subflows, 'subprocess');
-    var subflow = Subflow.create(this, subprocId, startActivityId, startTransitionId, type, x, y);
-    if (!this.process.subprocesses) {
-      this.process.subprocesses = [];
+    var startStepId = this.genId(this.steps, 'step');
+    var startLinkId = this.genId(this.links, 'link');
+    var subprocId = this.genId(this.subflows, 'subflow');
+    var subflow = Subflow.create(this, subprocId, startStepId, startLinkId, type, x, y);
+    if (!this.flow.subflows) {
+      this.flow.subflows = [];
     }
-    this.process.subprocesses.push(subflow.subprocess);
+    this.flow.subflows.push(subflow.subflow);
     this.subflows.push(subflow);
   }
 
   addNote(x, y) {
-    var note = Note.create(this, this.genId(this.notes, 'textNote'), x, y);
-    this.process.textNotes.push(note.textNote);
+    var note = Note.create(this, this.genId(this.notes, 'note'), x, y);
+    this.flow.notes.push(note.note);
     this.notes.push(note);
   }
 
-  genId(items, workflowType) {
+  genId(items, flowElementType) {
     var maxId = 0;
     if (items) {
       items.forEach(function (item) {
-        var itemId = parseInt(item[workflowType].id.substring(1));
+        var itemId = parseInt(item[flowElementType].id.substring(1));
         if (itemId > maxId) {
           maxId = itemId;
         }
@@ -856,17 +855,17 @@ export class Diagram extends Shape {
     var idx = -1;
     for (let i = 0; i < this.steps.length; i++) {
       var s = this.steps[i];
-      if (step.activity.id === s.activity.id) {
+      if (step.step.id === s.step.id) {
         idx = i;
         break;
       }
     }
     if (idx >= 0) {
-      this.process.activities.splice(idx, 1);
+      this.flow.steps.splice(idx, 1);
       this.steps.splice(idx, 1);
       for (let i = 0; i < this.links.length; i++) {
         var link = this.links[i];
-        if (link.to.activity.id === step.activity.id) {
+        if (link.to.step.id === step.step.id) {
           this.deleteLink(link);
         }
       }
@@ -882,7 +881,7 @@ export class Diagram extends Shape {
     var idx = -1;
     for (let i = 0; i < this.links.length; i++) {
       var l = this.links[i];
-      if (l.transition.id === link.transition.id) {
+      if (l.link.id === link.link.id) {
         idx = i;
         break;
       }
@@ -890,14 +889,14 @@ export class Diagram extends Shape {
     if (idx >= 0) {
       this.links.splice(idx, 1);
       var tidx = -1;
-      for (let i = 0; i < link.from.activity.transitions.length; i++) {
-        if (link.from.activity.transitions[i].id === link.transition.id) {
+      for (let i = 0; i < link.from.step.links.length; i++) {
+        if (link.from.step.links[i].id === link.link.id) {
           tidx = i;
           break;
         }
       }
       if (tidx >= 0) {
-        link.from.activity.transitions.splice(tidx, 1);
+        link.from.step.links.splice(tidx, 1);
       }
     }
     else if (this.subflows) {
@@ -911,13 +910,13 @@ export class Diagram extends Shape {
     var idx = -1;
     for (let i = 0; i < this.subflows.length; i++) {
       var s = this.subflows[i];
-      if (s.subprocess.id === subflow.subprocess.id) {
+      if (s.subflow.id === subflow.subflow.id) {
         idx = i;
         break;
       }
     }
     if (idx >= 0) {
-      this.process.subprocesses.splice(idx, 1);
+      this.flow.subflows.splice(idx, 1);
       this.subflows.splice(idx, 1);
     }
   }
@@ -926,26 +925,26 @@ export class Diagram extends Shape {
     var idx = -1;
     for (let i = 0; i < this.notes.length; i++) {
       var n = this.notes[i];
-      if (n.textNote.id === note.textNote.id) {
+      if (n.note.id === note.note.id) {
         idx = i;
         break;
       }
     }
     if (idx >= 0) {
-      this.process.textNotes.splice(idx, 1);
+      this.flow.notes.splice(idx, 1);
       this.notes.splice(idx, 1);
     }
   }
 
-  getActivityInstances(id) {
+  getStepInstances(id) {
     if (this.instance) {
       var insts = []; // should always return something, even if empty
-      if (this.instance.activities) {
-        var procInstId = this.instance.id;
-        this.instance.activities.forEach(function (actInst) {
-          if ('A' + actInst.activityId === id) {
-            actInst.processInstanceId = procInstId; // needed for subprocess & task instance retrieval
-            insts.push(actInst);
+      if (this.instance.steps) {
+        var flowInstId = this.instance.id;
+        this.instance.steps.forEach(function (stepInst) {
+          if ('S' + stepInst.stepId === id) {
+            stepInst.flowInstanceId = flowInstId; // needed for subflow & task instance retrieval
+            insts.push(stepInst);
           }
         });
       }
@@ -956,13 +955,13 @@ export class Diagram extends Shape {
     }
   }
 
-  getTransitionInstances(id) {
+  getLinkInstances(id) {
     if (this.instance) {
       var insts = []; // should always return something, even if empty
-      if (this.instance.transitions) {
-        this.instance.transitions.forEach(function (transInst) {
-          if ('T' + transInst.transitionId === id) {
-            insts.push(transInst);
+      if (this.instance.links) {
+        this.instance.links.forEach(function (linkInst) {
+          if ('L' + linkInst.linkId === id) {
+            insts.push(linkInst);
           }
         });
       }
@@ -973,12 +972,12 @@ export class Diagram extends Shape {
     }
   }
 
-  getSubprocessInstances(id) {
+  getSubflowInstances(id) {
     if (this.instance) {
       var insts = []; // should always return something, even if empty
-      if (this.instance.subprocesses) {
-        this.instance.subprocesses.forEach(function (subInst) {
-          if ('P' + subInst.processId === id) {
+      if (this.instance.subflows) {
+        this.instance.subflows.forEach(function (subInst) {
+          if ('F' + subInst.flowId === id) {
             insts.push(subInst);
           }
         });
@@ -1474,13 +1473,13 @@ export class Diagram extends Shape {
               link.moveAnchor(this.anchor, x - this.dragX, y - this.dragY);
               if (this.anchor === 0) {
                 let hovStep = this.getHoverStep(x, y);
-                if (hovStep && link.from.activity.id !== hovStep.activity.id) {
+                if (hovStep && link.from.step.id !== hovStep.step.id) {
                   link.setFrom(hovStep);
                 }
               }
               else if (this.anchor === this.selection.getSelectObj().display.xs.length - 1) {
                 var hovStep = this.getHoverStep(x, y);
-                if (hovStep && link.to.activity.id !== hovStep.activity.id) {
+                if (hovStep && link.to.step.id !== hovStep.step.id) {
                   link.setTo(hovStep);
                 }
               }
@@ -1488,8 +1487,8 @@ export class Diagram extends Shape {
             }
             if (this.selection.getSelectObj().resize) {
               if (this.selection.getSelectObj().isStep) {
-                let activityId = this.selection.getSelectObj().activity.id;
-                let step = this.getStep(activityId);
+                let stepId = this.selection.getSelectObj().step.id;
+                let step = this.getStep(stepId);
                 if (step) {
                   this.selection.getSelectObj().resize(this.dragX, this.dragY, x - this.dragX, y - this.dragY);
                   this.getLinks(step).forEach(function (link) {
@@ -1499,7 +1498,7 @@ export class Diagram extends Shape {
                 else {
                   // try subflows
                   this.subflows.forEach(function (subflow) {
-                    let step = subflow.getStep(activityId);
+                    let step = subflow.getStep(stepId);
                     if (step) {
                       // only within bounds of subflow
                       diagram.selection.getSelectObj().resize(diagram.dragX, diagram.dragY, x - diagram.dragX, y - diagram.dragY, subflow.display);
@@ -1566,7 +1565,7 @@ export class Diagram extends Shape {
     var selection = this.selection;
     var selObj = this.selection.getSelectObj();
     if (selObj && !selObj.isLabel) {
-      var msg = this.selection.isMulti ? 'Delete selected items?' : 'Delete ' + selObj.workflowType + '?';
+      var msg = this.selection.isMulti ? 'Delete selected items?' : 'Delete ' + selObj.flowElementType + '?';
       this.dialog.confirm('Confirm Delete', msg, function (res) {
         if (res) {
           selection.doDelete();
@@ -1586,7 +1585,7 @@ export class Diagram extends Shape {
 
   getContextMenuItems(e) {
     var selObj = this.selection.getSelectObj();
-    if (selObj && selObj.workflowType === 'activity') {
+    if (selObj && selObj.flowElementType === 'step') {
       var actions = [];
       if (this.instance && (this.instance.status === 'In Progress' || this.instance.status === 'Waiting')) {
         var inst = this.getLatestInstance();
@@ -1599,11 +1598,11 @@ export class Diagram extends Shape {
             var spec = selObj.specifier;
             if (inst.status === 'Waiting') {
               actions.push('proceed');
-              if (spec && spec.category && spec.category === 'com.centurylink.mdw.activity.types.PauseActivity') {
+              if (spec && spec.category && spec.category === 'com.centurylink.mdw.step.types.PauseStep') {
                 actions.push('resume');
               }
             }
-            if (spec && spec.category && spec.category !== 'com.centurylink.mdw.activity.types.TaskActivity') {
+            if (spec && spec.category && spec.category !== 'com.centurylink.mdw.step.types.TaskStep') {
               actions.push('fail');
             }
           }
@@ -1710,7 +1709,7 @@ export class Diagram extends Shape {
     this.draw();
   }
 
-  getAnchor(x, y) {
+  getAnchor(_x, _y) {
     return -1; // not applicable
   }
 }

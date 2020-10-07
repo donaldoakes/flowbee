@@ -5,7 +5,7 @@ export class Marquee extends Shape {
   constructor(diagram) {
     super(diagram.canvas.getContext("2d"), diagram.options);
     this.diagram = diagram;
-    this.workflowItem = { attributes: { WORK_DISPLAY_INFO: { x: 0, y: 0, w: 0, h: 0 } } }; // dummy to hold attrs
+    this.workflowItem = { attributes: { display: { x: 0, y: 0, w: 0, h: 0 } } }; // dummy to hold attrs
     this.isMarquee = true;
   }
 
@@ -45,7 +45,7 @@ export class Marquee extends Shape {
     this.setDisplayAttr(newX, newY, newW, newH);
   }
 
-  getAnchor(x, y) {
+  getAnchor(_x, _y) {
     return -1;
   }
 

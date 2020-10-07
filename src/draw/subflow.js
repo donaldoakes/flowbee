@@ -4,11 +4,11 @@ import { Link } from './link';
 
 export class Subflow extends Shape {
 
-  constructor(diagram, subprocess) {
-    super(diagram.canvas.getContext("2d"), diagram.options, subprocess);
+  constructor(diagram, subflow) {
+    super(diagram.canvas.getContext("2d"), diagram.options, subflow);
     this.diagram = diagram;
-    this.subprocess = subprocess;
-    this.workflowType = 'subprocess';
+    this.subflow = subflow;
+    this.flowElementType = 'subflow';
     this.isSubflow = true;
   }
 
@@ -44,7 +44,7 @@ export class Subflow extends Shape {
 
     // logical id
     this.diagram.context.fillStyle = this.diagram.options.metaColor;
-    this.diagram.context.fillText('[' + this.subprocess.id + ']', this.display.x + 10, this.display.y + this.display.h + 4);
+    this.diagram.context.fillText('[' + this.subflow.id + ']', this.display.x + 10, this.display.y + this.display.h + 4);
     this.diagram.context.fillStyle = this.diagram.options.defaultColor;
   }
 
@@ -55,7 +55,7 @@ export class Subflow extends Shape {
     // title
     var title = {
       subflow: this,
-      text: this.subprocess.name,
+      text: this.subflow.name,
       x: this.display.x + 10,
       y: this.display.y + 4 - this.diagram.options.defaultFont.size,
       isHover: function (x, y) {
@@ -104,22 +104,22 @@ export class Subflow extends Shape {
     }
 
     var subflow = this;
-    // just prepare activities -- assume boundaries account for size
+    // just prepare flow steps -- assume boundaries account for size
     subflow.steps = [];
-    if (this.subprocess.activities) {
-      this.subprocess.activities.forEach(function (activity) {
-        var step = new Step(subflow.diagram, activity);
-        step.specifier = subflow.diagram.getSpecifier(activity.specifier);
+    if (this.subflow.steps) {
+      this.subflow.steps.forEach(function (flowStep) {
+        var step = new Step(subflow.diagram, flowStep);
+        step.specifier = subflow.diagram.getSpecifier(flowStep.specifier);
         step.prepareDisplay();
         subflow.steps.push(step);
       });
     }
     subflow.links = [];
     subflow.steps.forEach(function (step) {
-      if (step.activity.transitions) {
-        step.activity.transitions.forEach(function (transition) {
-          var link = new Link(subflow.diagram, transition, step, subflow.getStep(transition.to));
-          var display = link.prepareDisplay();
+      if (step.step.links) {
+        step.step.links.forEach(function (flowLink) {
+          var link = new Link(subflow.diagram, flowLink, step, subflow.getStep(flowLink.to));
+          var _display = link.prepareDisplay();
           subflow.links.push(link);
         });
       }
@@ -129,23 +129,23 @@ export class Subflow extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].activity.specifier === Step.START_SPEC) {
+      if (this.steps[i].step.specifier === Step.START_SPEC) {
         return this.steps[i];
       }
     }
   }
 
-  getStep(activityId) {
+  getStep(stepId) {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].activity.id === activityId) {
+      if (this.steps[i].step.id === stepId) {
         return this.steps[i];
       }
     }
   }
 
-  getLink(transitionId) {
+  getLink(linkId) {
     for (var i = 0; i < this.links.length; i++) {
-      if (this.links[i].transition.id === transitionId) {
+      if (this.links[i].link.id === linkId) {
         return this.links[i];
       }
     }
@@ -154,7 +154,7 @@ export class Subflow extends Shape {
   getOutLinks(step) {
     var links = [];
     for (let i = 0; i < this.links.length; i++) {
-      if (step.activity.id === this.links[i].from.activity.id) {
+      if (step.step.id === this.links[i].from.step.id) {
         links.push(this.links[i]);
       }
     }
@@ -172,10 +172,10 @@ export class Subflow extends Shape {
   }
 
   get(id) {
-    if (id.startsWith('A')) {
+    if (id.startsWith('S')) {
       return this.getStep(id);
     }
-    else if (id.startsWith('T')) {
+    else if (id.startsWith('L')) {
       return this.getLink(id);
     }
   }
@@ -184,17 +184,17 @@ export class Subflow extends Shape {
     var idx = -1;
     for (let i = 0; i < this.steps.length; i++) {
       var s = this.steps[i];
-      if (step.activity.id === s.activity.id) {
+      if (step.step.id === s.step.id) {
         idx = i;
         break;
       }
     }
     if (idx >= 0) {
-      this.subprocess.activities.splice(idx, 1);
+      this.subflow.steps.splice(idx, 1);
       this.steps.splice(idx, 1);
       for (let i = 0; i < this.links.length; i++) {
         var link = this.links[i];
-        if (link.to.activity.id === step.activity.id) {
+        if (link.to.step.id === step.step.id) {
           this.deleteLink(link);
         }
       }
@@ -205,7 +205,7 @@ export class Subflow extends Shape {
     var idx = -1;
     for (let i = 0; i < this.links.length; i++) {
       var l = this.links[i];
-      if (l.transition.id === link.transition.id) {
+      if (l.link.id === link.link.id) {
         idx = i;
         break;
       }
@@ -213,49 +213,49 @@ export class Subflow extends Shape {
     if (idx >= 0) {
       this.links.splice(idx, 1);
       var tidx = -1;
-      for (let i = 0; i < link.from.activity.transitions.length; i++) {
-        if (link.from.activity.transitions[i].id === link.transition.id) {
+      for (let i = 0; i < link.from.step.links.length; i++) {
+        if (link.from.step.links[i].id === link.link.id) {
           tidx = i;
           break;
         }
       }
       if (tidx >= 0) {
-        link.from.activity.transitions.splice(tidx, 1);
+        link.from.step.links.splice(tidx, 1);
       }
     }
   }
 
-  getActivityInstances(id) {
+  getStepInstances(id) {
     if (this.instances) {
-      var actInsts = [];
-      var mainProcessInstanceId = this.mainProcessInstanceId;
+      var stepInsts = [];
+      var mainFlowInstanceId = this.mainFlowInstanceId;
       this.instances.forEach(function (inst) {
-        if (inst.activities) {
-          var procInstId = mainProcessInstanceId;
-          inst.activities.forEach(function (actInst) {
-            if ('A' + actInst.activityId === id) {
-              actInsts.push(actInst);
-              // needed for subprocess & task instance retrieval
-              actInst.processInstanceId = procInstId;
-              actInst.embeddedProcessInstanceId = inst.id;
+        if (inst.steps) {
+          var flowInstId = mainFlowInstanceId;
+          inst.steps.forEach(function (stepInst) {
+            if ('S' + stepInst.stepId === id) {
+              stepInsts.push(stepInst);
+              // needed for subflow & task instance retrieval
+              stepInst.flowInstanceId = flowInstId;
+              stepInst.embeddedFlowInstanceId = inst.id;
             }
           });
         }
       });
-      actInsts.sort(function (a1, a2) {
+      stepInsts.sort(function (a1, a2) {
         return a2.id - a1.id;
       });
-      return actInsts;
+      return stepInsts;
     }
   }
 
-  getTransitionInstances(id) {
+  getLinkInstances(id) {
     if (this.instances) {
       var transInsts = [];
       this.instances.forEach(function (inst) {
-        if (inst.transitions) {
-          inst.transitions.forEach(function (transInst) {
-            if ('T' + transInst.transitionId === id) {
+        if (inst.links) {
+          inst.links.forEach(function (transInst) {
+            if ('L' + transInst.linkId === id) {
               transInsts.push(transInst);
             }
           });
@@ -286,64 +286,64 @@ export class Subflow extends Shape {
     this.setDisplayAttr(display.x, display.y, display.w, display.h);
   }
 
-  static create(diagram, idNum, startActivityId, startTransitionId, type, x, y) {
-    var subprocess = Subflow.newSubprocess(diagram, idNum, type, x, y);
-    var subflow = new Subflow(diagram, subprocess);
+  static create(diagram, idNum, startStepId, startLinkId, type, x, y) {
+    var flowSubflow = Subflow.flowSubflow(diagram, idNum, type, x, y);
+    var subflow = new Subflow(diagram, flowSubflow);
     subflow.steps = [];
     subflow.links = [];
     subflow.display = { x: x, y: y };
 
-    var activityId = startActivityId;
-    var activityX = x + 40;
-    var activityY = y + 40;
-    var transitionId = startTransitionId;
+    var stepId = startStepId;
+    var stepX = x + 40;
+    var stepY = y + 40;
+    var linkId = startLinkId;
 
-    var start = Step.create(diagram, activityId, diagram.getSpecifier(Step.START_SPEC), activityX, activityY);
-    subprocess.activities.push(start.activity);
+    var start = Step.create(diagram, stepId, diagram.getSpecifier(Step.START_SPEC), stepX, stepY);
+    flowSubflow.steps.push(start.step);
     subflow.steps.push(start);
 
-    activityId++;
+    stepId++;
 
     var task;
     if (type === 'Exception Handler') {
-      activityX = x + 170;
-      activityY = y + 30;
-      task = Step.create(diagram, activityId, diagram.getSpecifier(Step.TASK_SPEC), activityX, activityY);
-      task.activity.attributes.TASK_PAGELET = Step.TASK_PAGELET;
-      task.activity.attributes.STATUS_AFTER_EVENT = 'Cancelled';
-      task.activity.name = diagram.process.name + ' Fallout';
-      subprocess.activities.push(task.activity);
+      stepX = x + 170;
+      stepY = y + 30;
+      task = Step.create(diagram, stepId, diagram.getSpecifier(Step.TASK_SPEC), stepX, stepY);
+      task.step.attributes.TASK_PAGELET = Step.TASK_PAGELET;
+      task.step.attributes.STATUS_AFTER_EVENT = 'Cancelled';
+      task.step.name = diagram.flow.name + ' Fallout';
+      subflow.steps.push(task.step);
       subflow.steps.push(task);
-      let link = Link.create(diagram, transitionId, start, task);
+      let link = Link.create(diagram, linkId, start, task);
       subflow.links.push(link);
     }
 
-    activityId++;
-    activityX = x + 340;
-    activityY = y + 40;
-    var stop = Step.create(diagram, activityId, diagram.getSpecifier(Step.STOP_SPEC), activityX, activityY);
-    subprocess.activities.push(stop.activity);
+    stepId++;
+    stepX = x + 340;
+    stepY = y + 40;
+    var stop = Step.create(diagram, stepId, diagram.getSpecifier(Step.STOP_SPEC), stepX, stepY);
+    flowSubflow.steps.push(stop.step);
     subflow.steps.push(stop);
-    let link = Link.create(diagram, transitionId, task ? task : start, stop);
+    let link = Link.create(diagram, linkId, task ? task : start, stop);
     subflow.links.push(link);
 
     return subflow;
   }
 
-  static newSubprocess(diagram, idNum, type, x, y) {
+  static flowSubflow(_diagram, idNum, type, x, y) {
     var w = 440;
     var h = 120;
-    var subprocess = {
-      activities: [],
+    var subflow = {
+      steps: [],
       attributes: {
-        EMBEDDED_PROCESS_TYPE: type,
-        PROCESS_VISIBILITY: 'EMBEDDED',
-        WORK_DISPLAY_INFO: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h
+        embeddedFlowType: type,
+        visibility: 'EMBEDDED',
+        display: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h
       },
-      id: 'P' + idNum,
+      id: 'F' + idNum,
       name: type
     };
-    return subprocess;
+    return subflow;
   }
 }
 

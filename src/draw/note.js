@@ -2,11 +2,11 @@ import { Shape } from './shape';
 
 export class Note extends Shape {
 
-  constructor(diagram, textNote) {
-    super(diagram.canvas.getContext("2d"), diagram.options, textNote);
+  constructor(diagram, note) {
+    super(diagram.canvas.getContext("2d"), diagram.options, note);
     this.diagram = diagram;
-    this.textNote = textNote;
-    this.workflowType = 'textNote';
+    this.note = note;
+    this.flowElementType = 'note';
     this.isNote = true;
   }
 
@@ -21,8 +21,8 @@ export class Note extends Shape {
       this.diagram.options.note.fillColor
     );
 
-    if (this.textNote.content) {
-      var lines = this.textNote.content.replace(/\r/g, '').split(/\n/);
+    if (this.note.content) {
+      var lines = this.note.content.replace(/\r/g, '').split(/\n/);
       this.diagram.context.font = this.diagram.options.note.font.name;
       this.diagram.context.fillStyle = this.diagram.options.note.textColor ? this.diagram.options.note.textColor : this.diagram.options.defaultColor;
       for (var i = 0; i < lines.length; i++) {
@@ -60,23 +60,23 @@ export class Note extends Shape {
   }
 
   static create(diagram, idNum, x, y) {
-    var textNote = Note.newTextNote(diagram, idNum, x, y);
-    var note = new Note(diagram, textNote);
+    var flowNote = Note.flowNote(diagram, idNum, x, y);
+    var note = new Note(diagram, flowNote);
     var disp = note.getDisplay();
     note.display = { x: disp.x, y: disp.y, w: disp.w, h: disp.h };
     return note;
   }
 
-  static newTextNote(diagram, idNum, x, y) {
+  static flowNote(_diagram, idNum, x, y) {
     var w = 200;
     var h = 60;
-    var textNote = {
+    var note = {
       id: 'N' + idNum,
       content: '',
-      attributes: { WORK_DISPLAY_INFO: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h },
-      transitions: []
+      attributes: { display: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h },
+      links: []
     };
-    return textNote;
+    return note;
   }
 }
 

@@ -11,7 +11,7 @@ export class Label extends Shape {
     this.owner = owner;
     this.diagram = owner.diagram;
     this.text = text;
-    this.display = display; // just x, y except for process owner
+    this.display = display; // just x, y except for flow owner
     this.font = font;
     this.workflowItem = owner.workflowItem;
     this.isLabel = true;

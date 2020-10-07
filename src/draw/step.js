@@ -6,22 +6,22 @@ export class Step extends Shape {
   static OLD_INST_W = 4;
   static MAX_INSTS = 10;
 
-  static START_SPEC = 'com.centurylink.mdw.workflow.activity.process.ProcessStartActivity';
-  static STOP_SPEC = 'com.centurylink.mdw.workflow.activity.process.ProcessFinishActivity';
-  static PAUSE_SPEC = 'com.centurylink.mdw.base.PauseActivity';
-  static TASK_SPEC = 'com.centurylink.mdw.workflow.activity.task.AutoFormManualTaskActivity';
+  static START_SPEC = 'com.centurylink.mdw.workflow.step.flow.FlowStart';
+  static STOP_SPEC = 'com.centurylink.mdw.workflow.step.flow.FlowFinish';
+  static PAUSE_SPEC = 'com.centurylink.mdw.base.PauseStep';
+  static TASK_SPEC = 'com.centurylink.mdw.workflow.step.task.AutoFormManualTaskStep';
   static TASK_PAGELET = 'com.centurylink.mdw.base/AutoFormManualTask.pagelet';
 
-  constructor(diagram, activity) {
-    super(diagram.canvas.getContext("2d"), diagram.options, activity);
+  constructor(diagram, step) {
+    super(diagram.canvas.getContext("2d"), diagram.options, step);
     this.diagram = diagram;
-    this.activity = activity;
-    this.workflowType = 'activity';
+    this.step = step;
+    this.flowElementType = 'step';
     this.isStep = true;
   }
 
   draw(animationTimeSlice) {
-    var activity = this.workflowObj = this.activity;
+    var step = this.workflowObj = this.step;
     var shape;
     if (this.specifier.icon && this.specifier.icon.startsWith('shape:')) {
       shape = this.specifier.icon.substring(6);
@@ -82,7 +82,7 @@ export class Step extends Shape {
           this.diagram.drawDiamond(this.display.x, this.display.y, this.display.w, this.display.h);
           yAdjust = this.title.lines.length === 1 ? -2 : -8;
         }
-        else if ('activity' === shape) {
+        else if ('step' === shape) {
           this.diagram.rect(
             this.display.x,
             this.display.y,
@@ -138,7 +138,7 @@ export class Step extends Shape {
 
     // logical id
     this.diagram.context.fillStyle = this.diagram.options.metaColor;
-    var showText = activity.id;
+    var showText = step.id;
     if (this.data && this.data.message) {
       showText += ' (' + this.data.message + ')';
     }
@@ -147,14 +147,14 @@ export class Step extends Shape {
   }
 
   getMilestone() {
-    if (this.activity.attributes && this.activity.attributes.Monitors) {
-      var monitors = JSON.parse(this.activity.attributes.Monitors);
+    if (this.step.attributes && this.step.attributes.Monitors) {
+      var monitors = JSON.parse(this.step.attributes.Monitors);
       if (monitors.length > 0) {
-        var activity = this;
+        var step = this;
         for (var i = 0; i < monitors.length; i++) {
           var mon = monitors[i];
           if (mon.length >= 3 && mon[0] === 'true' && mon[2] === 'com.centurylink.mdw.milestones/ActivityMilestone.java') {
-            var milestone = { label: activity.name };
+            var milestone = { label: step.name };
             if (mon.length >= 4 && mon[3]) {
               var text = mon[3];
               var bracket = text.indexOf('[');
@@ -204,10 +204,10 @@ export class Step extends Shape {
 
     // step title
     var titleLines = [];
-    this.activity.name.replace(/\r/g, '').split(/\n/).forEach(function (line) {
+    this.step.name.replace(/\r/g, '').split(/\n/).forEach(function (line) {
       titleLines.push({ text: line });
     });
-    var title = { text: this.activity.name, lines: titleLines, w: 0, h: 0 };
+    var title = { text: this.step.name, lines: titleLines, w: 0, h: 0 };
     for (var i = 0; i < title.lines.length; i++) {
       var line = title.lines[i];
       var textMetrics = this.diagram.context.measureText(line.text);
@@ -253,19 +253,19 @@ export class Step extends Shape {
 
   resize(x, y, deltaX, deltaY, limDisplay) {
     var display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize, limDisplay);
-    this.activity.attributes.WORK_DISPLAY_INFO = this.getAttr(display);
+    this.step.attributes.display = this.getAttr(display);
   }
 
   static create(diagram, idNum, specifier, x, y) {
-    var activity = Step.newActivity(diagram, idNum, specifier, x, y);
-    var step = new Step(diagram, activity);
+    var flowStep = Step.flowStep(diagram, idNum, specifier, x, y);
+    var step = new Step(diagram, flowStep);
     step.specifier = specifier;
     var disp = step.getDisplay();
     step.display = { x: disp.x, y: disp.y, w: disp.w, h: disp.h };
     return step;
   }
 
-  static newActivity(diagram, idNum, specifier, x, y) {
+  static flowStep(diagram, idNum, specifier, x, y) {
     var w = 24;
     var h = 24;
     if (diagram.drawBoxes) {
@@ -291,14 +291,14 @@ export class Step extends Shape {
     else {
       name = 'New ' + name;
     }
-    var activity = {
-      id: 'A' + idNum,
+    var step = {
+      id: 'S' + idNum,
       name: name,
       specifier: specifier.specifierClass,
-      attributes: { WORK_DISPLAY_INFO: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h },
-      transitions: []
+      attributes: { display: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h },
+      links: []
     };
-    return activity;
+    return step;
   }
 }
 
