@@ -15,14 +15,14 @@ export class Diagram extends Shape {
   static ANIMATION_SPEED = 8; // segments/s;
   static ANIMATION_LINK_FACTOR = 3; // relative link slice
 
-  constructor(canvas, options, flow, specifiers, imgBase, editable, step, instance, instanceEdit, data) {
+  constructor(canvas, options, flow, specifiers, resourceBase, editable, step, instance, instanceEdit, data) {
     super(canvas.getContext("2d"), options, flow);
     this.canvas = canvas;
     this.options = options;
     this.dialog = null; // TODO: see this.onDelete()
     this.flow = flow;
     this.specifiers = specifiers;
-    this.imgBase = imgBase;
+    this.resourceBase = resourceBase;
     this.editable = editable && editable.toString() === 'true';
     this.flowElementType = 'flow';
     this.isDiagram = true;
@@ -1257,7 +1257,7 @@ export class Diagram extends Shape {
   }
 
   drawImage(src, x, y) {
-    src = this.imgBase + '/' + src;
+    src = this.resourceBase + '/' + src;
     if (!this.images) {
       this.images = {};
     }

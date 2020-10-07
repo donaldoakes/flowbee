@@ -109,11 +109,11 @@ export class Step extends Shape {
             opacity
           );
         }
-        var iconSrc = 'asset/' + this.specifier.icon;
+        var iconSrc = this.specifier.icon;
         var iconX = this.display.x + this.display.w / 2 - 12;
-        var iconY = this.display.y + 5;
+        var iconY = this.display.y + 6;
         this.diagram.drawImage(iconSrc, iconX, iconY);
-        yAdjust = this.title.lines.length === 1 ? 10 : 4;
+        yAdjust = this.title.lines.length === 1 ? 10 : 6;
       }
     }
     else {
