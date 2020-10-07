@@ -80,6 +80,7 @@ export interface HyperlinkOptions {
 }
 
 export interface DrawingOptions {
+    specIdPrefix?: string;
     iconBase?: string;
     websocketUrl?: string;
     defaultFont?: Font;
@@ -104,6 +105,7 @@ export interface DrawingOptions {
 }
 
 export const DEFAULT_OPTIONS: DrawingOptions = {
+    specIdPrefix: null,
     iconBase: null,
     websocketUrl: null,
     defaultFont: {

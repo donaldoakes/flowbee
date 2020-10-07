@@ -6,11 +6,11 @@ export class Step extends Shape {
   static OLD_INST_W = 4;
   static MAX_INSTS = 10;
 
-  static START_SPEC = 'com.centurylink.mdw.workflow.step.flow.FlowStart';
-  static STOP_SPEC = 'com.centurylink.mdw.workflow.step.flow.FlowFinish';
-  static PAUSE_SPEC = 'com.centurylink.mdw.base.PauseStep';
-  static TASK_SPEC = 'com.centurylink.mdw.workflow.step.task.AutoFormManualTaskStep';
-  static TASK_PAGELET = 'com.centurylink.mdw.base/AutoFormManualTask.pagelet';
+  static START_SPEC = 'start';
+  static STOP_SPEC = 'stop';
+  static PAUSE_SPEC = 'pause';
+  static TASK_SPEC = 'task';
+  static TASK_PAGELET = 'task.pagelet'; // TODO layout
 
   constructor(diagram, step) {
     super(diagram.canvas.getContext("2d"), diagram.options, step);
@@ -112,7 +112,7 @@ export class Step extends Shape {
         var iconSrc = this.specifier.icon;
         var iconX = this.display.x + this.display.w / 2 - 12;
         var iconY = this.display.y + 6;
-        this.diagram.drawImage(iconSrc, iconX, iconY);
+        this.diagram.drawIcon(iconSrc, iconX, iconY);
         yAdjust = this.title.lines.length === 1 ? 10 : 6;
       }
     }
@@ -279,13 +279,13 @@ export class Step extends Shape {
       }
     }
     var name = specifier.label;
-    if (specifier.specifierClass === Step.START_SPEC) {
+    if (specifier.id === `${diagram.options.specIdPrefix}.${Step.START_SPEC}`) {
       name = 'Start';
     }
-    else if (specifier.specifierClass === Step.STOP_SPEC) {
+    else if (specifier.id === `${diagram.options.specIdPrefix}.${Step.STOP_SPEC}`) {
       name = 'Stop';
     }
-    else if (specifier.specifierClass === Step.PAUSE_SPEC) {
+    else if (specifier.id === `${diagram.options.specIdPrefix}.${Step.PAUSE_SPEC}`) {
       name = 'Pause';
     }
     else {
@@ -294,7 +294,7 @@ export class Step extends Shape {
     var step = {
       id: 'S' + idNum,
       name: name,
-      specifier: specifier.specifierClass,
+      specifier: specifier.id,
       attributes: { display: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h },
       links: []
     };

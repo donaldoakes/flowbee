@@ -49,7 +49,6 @@ export class FlowDiagram {
                 this.options,
                 flow,
                 this.specifiers,
-                this.options.iconBase,
                 !readonly,
                 step,
                 instance,

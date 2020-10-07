@@ -15,14 +15,16 @@ export class Diagram extends Shape {
   static ANIMATION_SPEED = 8; // segments/s;
   static ANIMATION_LINK_FACTOR = 3; // relative link slice
 
-  constructor(canvas, options, flow, specifiers, resourceBase, editable, step, instance, instanceEdit, data) {
+  constructor(canvas, options, flow, specifiers, editable, step, instance, instanceEdit, data) {
     super(canvas.getContext("2d"), options, flow);
     this.canvas = canvas;
     this.options = options;
+    if (!this.options.specIdPrefix) {
+      this.options.specIdPrefix = ''; // for template literals
+    }
     this.dialog = null; // TODO: see this.onDelete()
     this.flow = flow;
     this.specifiers = specifiers;
-    this.resourceBase = resourceBase;
     this.editable = editable && editable.toString() === 'true';
     this.flowElementType = 'flow';
     this.isDiagram = true;
@@ -637,7 +639,7 @@ export class Diagram extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.specifier === Step.START_SPEC) {
+      if (this.steps[i].step.specifier === `${this.options.specIdPrefix}.${Step.START_SPEC}`) {
         return this.steps[i];
       }
     }
@@ -756,7 +758,7 @@ export class Diagram extends Shape {
       }
     }
     // not found -- return placeholder
-    return { id, category: 'com.centurylink.mdw.step.types.GeneralStep', icon: 'shape:step', label: 'Unknown Specifier' };
+    return { id, icon: 'shape:step', label: 'Unknown Specifier' };
   }
 
   findInSubflows(x, y) {
@@ -1256,8 +1258,8 @@ export class Diagram extends Shape {
     this.context.stroke();
   }
 
-  drawImage(src, x, y) {
-    src = this.resourceBase + '/' + src;
+  drawIcon(src, x, y) {
+    src = this.options.iconBase ? this.options.iconBase + '/' + src : src;
     if (!this.images) {
       this.images = {};
     }
@@ -1549,13 +1551,13 @@ export class Diagram extends Shape {
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
     if (item.category === 'subflow') {
-      this.addSubflow(item.specifierClass, x, y);
+      this.addSubflow(item.specId, x, y);
     }
     else if (item.category === 'note') {
       this.addNote(x, y);
     }
     else {
-      this.addStep(item.specifierClass, x, y);
+      this.addStep(item.specId, x, y);
     }
     this.draw();
     return true;
@@ -1598,11 +1600,11 @@ export class Diagram extends Shape {
             var spec = selObj.specifier;
             if (inst.status === 'Waiting') {
               actions.push('proceed');
-              if (spec && spec.category && spec.category === 'com.centurylink.mdw.step.types.PauseStep') {
+              if (spec && spec.id === `${this.options.specIdPrefix}.${Step.PAUSE_SPEC}`) {
                 actions.push('resume');
               }
             }
-            if (spec && spec.category && spec.category !== 'com.centurylink.mdw.step.types.TaskStep') {
+            if (spec && spec.id !== `${this.options.specIdPrefix}.${Step.TASK_SPEC}`) {
               actions.push('fail');
             }
           }

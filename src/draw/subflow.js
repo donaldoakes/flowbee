@@ -129,7 +129,7 @@ export class Subflow extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.specifier === Step.START_SPEC) {
+      if (this.steps[i].step.specifier === `${this.diagram.options.specIdPrefix}.${Step.START_SPEC}`) {
         return this.steps[i];
       }
     }
@@ -287,6 +287,7 @@ export class Subflow extends Shape {
   }
 
   static create(diagram, idNum, startStepId, startLinkId, type, x, y) {
+    // TODO template-driven
     var flowSubflow = Subflow.flowSubflow(diagram, idNum, type, x, y);
     var subflow = new Subflow(diagram, flowSubflow);
     subflow.steps = [];
@@ -298,7 +299,7 @@ export class Subflow extends Shape {
     var stepY = y + 40;
     var linkId = startLinkId;
 
-    var start = Step.create(diagram, stepId, diagram.getSpecifier(Step.START_SPEC), stepX, stepY);
+    var start = Step.create(diagram, stepId, diagram.getSpecifier(`${diagram.options.specIdPrefix}.${Step.START_SPEC}`), stepX, stepY);
     flowSubflow.steps.push(start.step);
     subflow.steps.push(start);
 
@@ -306,9 +307,10 @@ export class Subflow extends Shape {
 
     var task;
     if (type === 'Exception Handler') {
+      // TODO template
       stepX = x + 170;
       stepY = y + 30;
-      task = Step.create(diagram, stepId, diagram.getSpecifier(Step.TASK_SPEC), stepX, stepY);
+      task = Step.create(diagram, stepId, diagram.getSpecifier(`${diagram.options.specIdPrefix}.${Step.TASK_SPEC}`), stepX, stepY);
       task.step.attributes.TASK_PAGELET = Step.TASK_PAGELET;
       task.step.attributes.STATUS_AFTER_EVENT = 'Cancelled';
       task.step.name = diagram.flow.name + ' Fallout';
@@ -321,7 +323,7 @@ export class Subflow extends Shape {
     stepId++;
     stepX = x + 340;
     stepY = y + 40;
-    var stop = Step.create(diagram, stepId, diagram.getSpecifier(Step.STOP_SPEC), stepX, stepY);
+    var stop = Step.create(diagram, stepId, diagram.getSpecifier(`${diagram.options.specIdPrefix}.${Step.STOP_SPEC}`), stepX, stepY);
     flowSubflow.steps.push(stop.step);
     subflow.steps.push(stop);
     let link = Link.create(diagram, linkId, task ? task : start, stop);
