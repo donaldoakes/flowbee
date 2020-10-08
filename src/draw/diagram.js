@@ -15,34 +15,21 @@ export class Diagram extends Shape {
   static ANIMATION_SPEED = 8; // segments/s;
   static ANIMATION_LINK_FACTOR = 3; // relative link slice
 
-  constructor(canvas, options, flow, specifiers, editable, step, instance, instanceEdit, data) {
-    super(canvas.getContext("2d"), options, flow);
+  constructor(canvas, options, specifiers, editable) {
+    super(canvas.getContext("2d"), options);
     this.canvas = canvas;
     this.options = options;
     if (!this.options.specIdPrefix) {
       this.options.specIdPrefix = ''; // for template literals
     }
     this.dialog = null; // TODO: see this.onDelete()
-    this.flow = flow;
     this.specifiers = specifiers;
     this.editable = editable && editable.toString() === 'true';
     this.flowElementType = 'flow';
     this.isDiagram = true;
     this.context = this.canvas.getContext("2d");
     this.anchor = -1;
-    this.drawBoxes = flow.attributes.NodeStyle === 'BoxIcon';
     this.selection = new Selection(this);
-    if (step) {
-      if (instance) {
-        this.stepInstanceId = step;
-      }
-      else {
-        this.stepId = step;
-      }
-    }
-    this.instance = instance;
-    this.instanceEdit = instanceEdit && instanceEdit.toString() === 'true';
-    this.data = data;
 
     // zoom setup
     this.zoom = 100;
@@ -161,7 +148,23 @@ export class Diagram extends Shape {
     }
   }
 
-  draw(animate) {
+  draw(flow, instance, step, animate, instanceEdit, data) {
+    this.flow = flow;
+    super.workflowItem = flow;
+    this.drawBoxes = flow.attributes.NodeStyle === 'BoxIcon';
+
+    if (step) {
+      if (instance) {
+        this.stepInstanceId = step;
+      }
+      else {
+        this.stepId = step;
+      }
+    }
+    this.instance = instance;
+    this.instanceEdit = instanceEdit && instanceEdit.toString() === 'true';
+    this.data = data;
+
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.prepareDisplay();

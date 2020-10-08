@@ -3,7 +3,9 @@
  */
 export interface Link {
     id: string;
-    to: string;
     event?: string;
+    // from?
+    to: string;
+    result?: string;
     attribute?: {[key: string]: string};
 }
