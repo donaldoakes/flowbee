@@ -1,6 +1,6 @@
 import { Step } from './step';
 import { Note } from './note';
-import { Variable } from './variable';
+import { Variable } from './var';
 
 /**
  * Model for a flow diagram

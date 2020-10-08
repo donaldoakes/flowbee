@@ -148,11 +148,15 @@ export class Diagram extends Shape {
     }
   }
 
+  /**
+   * params are only passed during initial draw
+   */
   draw(flow, instance, step, animate, instanceEdit, data) {
-    this.flow = flow;
-    super.workflowItem = flow;
-    this.drawBoxes = flow.attributes.NodeStyle === 'BoxIcon';
-
+    if (flow) {
+      this.flow = flow;
+      super.workflowItem = flow;
+      this.drawBoxes = flow.attributes.NodeStyle === 'BoxIcon';
+    }
     if (step) {
       if (instance) {
         this.stepInstanceId = step;
@@ -161,9 +165,15 @@ export class Diagram extends Shape {
         this.stepId = step;
       }
     }
-    this.instance = instance;
-    this.instanceEdit = instanceEdit && instanceEdit.toString() === 'true';
-    this.data = data;
+    if (instance) {
+      this.instance = instance;
+    }
+    if (typeof instanceEdit !== 'undefined') {
+      this.instanceEdit = instanceEdit && instanceEdit.toString() === 'true';
+    }
+    if (data) {
+      this.data = data;
+    }
 
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 

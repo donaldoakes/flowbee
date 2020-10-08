@@ -189,7 +189,7 @@ export class Link {
     context.fillStyle = color;
 
     if (hitX) {
-      context.lineWidth = this.options.diagram.link.hitWidth;
+      context.lineWidth = this.diagram.options.link.hitWidth;
       context.strokeStyle = 'rgba(0, 0, 0, 0)'; // transparent
     }
     else {
