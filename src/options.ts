@@ -20,6 +20,7 @@ export interface StepOptions {
     startColor?: string;
     stopColor?: string;
     pauseColor?: string;
+    filledTextColor?: string;
     minSize?: number;
 }
 
@@ -69,9 +70,6 @@ export interface AnchorOptions {
 export interface HighlightOptions {
     margin?: number;
     color?: string;
-}
-
-export interface OvalOptions {
     lineWidth?: number;
 }
 
@@ -99,7 +97,6 @@ export interface DrawingOptions {
     marquee?: MarqueeOptions;
     anchor?: AnchorOptions;
     highlight?: HighlightOptions;
-    oval?: OvalOptions;
     hyperlink?: HyperlinkOptions;
     statuses?: Status[];
 }
@@ -137,6 +134,7 @@ export const DEFAULT_OPTIONS: DrawingOptions = {
         startColor: '#98fb98',
         stopColor: '#ff8c86',
         pauseColor: '#fffd87',
+        filledTextColor: 'black',
         minSize: 4
     },
     link: {
@@ -179,9 +177,7 @@ export const DEFAULT_OPTIONS: DrawingOptions = {
     },
     highlight: {
         margin: 10,
-        color: '#03a9f4'
-    },
-    oval: {
+        color: '#03a9f4',
         lineWidth: 3
     },
     hyperlink: {
@@ -207,7 +203,7 @@ export const DARK_OPTIONS: DrawingOptions = {
         color: '#d4d4d4'
     },
     step: {
-        outlineColor: '#d4d4d4'
+        outlineColor: '#bbbbbb'
     },
     link: {
         colors: {

@@ -70,13 +70,39 @@ export class Step extends Shape {
     if (this.specifier.icon) {
       if (shape) {
         if ('start' === shape) {
-          this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, this.diagram.options.step.startColor, 0.8);
+          this.diagram.oval(
+            this.display.x,
+            this.display.y,
+            this.display.w,
+            this.display.h,
+            this.diagram.options.step.outlineColor,
+            this.diagram.options.step.startColor,
+            0.8,
+            1
+          );
         }
         else if ('stop' === shape) {
-          this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, this.diagram.options.step.stopColor, 0.8);
+          this.diagram.oval(
+            this.display.x,
+            this.display.y,
+            this.display.w,
+            this.display.h,
+            this.diagram.options.step.outlineColor,
+            this.diagram.options.step.stopColor,
+            0.8,
+            1
+          );
         }
         else if ('pause' === shape) {
-          this.diagram.drawOval(this.display.x, this.display.y, this.display.w, this.display.h, null, this.diagram.options.step.pauseColor, 0.8);
+          this.diagram.oval(
+            this.display.x,
+            this.display.y,
+            this.display.w,
+            this.display.h,
+            this.diagram.options.step.outlineColor,
+            this.diagram.options.step.pauseColor,
+            0.8,
+            1);
         }
         else if ('decision' === shape) {
           this.diagram.drawDiamond(this.display.x, this.display.y, this.display.w, this.display.h);
@@ -133,7 +159,11 @@ export class Step extends Shape {
     var diagram = this.diagram;
     diagram.context.font = this.diagram.options.defaultFont.name;
     this.title.lines.forEach(function (line) {
+      if (shape === 'start' || shape === 'stop' || shape === 'pause') {
+        diagram.context.fillStyle = diagram.options.step.filledTextColor;
+      }
       diagram.context.fillText(line.text, line.x, line.y + yAdjust);
+      diagram.context.fillStyle = diagram.options.defaultColor;
     });
 
     // logical id
@@ -186,8 +216,15 @@ export class Step extends Shape {
   }
 
   highlight() {
-    this.diagram.drawOval(this.display.x - this.diagram.options.highlight.margin, this.display.y - this.diagram.options.highlight.margin,
-      this.display.w + (2 * this.diagram.options.highlight.margin), this.display.h + (2 * this.diagram.options.highlight.margin), this.diagram.options.highlight.color);
+    this.diagram.oval(
+      this.display.x - this.diagram.options.highlight.margin,
+      this.display.y - this.diagram.options.highlight.margin,
+      this.display.w + (2 * this.diagram.options.highlight.margin),
+      this.display.h + (2 * this.diagram.options.highlight.margin),
+      this.diagram.options.highlight.color,
+      null,
+      this.diagram.options.highlight.lineWidth
+    );
   }
 
   // sets display/title and returns an object with w and h for required size

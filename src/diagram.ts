@@ -13,7 +13,7 @@ export class FlowDiagram {
 
     private down = false;
     private dragging = false;
-    private dragIn?: Specifier;
+    private dragIn?: string;
 
     /**
      * Create a flow diagram
@@ -103,6 +103,7 @@ export class FlowDiagram {
         this.canvas.onmousedown = e => this.onMouseDown(e);
         this.canvas.onmouseup = e => this.onMouseUp(e);
         this.canvas.onmousemove = e => this.onMouseMove(e);
+        this.canvas.onmouseenter = e => this.onMouseEnter(e);
         this.canvas.onmouseover = e => this.onMouseOver(e);
         this.canvas.onmouseout = e => this.onMouseOut(e);
         this.canvas.ondblclick = e => this.onDoubleClick(e);
@@ -191,9 +192,15 @@ export class FlowDiagram {
     }
 
     onMouseOver(e: MouseEvent) {
-        // if (e.buttons === 1 && this.toolbox && this.toolbox.getSelected()) {
-        //     this.dragIn = this.toolbox.getSelected();
-        // }
+        if (e.buttons === 1 /* && this.toolbox && this.toolbox.getSelected() */) {
+            // this.dragIn = 'com.centurylink.mdw.workflow.activity.process.InvokeSubProcessActivity'; // this.toolbox.getSelected();
+        }
+    }
+
+    onMouseEnter(e: MouseEvent) {
+        if (e.buttons === 1 /* && this.toolbox && this.toolbox.getSelected() */) {
+            //
+        }
     }
 
     onMouseOut(e: MouseEvent) {

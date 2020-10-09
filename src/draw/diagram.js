@@ -1153,7 +1153,7 @@ export class Diagram extends Shape {
     }
   }
 
-  drawOval(x, y, w, h, color, fill) {
+  oval(x, y, w, h, color, fill, opacity, width) {
     var kappa = 0.5522848;
     var ox = (w / 2) * kappa; // control point offset horizontal
     var oy = (h / 2) * kappa; // control point offset vertical
@@ -1164,7 +1164,9 @@ export class Diagram extends Shape {
 
     if (color) {
       this.context.strokeStyle = color;
-      this.context.lineWidth = this.options.oval.lineWidth;
+    }
+    if (width) {
+      this.context.lineWidth = width;
     }
     this.context.beginPath();
     this.context.moveTo(x, ym);
@@ -1174,6 +1176,9 @@ export class Diagram extends Shape {
     this.context.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
     this.context.closePath(); // not used correctly? (use to close off open path)
     if (fill) {
+      if (opacity) {
+        this.context.globalAlpha = opacity;
+      }
       this.context.fillStyle = fill;
       this.context.fill();
       this.context.stroke();
@@ -1184,6 +1189,11 @@ export class Diagram extends Shape {
     this.context.fillStyle = this.options.defaultColor;
     if (color) {
       this.context.strokeStyle = this.options.defaultColor;
+    }
+    if (opacity) {
+      this.context.globalAlpha = 1.0;
+    }
+    if (width) {
       this.context.lineWidth = this.options.defaultLineWidth;
     }
   }
@@ -1559,18 +1569,18 @@ export class Diagram extends Shape {
     }
   }
 
-  onDrop(e, item) {
+  onDrop(e, specId) {
     var rect = this.canvas.getBoundingClientRect();
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
-    if (item.category === 'subflow') {
-      this.addSubflow(item.specId, x, y);
+    if (specId === `${this.diagram.options.specIdPrefix}.subflow`) {
+      this.addSubflow(specId, x, y);
     }
-    else if (item.category === 'note') {
+    else if (specId === `${this.diagram.options.specIdPrefix}.note`) {
       this.addNote(x, y);
     }
     else {
-      this.addStep(item.specId, x, y);
+      this.addStep(specId, x, y);
     }
     this.draw();
     return true;
