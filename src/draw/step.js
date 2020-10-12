@@ -6,10 +6,6 @@ export class Step extends Shape {
   static OLD_INST_W = 4;
   static MAX_INSTS = 10;
 
-  static START_SPEC = 'start';
-  static STOP_SPEC = 'stop';
-  static PAUSE_SPEC = 'pause';
-  static TASK_SPEC = 'task';
   static TASK_PAGELET = 'task.pagelet'; // TODO layout
 
   constructor(diagram, step) {
@@ -55,6 +51,7 @@ export class Step extends Shape {
       if (shape === 'start' || shape === 'stop' || shape === 'pause') {
         adj = 2;
       }
+      // TODO why is this here? -- probably milestones?
       var color = null;
       if (shape === 'pause') {
         color = '#ffea00';
@@ -316,13 +313,13 @@ export class Step extends Shape {
       }
     }
     var name = specifier.label;
-    if (specifier.id === `${diagram.options.specIdPrefix}.${Step.START_SPEC}`) {
+    if (specifier.id === diagram.startSpec.id) {
       name = 'Start';
     }
-    else if (specifier.id === `${diagram.options.specIdPrefix}.${Step.STOP_SPEC}`) {
+    else if (specifier.id === diagram.stopSpec.id) {
       name = 'Stop';
     }
-    else if (specifier.id === `${diagram.options.specIdPrefix}.${Step.PAUSE_SPEC}`) {
+    else if (specifier.id === diagram.pauseSpec.id) {
       name = 'Pause';
     }
     else {

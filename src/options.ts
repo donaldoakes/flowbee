@@ -77,10 +77,10 @@ export interface HyperlinkOptions {
     color?: string;
 }
 
-export interface DrawingOptions {
-    specIdPrefix?: string;
+export interface DiagramOptions {
     iconBase?: string;
     websocketUrl?: string;
+    backgroundColor?: string;
     defaultFont?: Font;
     defaultLineWidth?: number;
     defaultColor?: string;
@@ -101,10 +101,16 @@ export interface DrawingOptions {
     statuses?: Status[];
 }
 
-export const DEFAULT_OPTIONS: DrawingOptions = {
-    specIdPrefix: null,
+export interface ToolboxOptions {
+    iconBase?: string;
+    backgroundColor?: string;
+    labelColor?: string;
+}
+
+const diagramDefault: DiagramOptions = {
     iconBase: null,
     websocketUrl: null,
+    backgroundColor: '#ffffff',
     defaultFont: {
         name: '12px sans-serif',
         size: 12,
@@ -195,9 +201,11 @@ export const DEFAULT_OPTIONS: DrawingOptions = {
     ]
 };
 
-export const LIGHT_OPTIONS = DEFAULT_OPTIONS;
-
-export const DARK_OPTIONS: DrawingOptions = {
+/**
+ * merged into diagramDefault
+ */
+const diagramDark: DiagramOptions = {
+    backgroundColor: '#1e1e1e',
     defaultColor: '#d4d4d4',
     title: {
         color: '#d4d4d4'
@@ -220,5 +228,30 @@ export const DARK_OPTIONS: DrawingOptions = {
     },
     grid: {
         color: '#787878'
+    }
+};
+
+const toolboxDefault: ToolboxOptions = {
+    iconBase: null,
+    backgroundColor: '#f3f3f3',
+    labelColor: '#616161'
+};
+
+/**
+ * merged into toolboxDefault
+ */
+const toolboxDark: ToolboxOptions = {
+    backgroundColor: '#252526',
+    labelColor: '#cccccc'
+};
+
+export const DefaultOptions = {
+    diagram: {
+        light: diagramDefault,
+        dark: diagramDark
+    },
+    toolbox: {
+        light: toolboxDefault,
+        dark: toolboxDark
     }
 };

@@ -15,13 +15,15 @@ export class Diagram extends Shape {
   static ANIMATION_SPEED = 8; // segments/s;
   static ANIMATION_LINK_FACTOR = 3; // relative link slice
 
+  startSpec;
+  stopSpec;
+  pauseSpec;
+  taskSpec;
+
   constructor(canvas, options, specifiers, editable) {
     super(canvas.getContext("2d"), options);
     this.canvas = canvas;
     this.options = options;
-    if (!this.options.specIdPrefix) {
-      this.options.specIdPrefix = ''; // for template literals
-    }
     this.dialog = null; // TODO: see this.onDelete()
     this.specifiers = specifiers;
     this.editable = editable && editable.toString() === 'true';
@@ -652,7 +654,7 @@ export class Diagram extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.specifier === `${this.options.specIdPrefix}.${Step.START_SPEC}`) {
+      if (this.steps[i].step.specifier === this.startSpec.id) {
         return this.steps[i];
       }
     }
@@ -1569,18 +1571,18 @@ export class Diagram extends Shape {
     }
   }
 
-  onDrop(e, specId) {
+  onDrop(e, spec) {
     var rect = this.canvas.getBoundingClientRect();
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
-    if (specId === `${this.diagram.options.specIdPrefix}.subflow`) {
-      this.addSubflow(specId, x, y);
+    if (spec.type === 'subflow') {
+      this.addSubflow(spec.id, x, y);
     }
-    else if (specId === `${this.diagram.options.specIdPrefix}.note`) {
+    else if (spec.type === 'note') {
       this.addNote(x, y);
     }
     else {
-      this.addStep(specId, x, y);
+      this.addStep(spec.id, x, y);
     }
     this.draw();
     return true;
@@ -1623,11 +1625,11 @@ export class Diagram extends Shape {
             var spec = selObj.specifier;
             if (inst.status === 'Waiting') {
               actions.push('proceed');
-              if (spec && spec.id === `${this.options.specIdPrefix}.${Step.PAUSE_SPEC}`) {
+              if (spec && spec.id === this.pauseSpec.id) {
                 actions.push('resume');
               }
             }
-            if (spec && spec.id !== `${this.options.specIdPrefix}.${Step.TASK_SPEC}`) {
+            if (spec && spec.category !== 'Task') {
               actions.push('fail');
             }
           }

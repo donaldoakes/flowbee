@@ -2,13 +2,13 @@ import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
 import { Flow } from './flow';
-import { Specifier } from './spec';
+import { Specifier, start, stop, pause, task, StandardSpecifiers } from './spec';
 import { Variable } from './var';
-import { DrawingOptions, DEFAULT_OPTIONS } from './options';
+import { DiagramOptions, DefaultOptions } from './options';
 
 export class FlowDiagram {
 
-    options: DrawingOptions;
+    options: DiagramOptions;
     diagram: Diagram;
 
     private down = false;
@@ -24,12 +24,11 @@ export class FlowDiagram {
      */
     constructor(
         readonly canvas: HTMLCanvasElement,
-        options?: DrawingOptions,
-        readonly specifiers?: Specifier[],
+        options?: DiagramOptions,
+        readonly specifiers: Specifier[] = StandardSpecifiers,
         readonly readonly = false
     ) {
-        this.canvas = canvas;
-        this.options = merge(DEFAULT_OPTIONS, options || {});
+        this.options = merge(DefaultOptions.diagram.light, options || {});
 
         this.diagram = new Diagram(
             this.canvas,
@@ -37,6 +36,11 @@ export class FlowDiagram {
             this.specifiers,
             !readonly
         );
+
+        this.diagram.startSpec = start;
+        this.diagram.stopSpec = stop;
+        this.diagram.pauseSpec = pause;
+        this.diagram.taskSpec = task;
 
         // if ($scope.editable) {
         //     $scope.toolbox = Toolbox.getToolbox();
