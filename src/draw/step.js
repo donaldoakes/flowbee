@@ -25,7 +25,7 @@ export class Step extends Shape {
 
     var title, fill;
     var opacity = null;
-    var milestoneGroups = sessionStorage.getItem('mdw-milestoneGroups');
+    var milestoneGroups = sessionStorage.getItem('flowbee-milestoneGroups');
     if (milestoneGroups) {
       milestoneGroups = JSON.parse(milestoneGroups);
     }
@@ -180,7 +180,7 @@ export class Step extends Shape {
         var step = this;
         for (var i = 0; i < monitors.length; i++) {
           var mon = monitors[i];
-          if (mon.length >= 3 && mon[0] === 'true' && mon[2] === 'com.centurylink.mdw.milestones/ActivityMilestone.java') {
+          if (mon.length >= 3 && mon[0] === 'true' && mon[2] === 'milestones/ActivityMilestone.java') {
             var milestone = { label: step.name };
             if (mon.length >= 4 && mon[3]) {
               var text = mon[3];

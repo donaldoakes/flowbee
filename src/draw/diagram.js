@@ -35,7 +35,7 @@ export class Diagram extends Shape {
 
     // zoom setup
     this.zoom = 100;
-    var zoomControls = document.getElementsByClassName('mdw-workflow-zoom');
+    var zoomControls = document.getElementsByClassName('flow-zoom');
     if (zoomControls.length === 1) {
       var diagram = this;
       this.zoomControl = zoomControls[0];
@@ -77,7 +77,7 @@ export class Diagram extends Shape {
         rangeInput.title = Math.round(z) + '%';
       };
       // show/hide/close
-      var closeBtn = this.zoomControl.getElementsByClassName('mdw-close')[0];
+      var closeBtn = this.zoomControl.getElementsByClassName('zoom-close')[0];
       this.zoomControl.onmouseover = function (e) {
         closeBtn.style.visibility = 'visible';
       };
@@ -124,17 +124,17 @@ export class Diagram extends Shape {
    * adjust section to accommodate zoomed canvas
    */
   adjustSection() {
-    var mdwSections = document.getElementsByClassName('mdw-section');
-    if (mdwSections.length) {
-      var section = mdwSections[0];
+    var sections = document.getElementsByClassName('zoom-section');
+    if (sections.length) {
+      var section = sections[0];
       var scale = this.zoom / 100;
       var cw = this.canvas.style.width.substring(0, this.canvas.style.width.length - 2);
       var w = (cw ? parseInt(cw) : this.canvas.width) * scale; // canvas style width not populated on windows
-      var mdwPanels = document.getElementsByClassName('mdw-panel-full-width');
-      if (mdwPanels.length) {
+      var panels = document.getElementsByClassName('panel-full-width');
+      if (panels.length) {
         // don't shrink width smaller than original panel width
         if (!this.origPanelWidth) {
-          this.origPanelWidth = mdwPanels[0].offsetWidth;
+          this.origPanelWidth = panels[0].offsetWidth;
         }
         if (w < this.origPanelWidth - 37) {
           w = this.origPanelWidth - 37;

@@ -197,7 +197,7 @@ export class FlowDiagram {
 
     onMouseOver(e: MouseEvent) {
         if (e.buttons === 1 /* && this.toolbox && this.toolbox.getSelected() */) {
-            // this.dragIn = 'com.centurylink.mdw.workflow.activity.process.InvokeSubProcessActivity'; // this.toolbox.getSelected();
+            // this.dragIn = 'workflow.activity.process.InvokeSubProcessActivity'; // this.toolbox.getSelected();
         }
     }
 
