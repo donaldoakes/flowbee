@@ -105,6 +105,12 @@ export interface ToolboxOptions {
     iconBase?: string;
     backgroundColor?: string;
     labelColor?: string;
+    tabIndex?: number;
+}
+
+export interface FlowTreeOptions {
+    backgroundColor?: string;
+    tabIndex?: number;
 }
 
 /**
@@ -237,7 +243,8 @@ const diagramDark: DiagramOptions = {
 const toolboxDefault: ToolboxOptions = {
     iconBase: null,
     backgroundColor: '#f3f3f3',
-    labelColor: '#303030'
+    labelColor: '#303030',
+    tabIndex: 1000
 };
 
 /**
@@ -248,6 +255,15 @@ const toolboxDark: ToolboxOptions = {
     labelColor: '#cccccc'
 };
 
+const flowTreeDefault: FlowTreeOptions = {
+    backgroundColor: '#ffffff',
+    tabIndex: 100
+};
+
+const flowTreeDark: FlowTreeOptions = {
+    backgroundColor: '#1e1e1e'
+};
+
 export const DefaultOptions = {
     diagram: {
         light: diagramDefault,
@@ -256,5 +272,9 @@ export const DefaultOptions = {
     toolbox: {
         light: toolboxDefault,
         dark: toolboxDark
+    },
+    flowTree: {
+        light: flowTreeDefault,
+        dark: flowTreeDark
     }
 };

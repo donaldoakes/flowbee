@@ -1,4 +1,4 @@
-export type ItemType = 'step' | 'subflow' | 'note';
+export type FlowItemType = 'step' | 'subflow' | 'note';
 
 export interface Descriptor {
     /**
@@ -16,7 +16,7 @@ export interface Descriptor {
     /**
      * Item type ('step', 'subflow', 'note')
      */
-    type?: ItemType;
+    type?: FlowItemType;
     /**
      * Arbitrary categorization.
      */
@@ -29,7 +29,7 @@ export class FlowItemDescriptor implements Descriptor {
     name: string;
     label: string;
     icon?: string;
-    type: ItemType;
+    type: FlowItemType;
     category?: string;
     template?: object;
 

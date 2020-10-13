@@ -8,17 +8,16 @@ export class Toolbox {
 
     constructor(
         readonly container: HTMLElement,
-        options?: ToolboxOptions,
-        readonly descriptors: Descriptor[] = StandardDescriptors
+        options?: ToolboxOptions
     ) {
         this.options = merge(DefaultOptions.toolbox.light, options || {});
     }
 
-    async render() {
+    async render(descriptors = StandardDescriptors) {
         const div = document.getElementById('flow-toolbox') as HTMLElement;
         const ul = document.createElement('ul') as HTMLUListElement;
-        let tabIndex = 1000;
-        for (const descriptor of this.descriptors) {
+        let tabIndex = this.options.tabIndex;
+        for (const descriptor of descriptors) {
             const li = document.createElement('li') as HTMLLIElement;
             li.setAttribute('id', descriptor.name);
             li.tabIndex = tabIndex++;
@@ -27,7 +26,22 @@ export class Toolbox {
                 iconDiv.className = 'toolbox-icon';
                 const iconImg = document.createElement('img') as HTMLImageElement;
                 const iconBase = this.options.iconBase ? this.options.iconBase : '';
-                iconImg.src = `${iconBase}/${descriptor.icon}`;
+                let icon = descriptor.icon;
+                switch (icon) {
+                    case 'shape:start':
+                        icon = 'start.png';
+                        break;
+                    case 'shape:stop':
+                        icon = 'stop.png';
+                        break;
+                    case 'shape:pause':
+                        icon = 'pause.png';
+                        break;
+                    case 'shape:decision':
+                        icon = 'decision.png';
+                        break;
+                }
+                iconImg.src = `${iconBase}/${icon}`;
                 iconDiv.appendChild(iconImg);
                 li.appendChild(iconDiv);
             }
@@ -42,7 +56,7 @@ export class Toolbox {
 
         // events
         ul.onmousedown = (e: MouseEvent) => {
-            console.log("MOUSE DOWN");
+            // console.log("MOUSE DOWN");
             let el = e.target as HTMLElement;
             if (el.tagName !== 'LI') {
               while ((el = el.parentElement as HTMLElement) && el.tagName !== 'LI') {
@@ -51,11 +65,11 @@ export class Toolbox {
             }
         };
         ul.onmouseup = (_e: MouseEvent) => {
-            console.log("MOUSE UP");
+            // console.log("MOUSE UP");
         };
         ul.onmouseout = (e: MouseEvent) => {
             if (e.buttons !== 1) {
-                console.log("MOUSE OUT BTNS=1");
+                // console.log("MOUSE OUT BTNS=1");
             }
         };
     }
