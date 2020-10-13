@@ -107,6 +107,9 @@ export interface ToolboxOptions {
     labelColor?: string;
 }
 
+/**
+ * TODO: colors controlled by style classes (eg: .diagram-title-dark, etc)?
+ */
 const diagramDefault: DiagramOptions = {
     iconBase: null,
     websocketUrl: null,
@@ -234,7 +237,7 @@ const diagramDark: DiagramOptions = {
 const toolboxDefault: ToolboxOptions = {
     iconBase: null,
     backgroundColor: '#f3f3f3',
-    labelColor: '#616161'
+    labelColor: '#303030'
 };
 
 /**

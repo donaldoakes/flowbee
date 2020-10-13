@@ -14,32 +14,31 @@ export class Toolbox {
         this.options = merge(DefaultOptions.toolbox.light, options || {});
     }
 
-    render() {
-        const div = document.createElement('div') as HTMLDivElement;
-        div.className = 'flowbee-toolbox';
+    async render() {
+        const div = document.getElementById('flow-toolbox') as HTMLElement;
         const ul = document.createElement('ul') as HTMLUListElement;
         let tabIndex = 1000;
         for (const descriptor of this.descriptors) {
             const li = document.createElement('li') as HTMLLIElement;
             li.setAttribute('id', descriptor.name);
-            li.tabIndex = tabIndex;
-            const iconDiv = document.createElement('div') as HTMLDivElement;
-            iconDiv.className = 'flowbee-toolbox-icon';
-            const iconImg = document.createElement('img') as HTMLImageElement;
-            const icon = descriptor.icon || 'step.svg';
-            iconImg.src = this.options.iconBase ? this.options.iconBase + '/' + icon : icon;
-            iconDiv.appendChild(iconImg);
-            li.appendChild(iconDiv);
+            li.tabIndex = tabIndex++;
+            if (descriptor.icon) {
+                const iconDiv = document.createElement('div') as HTMLDivElement;
+                iconDiv.className = 'toolbox-icon';
+                const iconImg = document.createElement('img') as HTMLImageElement;
+                const iconBase = this.options.iconBase ? this.options.iconBase : '';
+                iconImg.src = `${iconBase}/${descriptor.icon}`;
+                iconDiv.appendChild(iconImg);
+                li.appendChild(iconDiv);
+            }
             const labelDiv = document.createElement('div') as HTMLDivElement;
-            labelDiv.className = 'flowbee-toolbox-label';
+            labelDiv.className = 'toolbox-label';
             labelDiv.style.color = this.options.labelColor;
             labelDiv.appendChild(document.createTextNode(descriptor.label));
             li.appendChild(labelDiv);
             ul.appendChild(li);
-            tabIndex++;
         }
         div.appendChild(ul);
-        this.container.appendChild(div);
 
         // events
         ul.onmousedown = (e: MouseEvent) => {
