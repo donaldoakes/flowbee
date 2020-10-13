@@ -109,7 +109,7 @@ export class Subflow extends Shape {
     if (this.subflow.steps) {
       this.subflow.steps.forEach(function (flowStep) {
         var step = new Step(subflow.diagram, flowStep);
-        step.specifier = subflow.diagram.getSpecifier(flowStep.specifier);
+        step.descriptor = subflow.diagram.getDescriptor(flowStep.descriptor);
         step.prepareDisplay();
         subflow.steps.push(step);
       });
@@ -129,7 +129,7 @@ export class Subflow extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.specifier === this.diagram.startSpec.id) {
+      if (this.steps[i].step.descriptor === this.diagram.startdescriptor.name) {
         return this.steps[i];
       }
     }
@@ -299,7 +299,7 @@ export class Subflow extends Shape {
     var stepY = y + 40;
     var linkId = startLinkId;
 
-    var start = Step.create(diagram, stepId, diagram.startSpec, stepX, stepY);
+    var start = Step.create(diagram, stepId, diagram.startDescriptor, stepX, stepY);
     flowSubflow.steps.push(start.step);
     subflow.steps.push(start);
 
@@ -310,7 +310,7 @@ export class Subflow extends Shape {
       // TODO template
       stepX = x + 170;
       stepY = y + 30;
-      task = Step.create(diagram, stepId, diagram.taskSpec, stepX, stepY);
+      task = Step.create(diagram, stepId, diagram.taskDescriptor, stepX, stepY);
       task.step.attributes.TASK_PAGELET = Step.TASK_PAGELET;
       task.step.attributes.STATUS_AFTER_EVENT = 'Cancelled';
       task.step.name = diagram.flow.name + ' Fallout';
@@ -323,7 +323,7 @@ export class Subflow extends Shape {
     stepId++;
     stepX = x + 340;
     stepY = y + 40;
-    var stop = Step.create(diagram, stepId, diagram.stopSpec, stepX, stepY);
+    var stop = Step.create(diagram, stepId, diagram.stopDescriptor, stepX, stepY);
     flowSubflow.steps.push(stop.step);
     subflow.steps.push(stop);
     let link = Link.create(diagram, linkId, task ? task : start, stop);

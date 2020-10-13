@@ -2,7 +2,7 @@ import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
 import { Flow } from './flow';
-import { Specifier, start, stop, pause, task, StandardSpecifiers } from './spec';
+import { Descriptor, start, stop, pause, task, StandardDescriptors } from './descriptor';
 import { Variable } from './var';
 import { DiagramOptions, DefaultOptions } from './options';
 
@@ -19,13 +19,13 @@ export class FlowDiagram {
      * Create a flow diagram
      * @param canvas html canvas
      * @param options drawing options
-     * @param specifiers step specifiers
+     * @param descriptors flow item descriptors
      * @param readonly
      */
     constructor(
         readonly canvas: HTMLCanvasElement,
         options?: DiagramOptions,
-        readonly specifiers: Specifier[] = StandardSpecifiers,
+        readonly descriptors: Descriptor[] = StandardDescriptors,
         readonly readonly = false
     ) {
         this.options = merge(DefaultOptions.diagram.light, options || {});
@@ -33,18 +33,18 @@ export class FlowDiagram {
         this.diagram = new Diagram(
             this.canvas,
             this.options,
-            this.specifiers,
+            this.descriptors,
             !readonly
         );
 
-        this.diagram.startSpec = start;
-        this.diagram.stopSpec = stop;
-        this.diagram.pauseSpec = pause;
-        this.diagram.taskSpec = task;
+        this.diagram.startDescriptor = start;
+        this.diagram.stopDescriptor = stop;
+        this.diagram.pauseDescriptor = pause;
+        this.diagram.taskDescriptor = task;
 
         // if ($scope.editable) {
         //     $scope.toolbox = Toolbox.getToolbox();
-        //     $scope.toolbox.init($scope.specifiers, $scope.hubBase);
+        //     $scope.toolbox.init($scope.descriptors, $scope.hubBase);
         // }
     }
 

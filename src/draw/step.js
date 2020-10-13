@@ -19,8 +19,8 @@ export class Step extends Shape {
   draw(animationTimeSlice) {
     var step = this.workflowObj = this.step;
     var shape;
-    if (this.specifier.icon && this.specifier.icon.startsWith('shape:')) {
-      shape = this.specifier.icon.substring(6);
+    if (this.descriptor.icon && this.descriptor.icon.startsWith('shape:')) {
+      shape = this.descriptor.icon.substring(6);
     }
 
     var title, fill;
@@ -64,7 +64,7 @@ export class Step extends Shape {
     }
 
     var yAdjust = -2;
-    if (this.specifier.icon) {
+    if (this.descriptor.icon) {
       if (shape) {
         if ('start' === shape) {
           this.diagram.oval(
@@ -132,7 +132,7 @@ export class Step extends Shape {
             opacity
           );
         }
-        var iconSrc = this.specifier.icon;
+        var iconSrc = this.descriptor.icon;
         var iconX = this.display.x + this.display.w / 2 - 12;
         var iconY = this.display.y + 6;
         this.diagram.drawIcon(iconSrc, iconX, iconY);
@@ -290,20 +290,20 @@ export class Step extends Shape {
     this.step.attributes.display = this.getAttr(display);
   }
 
-  static create(diagram, idNum, specifier, x, y) {
-    var flowStep = Step.flowStep(diagram, idNum, specifier, x, y);
+  static create(diagram, idNum, descriptor, x, y) {
+    var flowStep = Step.flowStep(diagram, idNum, descriptor, x, y);
     var step = new Step(diagram, flowStep);
-    step.specifier = specifier;
+    step.descriptor = descriptor;
     var disp = step.getDisplay();
     step.display = { x: disp.x, y: disp.y, w: disp.w, h: disp.h };
     return step;
   }
 
-  static flowStep(diagram, idNum, specifier, x, y) {
+  static flowStep(diagram, idNum, descriptor, x, y) {
     var w = 24;
     var h = 24;
     if (diagram.drawBoxes) {
-      if (specifier.icon && specifier.icon.startsWith('shape:')) {
+      if (descriptor.icon && descriptor.icon.startsWith('shape:')) {
         w = 60;
         h = 40;
       }
@@ -312,14 +312,14 @@ export class Step extends Shape {
         h = 60;
       }
     }
-    var name = specifier.label;
-    if (specifier.id === diagram.startSpec.id) {
+    var name = descriptor.label;
+    if (descriptor.name === diagram.startdescriptor.name) {
       name = 'Start';
     }
-    else if (specifier.id === diagram.stopSpec.id) {
+    else if (descriptor.name === diagram.stopdescriptor.name) {
       name = 'Stop';
     }
-    else if (specifier.id === diagram.pauseSpec.id) {
+    else if (descriptor.name === diagram.pausedescriptor.name) {
       name = 'Pause';
     }
     else {
@@ -328,7 +328,7 @@ export class Step extends Shape {
     var step = {
       id: 'S' + idNum,
       name: name,
-      specifier: specifier.id,
+      descriptor: descriptor.name,
       attributes: { display: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h },
       links: []
     };

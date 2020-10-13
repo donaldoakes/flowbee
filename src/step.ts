@@ -6,7 +6,7 @@ import { Link } from './link';
 export interface Step {
     id: string;
     name: string;
-    specifier?: string;
+    descriptor?: string;
     links?: Link[];
     attributes?: {[key: string]: string};
 }

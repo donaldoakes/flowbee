@@ -1,4 +1,4 @@
 /**
- * Default specs
+ * Default descriptors
  */
 

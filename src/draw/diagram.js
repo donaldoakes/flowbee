@@ -15,17 +15,17 @@ export class Diagram extends Shape {
   static ANIMATION_SPEED = 8; // segments/s;
   static ANIMATION_LINK_FACTOR = 3; // relative link slice
 
-  startSpec;
-  stopSpec;
-  pauseSpec;
-  taskSpec;
+  startDescriptor;
+  stopDescriptor;
+  pauseDescriptor;
+  taskDescriptor;
 
-  constructor(canvas, options, specifiers, editable) {
+  constructor(canvas, options, descriptors, editable) {
     super(canvas.getContext("2d"), options);
     this.canvas = canvas;
     this.options = options;
     this.dialog = null; // TODO: see this.onDelete()
-    this.specifiers = specifiers;
+    this.descriptors = descriptors;
     this.editable = editable && editable.toString() === 'true';
     this.flowElementType = 'flow';
     this.isDiagram = true;
@@ -321,7 +321,7 @@ export class Diagram extends Shape {
 
   /**
    * sets display fields and returns a display with w and h for canvas size
-   * (for performance reasons, also initializes steps/links arrays and step specs)
+   * (for performance reasons, also initializes steps/links arrays and step descriptors)
    */
   prepareDisplay() {
     var canvasDisplay = { w: 640, h: 480 };
@@ -342,7 +342,7 @@ export class Diagram extends Shape {
     if (this.flow.steps) {
       this.flow.steps.forEach(function (flowStep) {
         var step = new Step(diagram, flowStep);
-        step.specifier = diagram.getSpecifier(flowStep.specifier);
+        step.descriptor = diagram.getDescriptor(flowStep.descriptor);
         diagram.makeRoom(canvasDisplay, step.prepareDisplay());
         diagram.steps.push(step);
       });
@@ -654,7 +654,7 @@ export class Diagram extends Shape {
 
   getStart() {
     for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.specifier === this.startSpec.id) {
+      if (this.steps[i].step.descriptor === this.startdescriptor.name) {
         return this.steps[i];
       }
     }
@@ -763,17 +763,17 @@ export class Diagram extends Shape {
     }
   }
 
-  getSpecifier(id) {
-    if (this.specifiers) {
-      for (var i = 0; i < this.specifiers.length; i++) {
-        var specifier = this.specifiers[i];
-        if (specifier.id && specifier.id === id) {
-          return specifier;
+  getDescriptor(id) {
+    if (this.descriptors) {
+      for (var i = 0; i < this.descriptors.length; i++) {
+        var descriptor = this.descriptors[i];
+        if (descriptor.name && descriptor.name === id) {
+          return descriptor;
         }
       }
     }
     // not found -- return placeholder
-    return { id, icon: 'shape:step', label: 'Unknown Specifier' };
+    return { id, icon: 'shape:step', label: 'Unknown Descriptor' };
   }
 
   findInSubflows(x, y) {
@@ -786,15 +786,15 @@ export class Diagram extends Shape {
     }
   }
 
-  addStep(spec, x, y) {
-    var specifier = this.getSpecifier(spec);
+  addStep(descriptor, x, y) {
+    var descrip = this.getDescriptor(descriptor);
     var steps = this.steps.slice(0);
     if (this.subflows) {
       for (let i = 0; i < this.subflows.length; i++) {
         steps = steps.concat(this.subflows[i].steps);
       }
     }
-    var step = Step.create(this, this.genId(steps, 'step'), specifier, x, y);
+    var step = Step.create(this, this.genId(steps, 'step'), descrip, x, y);
     var hoverObj = this.getHoverObj(x, y);
     if (hoverObj && hoverObj.isSubflow) {
       hoverObj.subflow.steps.push(step.step);
@@ -1571,18 +1571,18 @@ export class Diagram extends Shape {
     }
   }
 
-  onDrop(e, spec) {
+  onDrop(e, descriptor) {
     var rect = this.canvas.getBoundingClientRect();
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
-    if (spec.type === 'subflow') {
-      this.addSubflow(spec.id, x, y);
+    if (descriptor.type === 'subflow') {
+      this.addSubflow(descriptor.name, x, y);
     }
-    else if (spec.type === 'note') {
+    else if (descriptor.type === 'note') {
       this.addNote(x, y);
     }
     else {
-      this.addStep(spec.id, x, y);
+      this.addStep(descriptor.name, x, y);
     }
     this.draw();
     return true;
@@ -1622,14 +1622,14 @@ export class Diagram extends Shape {
             actions.push('proceed');
           }
           else if (inst.status === 'Waiting' || inst.status === 'In Progress') {
-            var spec = selObj.specifier;
+            var descriptor = selObj.descriptor;
             if (inst.status === 'Waiting') {
               actions.push('proceed');
-              if (spec && spec.id === this.pauseSpec.id) {
+              if (descriptor && descriptor.name === this.pausedescriptor.name) {
                 actions.push('resume');
               }
             }
-            if (spec && spec.category !== 'Task') {
+            if (descriptor && descriptor.category !== 'Task') {
               actions.push('fail');
             }
           }

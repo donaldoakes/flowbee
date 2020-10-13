@@ -1,4 +1,4 @@
 export { FlowDiagram } from './diagram';
-export { Specifier, FlowSpecifier } from './spec';
+export { Descriptor, FlowItemDescriptor } from './descriptor';
 export * from './options';
 
