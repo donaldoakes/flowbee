@@ -329,7 +329,14 @@ export class Diagram extends Shape {
     var diagram = this; // forEach inner access
 
     // label
-    var label = this.instance && this.instance.template ? this.instance.packageName + '/' + this.instance.flowName : this.flow.name;
+    var label = this.flow.name;
+    var lastSlash = label.lastIndexOf('/');
+    if (lastSlash >= 0 && lastSlash < label.length - 1) {
+      label = label.substring(lastSlash + 1);
+    }
+    if (this.instance && this.instance.template) {
+      this.instance.packageName + '/' + this.instance.flowName;
+    }
     var font = this.instance && this.instance.template ? this.options.template.font : this.options.title.font;
     diagram.label = new Label(this, label, this.getDisplay(), font);
     if (this.flow.instanceId) {
