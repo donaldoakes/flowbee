@@ -3,6 +3,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
+import postcss from 'rollup-plugin-postcss';
 
 export default [
     // browser UMD build (tsc builds module output & types)
@@ -16,7 +17,21 @@ export default [
         plugins: [
             resolve(),
             commonjs(),
-            typescript()
+            typescript(),
+            postcss()
         ]
-    }
+    },
+	{
+		input: 'src/main.ts',
+		output: {
+            file: 'dist/main.js',
+            format: 'es'
+        },
+        plugins: [
+            resolve(),
+            commonjs(),
+            typescript(),
+            postcss()
+        ]
+	}
 ];

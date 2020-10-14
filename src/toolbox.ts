@@ -14,7 +14,6 @@ export class Toolbox {
     }
 
     async render(descriptors = StandardDescriptors) {
-        const div = document.getElementById('flow-toolbox') as HTMLElement;
         const ul = document.createElement('ul') as HTMLUListElement;
         let tabIndex = this.options.tabIndex;
         for (const descriptor of descriptors) {
@@ -52,7 +51,7 @@ export class Toolbox {
             li.appendChild(labelDiv);
             ul.appendChild(li);
         }
-        div.appendChild(ul);
+        this.container.appendChild(ul);
 
         // events
         ul.onmousedown = (e: MouseEvent) => {
