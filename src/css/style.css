@@ -1,10 +1,8 @@
 .toolbox {
   height: 100%;
   overflow: auto;
-  border-left: 2px ridge #e7e7e7;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
   font-size: 13px;
-  padding: 3px 0;
 }
 .toolbox > ul {
   margin: 0;
@@ -44,11 +42,9 @@
 .tree {
   height: 100%;
   overflow: auto;
-  border-right: 2px ridge #e7e7e7;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
   font-size: 13px;
   color: #303030;
-  padding: 3px 0 3px 7px;
 }
 .tree ul {
   margin: 0;

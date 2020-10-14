@@ -14,6 +14,8 @@ export class Toolbox {
     }
 
     async render(descriptors = StandardDescriptors) {
+        const div = document.createElement('div') as HTMLDivElement;
+        div.className = 'toolbox';
         const ul = document.createElement('ul') as HTMLUListElement;
         let tabIndex = this.options.tabIndex;
         for (const descriptor of descriptors) {
@@ -51,7 +53,8 @@ export class Toolbox {
             li.appendChild(labelDiv);
             ul.appendChild(li);
         }
-        this.container.appendChild(ul);
+        div.appendChild(ul);
+        this.container.appendChild(div);
 
         // events
         ul.onmousedown = (e: MouseEvent) => {

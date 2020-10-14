@@ -18,7 +18,9 @@ export default [
             resolve(),
             commonjs(),
             typescript(),
-            postcss()
+            postcss({
+                inject: { insertAt: 'top' }
+            })
         ]
     },
 	{
@@ -31,7 +33,9 @@ export default [
             resolve(),
             commonjs(),
             typescript(),
-            postcss()
+            postcss({
+                inject: { insertAt: 'top' }
+            })
         ]
 	}
 ];

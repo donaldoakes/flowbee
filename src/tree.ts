@@ -41,6 +41,16 @@ export class FlowTree {
         this.tabIndex = options.tabIndex;
     }
 
+    async render(fileTree: FileTree) {
+        const div = document.createElement('div') as HTMLDivElement;
+        div.className = 'tree';
+        const ul = document.createElement('ul') as HTMLUListElement;
+        ul.style.paddingLeft = '0px';
+        this.renderItem(ul, fileTree);
+        div.appendChild(ul);
+        this.container.appendChild(div);
+    }
+
     renderItem(ul: HTMLUListElement, item: FileTree) {
         // TODO honor dark
         if (!item.name.startsWith('.')) {
@@ -85,13 +95,6 @@ export class FlowTree {
                 ul.appendChild(li);
             }
         }
-    }
-
-    async render(fileTree: FileTree) {
-        const ul = document.createElement('ul') as HTMLUListElement;
-        ul.style.paddingLeft = '0px';
-        this.renderItem(ul, fileTree);
-        this.container.appendChild(ul);
     }
 
 }

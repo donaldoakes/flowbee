@@ -85,35 +85,6 @@ export class FlowDiagram {
     }
 
     /**
-     * Draw a flow diagram
-     * @param flow to render
-     * @param instance runtime instance (TODO: define class)
-     * @param step step id or step instance id to highlight
-     * @param animate
-     * @param instanceEdit
-     * @param data hotspots
-     */
-    draw(flow: Flow, instance?: any, step?: string, animate = false, instanceEdit = false, data?: any) {
-        this.diagram.draw(
-            flow,
-            instance,
-            step,
-            animate,
-            instanceEdit,
-            data
-        );
-
-        // events
-        this.canvas.onmousedown = e => this.onMouseDown(e);
-        this.canvas.onmouseup = e => this.onMouseUp(e);
-        this.canvas.onmousemove = e => this.onMouseMove(e);
-        this.canvas.onmouseenter = e => this.onMouseEnter(e);
-        this.canvas.onmouseover = e => this.onMouseOver(e);
-        this.canvas.onmouseout = e => this.onMouseOut(e);
-        this.canvas.ondblclick = e => this.onDoubleClick(e);
-    }
-
-    /**
      * Parse and render from text
      * @param text json or yaml
      * @param file file name
@@ -135,6 +106,35 @@ export class FlowDiagram {
             }
             this.draw(flow, instance, step, animate, instanceEdit, data);
         }
+    }
+
+    /**
+     * Draw a flow diagram
+     * @param flow to render
+     * @param instance runtime instance (TODO: define class)
+     * @param step step id or step instance id to highlight
+     * @param animate
+     * @param instanceEdit
+     * @param data hotspots
+     */
+    private draw(flow: Flow, instance?: any, step?: string, animate = false, instanceEdit = false, data?: any) {
+        this.diagram.draw(
+            flow,
+            instance,
+            step,
+            animate,
+            instanceEdit,
+            data
+        );
+
+        // events
+        this.canvas.onmousedown = e => this.onMouseDown(e);
+        this.canvas.onmouseup = e => this.onMouseUp(e);
+        this.canvas.onmousemove = e => this.onMouseMove(e);
+        this.canvas.onmouseenter = e => this.onMouseEnter(e);
+        this.canvas.onmouseover = e => this.onMouseOver(e);
+        this.canvas.onmouseout = e => this.onMouseOut(e);
+        this.canvas.ondblclick = e => this.onDoubleClick(e);
     }
 
     onMouseMove(e: MouseEvent) {
