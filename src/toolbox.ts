@@ -1,6 +1,6 @@
 import { merge } from 'merge-anything';
-import { ToolboxOptions, DefaultOptions } from './options';
-import { Descriptor, StandardDescriptors } from './descriptor';
+import { ToolboxOptions, toolboxDefault } from './options';
+import { StandardDescriptors } from './descriptor';
 
 export class Toolbox {
 
@@ -10,14 +10,14 @@ export class Toolbox {
         readonly container: HTMLElement,
         options?: ToolboxOptions
     ) {
-        this.options = merge(DefaultOptions.toolbox.light, options || {});
+        this.options = merge(toolboxDefault, options || {});
     }
 
-    async render(descriptors = StandardDescriptors) {
+    async render(theme: string, descriptors = StandardDescriptors) {
         const div = document.createElement('div') as HTMLDivElement;
-        div.className = 'toolbox';
+        div.className = `toolbox toolbox-${theme || ''}`;
         const ul = document.createElement('ul') as HTMLUListElement;
-        let tabIndex = this.options.tabIndex;
+        let tabIndex = 1;
         for (const descriptor of descriptors) {
             const li = document.createElement('li') as HTMLLIElement;
             li.setAttribute('id', descriptor.name);
@@ -48,7 +48,6 @@ export class Toolbox {
             }
             const labelDiv = document.createElement('div') as HTMLDivElement;
             labelDiv.className = 'toolbox-label';
-            labelDiv.style.color = this.options.labelColor;
             labelDiv.appendChild(document.createTextNode(descriptor.label));
             li.appendChild(labelDiv);
             ul.appendChild(li);

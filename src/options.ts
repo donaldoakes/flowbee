@@ -101,18 +101,6 @@ export interface DiagramOptions {
     statuses?: Status[];
 }
 
-export interface ToolboxOptions {
-    iconBase?: string;
-    backgroundColor?: string;
-    labelColor?: string;
-    tabIndex?: number;
-}
-
-export interface FlowTreeOptions {
-    backgroundColor?: string;
-    tabIndex?: number;
-}
-
 /**
  * TODO: colors controlled by style classes (eg: .diagram-title-dark, etc)?
  */
@@ -240,41 +228,23 @@ const diagramDark: DiagramOptions = {
     }
 };
 
-const toolboxDefault: ToolboxOptions = {
-    iconBase: null,
-    backgroundColor: '#f3f3f3',
-    labelColor: '#303030',
-    tabIndex: 1000
+export interface ToolboxOptions {
+    iconBase?: string;
+}
+export const toolboxDefault: ToolboxOptions = {
+    iconBase: null
 };
 
-/**
- * merged into toolboxDefault
- */
-const toolboxDark: ToolboxOptions = {
-    backgroundColor: '#252526',
-    labelColor: '#cccccc'
-};
-
-const flowTreeDefault: FlowTreeOptions = {
-    backgroundColor: '#ffffff',
-    tabIndex: 100
-};
-
-const flowTreeDark: FlowTreeOptions = {
-    backgroundColor: '#1e1e1e'
+export interface FlowTreeOptions {
+    fileIcon?: string;
+}
+export const flowTreeDefault: FlowTreeOptions = {
+    fileIcon: '/img/flow.svg'
 };
 
 export const DefaultOptions = {
     diagram: {
         light: diagramDefault,
         dark: diagramDark
-    },
-    toolbox: {
-        light: toolboxDefault,
-        dark: toolboxDark
-    },
-    flowTree: {
-        light: flowTreeDefault,
-        dark: flowTreeDark
     }
 };

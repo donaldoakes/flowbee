@@ -1,4 +1,4 @@
-import './css/style.css';
+import './css/style.scss';
 export { FlowDiagram } from './diagram';
 export { Descriptor, FlowItemDescriptor, FlowItemType } from './descriptor';
 export { Toolbox } from './toolbox';

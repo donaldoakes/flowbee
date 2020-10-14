@@ -1,5 +1,5 @@
 import { merge } from 'merge-anything';
-import { FlowTreeOptions, DefaultOptions } from './options';
+import { FlowTreeOptions, flowTreeDefault } from './options';
 import { TypedEvent, Listener } from './event';
 
 export type FileItemType = 'file' | 'directory';
@@ -26,7 +26,7 @@ export interface FlowTreeSelectEvent {
 export class FlowTree {
 
     options: FlowTreeOptions;
-    private tabIndex: number;
+    private tabIndex = 1;
 
     private _onFlowSelect = new TypedEvent<FlowTreeSelectEvent>();
     onFlowSelect(listener: Listener<FlowTreeSelectEvent>) {
@@ -37,13 +37,12 @@ export class FlowTree {
         readonly container: HTMLElement,
         options?: FlowTreeOptions
     ) {
-        this.options = merge(DefaultOptions.flowTree.light, options || {});
-        this.tabIndex = options.tabIndex;
+        this.options = merge(flowTreeDefault, options || {});
     }
 
-    async render(fileTree: FileTree) {
+    async render(theme: string, fileTree: FileTree) {
         const div = document.createElement('div') as HTMLDivElement;
-        div.className = 'tree';
+        div.className = `tree tree-${theme || ''}`;
         const ul = document.createElement('ul') as HTMLUListElement;
         ul.style.paddingLeft = '0px';
         this.renderItem(ul, fileTree);
@@ -59,11 +58,13 @@ export class FlowTree {
                 li.setAttribute('id', item.path);
                 li.className = 'tree-flow-item';
                 li.tabIndex = this.tabIndex++;
-                const img = document.createElement('img') as HTMLImageElement;
-                img.src = '/img/flow.svg';
-                img.alt = 'flow';
-                img.className = 'tree-flow-icon';
-                li.appendChild(img);
+                if (this.options.fileIcon) {
+                    const img = document.createElement('img') as HTMLImageElement;
+                    img.src = this.options.fileIcon;
+                    img.alt = 'flow';
+                    img.className = 'tree-flow-icon';
+                    li.appendChild(img);
+                }
                 li.addEventListener('click', async () => {
                     this._onFlowSelect.emit({
                         path: item.path,
