@@ -15,12 +15,13 @@ export class Diagram extends Shape {
   static ANIMATION_SPEED = 8; // segments/s;
   static ANIMATION_LINK_FACTOR = 3; // relative link slice
 
+  options;
+  readonly = false;
+
   startDescriptor;
   stopDescriptor;
   pauseDescriptor;
   taskDescriptor;
-
-  readonly = false;
 
   constructor(canvas, options, descriptors) {
     super(canvas.getContext("2d"), options);
@@ -1095,7 +1096,7 @@ export class Diagram extends Shape {
     if (opacity) {
       this.context.globalAlpha = opacity;
     }
-    var rounding = this.options.defaultRoundingRadius;
+    var rounding = this.options.data.roundingRadius;
     var x1, y1, w1, h1;
     this.rect(
       display.x,
@@ -1476,7 +1477,7 @@ export class Diagram extends Shape {
       var deltaX = x - this.dragX;
       var deltaY = y - this.dragY;
 
-      if (Math.abs(deltaX) > this.options.minDrag || Math.abs(deltaY) > this.options.minDrag) {
+      if (Math.abs(deltaX) > this.options.drag.min || Math.abs(deltaY) > this.options.drag.min) {
 
         if (x > rect.right - Diagram.BOUNDARY_DIM) {
           this.canvas.width = this.canvas.width + Diagram.BOUNDARY_DIM;
@@ -1556,6 +1557,7 @@ export class Diagram extends Shape {
             }
           }
           else {
+            console.log("ELSE");
             this.selection.move(this.dragX, this.dragY, deltaX, deltaY);
             // non-workflow selection may not be reselected after move
             var hovObj = this.diagram.getHoverObj(x, y);

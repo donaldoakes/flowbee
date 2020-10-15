@@ -4,13 +4,14 @@ import { Diagram } from './draw/diagram';
 import { Flow } from './flow';
 import { Descriptor, start, stop, pause, task, StandardDescriptors } from './descriptor';
 import { Variable } from './var';
-import { DiagramOptions, DefaultOptions } from './options';
+import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style';
 
 export class FlowDiagram {
 
     options: DiagramOptions;
     private diagram: Diagram;
+    private diagramStyle: DiagramStyle;
 
     private down = false;
     private dragging = false;
@@ -27,7 +28,9 @@ export class FlowDiagram {
         options?: DiagramOptions,
         readonly descriptors: Descriptor[] = StandardDescriptors
     ) {
-        this.options = merge(DefaultOptions.diagram.light, options || {});
+        this.options = merge(diagramDefault, options || {});
+
+        this.diagramStyle = new DiagramStyle(canvas);
 
         this.diagram = new Diagram(
             this.canvas,
@@ -98,8 +101,12 @@ export class FlowDiagram {
                     flow.name = flow.name.substring(0, lastDot);
                 }
             }
-            new DiagramStyle(theme);
-            this.canvas.style.backgroundColor = this.options.backgroundColor;
+
+            this.diagram.options = merge(this.options, this.diagramStyle.getDrawingOptions(theme));
+
+            this.canvas.style.backgroundColor = this.diagram.options.backgroundColor;
+
+
             this.draw(flow, instance, step, animate, instanceEdit, data);
         }
     }

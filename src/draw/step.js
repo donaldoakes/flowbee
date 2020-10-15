@@ -31,7 +31,7 @@ export class Step extends Shape {
     }
     var milestone = this.getMilestone();
     if (milestone) {
-      fill = this.diagram.options.step.milestoneColor;
+      fill = this.diagram.options.milestone.color;
       opacity = 0.5;
       title = milestone.label; // TODO use this
       if (milestone.group) {
@@ -73,7 +73,7 @@ export class Step extends Shape {
             this.display.w,
             this.display.h,
             this.diagram.options.step.outlineColor,
-            this.diagram.options.step.startColor,
+            this.diagram.options.step.start.fillColor,
             0.8,
             1
           );
@@ -85,7 +85,7 @@ export class Step extends Shape {
             this.display.w,
             this.display.h,
             this.diagram.options.step.outlineColor,
-            this.diagram.options.step.stopColor,
+            this.diagram.options.step.stop.fillColor,
             0.8,
             1
           );
@@ -97,7 +97,7 @@ export class Step extends Shape {
             this.display.w,
             this.display.h,
             this.diagram.options.step.outlineColor,
-            this.diagram.options.step.pauseColor,
+            this.diagram.options.step.pause.fillColor,
             0.8,
             1);
         }
@@ -156,15 +156,19 @@ export class Step extends Shape {
     var diagram = this.diagram;
     diagram.context.font = this.diagram.options.defaultFont.name;
     this.title.lines.forEach(function (line) {
-      if (shape === 'start' || shape === 'stop' || shape === 'pause') {
-        diagram.context.fillStyle = diagram.options.step.filledTextColor;
+      if (shape === 'start') {
+        diagram.context.fillStyle = diagram.options.step.start.color;
+      } else if (shape === 'stop') {
+        diagram.context.fillStyle = diagram.options.step.stop.color;
+      } else if (shape === 'pause') {
+        diagram.context.fillStyle = diagram.options.step.pause.color;
       }
       diagram.context.fillText(line.text, line.x, line.y + yAdjust);
       diagram.context.fillStyle = diagram.options.defaultColor;
     });
 
     // logical id
-    this.diagram.context.fillStyle = this.diagram.options.metaColor;
+    this.diagram.context.fillStyle = this.diagram.options.meta.color;
     var showText = step.id;
     if (this.data && this.data.message) {
       showText += ' (' + this.data.message + ')';

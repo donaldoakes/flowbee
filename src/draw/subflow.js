@@ -43,7 +43,7 @@ export class Subflow extends Shape {
     }
 
     // logical id
-    this.diagram.context.fillStyle = this.diagram.options.metaColor;
+    this.diagram.context.fillStyle = this.diagram.options.meta.color;
     this.diagram.context.fillText('[' + this.subflow.id + ']', this.display.x + 10, this.display.y + this.display.h + 4);
     this.diagram.context.fillStyle = this.diagram.options.defaultColor;
   }

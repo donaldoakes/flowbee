@@ -4,6 +4,9 @@
   background-color: #ffffff;
   font-family: sans-serif;
   font-size: 12px;
+  .grid {
+    color: #d3d3d3;
+  }
   .title {
     color: #360303;
     font-family: sans-serif;
@@ -12,6 +15,9 @@
   }
   .line {
     width: 1px;
+  }
+  .drag {
+    min-width: 3px;
   }
   .meta {
     color: gray;
@@ -72,14 +78,7 @@
     min-width: 4px;
   }
   .milestone {
-    color: #4cafea;
-  }
-  .grid {
-    color: #d3d3d3;
-  }
-  .marquee {
-    border-color: #00ffff;
-    border-radius: 2px;
+    background-color: #4cafea;
   }
   .anchor {
     width: 3px;
@@ -87,6 +86,10 @@
     .hit {
       width: 8px;
     }
+  }
+  .marquee {
+    border-color: #00ffff;
+    border-radius: 2px;
   }
   .highlight {
     margin: 10px;

@@ -26,7 +26,7 @@ export class Label extends Shape {
     this.diagram.context.fillText(this.text, this.display.x, this.display.y + this.display.h / 1.33);
     this.diagram.context.font = this.diagram.options.defaultFont.name;
     if (this.subtext) {
-      this.diagram.context.fillStyle = this.diagram.options.metaColor;
+      this.diagram.context.fillStyle = this.diagram.options.meta.color;
       this.diagram.context.fillText(this.subtext, this.display.x, this.display.y + this.display.h * 1.33);
     }
     this.diagram.context.fillStyle = this.diagram.options.defaultColor;
