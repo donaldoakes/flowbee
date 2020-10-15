@@ -13,6 +13,14 @@ export interface TextOptions {
     font?: Font;
 }
 
+export interface LineOptions {
+    width?: number; // 1
+}
+
+export interface MetaOptions {
+    color?: string; // gray
+}
+
 export interface StepOptions {
     outlineColor?: string;
     roundingRadius?: number;
@@ -78,6 +86,7 @@ export interface HyperlinkOptions {
 }
 
 export interface DiagramOptions {
+    readonly?: boolean;
     iconBase?: string;
     websocketUrl?: string;
     backgroundColor?: string;
@@ -101,19 +110,24 @@ export interface DiagramOptions {
     statuses?: Status[];
 }
 
+export interface NewDiagramOptions {
+    minDrag?: number; // 3
+}
+
 /**
  * TODO: colors controlled by style classes (eg: .diagram-title-dark, etc)?
  */
 const diagramDefault: DiagramOptions = {
+    readonly: false,
     iconBase: null,
     websocketUrl: null,
     backgroundColor: '#ffffff',
+    defaultLineWidth: 1,
+    defaultColor: 'black',
     defaultFont: {
         name: '12px sans-serif',
         size: 12,
     },
-    defaultLineWidth: 1,
-    defaultColor: 'black',
     metaColor: 'gray',
     defaultRoundingRadius: 12,
     minDrag: 3,

@@ -5,11 +5,12 @@ import { Flow } from './flow';
 import { Descriptor, start, stop, pause, task, StandardDescriptors } from './descriptor';
 import { Variable } from './var';
 import { DiagramOptions, DefaultOptions } from './options';
+import { DiagramStyle } from './style';
 
 export class FlowDiagram {
 
     options: DiagramOptions;
-    diagram: Diagram;
+    private diagram: Diagram;
 
     private down = false;
     private dragging = false;
@@ -20,32 +21,24 @@ export class FlowDiagram {
      * @param canvas html canvas
      * @param options drawing options
      * @param descriptors flow item descriptors
-     * @param readonly
      */
     constructor(
         readonly canvas: HTMLCanvasElement,
         options?: DiagramOptions,
-        readonly descriptors: Descriptor[] = StandardDescriptors,
-        readonly readonly = false
+        readonly descriptors: Descriptor[] = StandardDescriptors
     ) {
         this.options = merge(DefaultOptions.diagram.light, options || {});
 
         this.diagram = new Diagram(
             this.canvas,
             this.options,
-            this.descriptors,
-            !readonly
+            this.descriptors
         );
 
         this.diagram.startDescriptor = start;
         this.diagram.stopDescriptor = stop;
         this.diagram.pauseDescriptor = pause;
         this.diagram.taskDescriptor = task;
-
-        // if ($scope.editable) {
-        //     $scope.toolbox = Toolbox.getToolbox();
-        //     $scope.toolbox.init($scope.descriptors, $scope.hubBase);
-        // }
     }
 
     /**
@@ -86,6 +79,7 @@ export class FlowDiagram {
 
     /**
      * Parse and render from text
+     * @param theme theme name
      * @param text json or yaml
      * @param file file name
      * @param instance runtime instance (TODO: define class)
@@ -94,7 +88,7 @@ export class FlowDiagram {
      * @param instanceEdit
      * @param data hotspots
      */
-    render(text: string, file: string, instance?: any, step?: string, animate = false, instanceEdit = false, data?: any) {
+    render(theme: string, text: string, file: string, instance?: any, step?: string, animate = false, instanceEdit = false, data?: any) {
         if (typeof text === 'string') {
             const flow = this.parse(text, file);
             if (file) {
@@ -104,6 +98,8 @@ export class FlowDiagram {
                     flow.name = flow.name.substring(0, lastDot);
                 }
             }
+            new DiagramStyle(theme);
+            this.canvas.style.backgroundColor = this.options.backgroundColor;
             this.draw(flow, instance, step, animate, instanceEdit, data);
         }
     }
@@ -138,11 +134,11 @@ export class FlowDiagram {
     }
 
     onMouseMove(e: MouseEvent) {
-        if (this.dragIn && !this.readonly) {
+        if (this.dragIn && !this.options.readonly) {
             document.body.style.cursor = 'copy';
         }
         else {
-            if (this.down && !this.readonly) {
+            if (this.down && !this.options.readonly) {
                 this.dragging = true;
             }
             if (this.diagram) {
@@ -168,12 +164,12 @@ export class FlowDiagram {
                 selObj = selObj.owner;
             }
             if (selObj) {
-                // Inspector.setObj(selObj, !$scope.editable && e.button !== 2);
+                // Inspector.setObj(selObj, this.options.readonly && e.button !== 2);
             }
             else {
                 const bgObj = this.diagram.getBackgroundObj(e);
                 if (bgObj) {
-                    // Inspector.setObj(bgObj, !$scope.editable && e.button !== 2);
+                    // Inspector.setObj(bgObj, this.options.readonly && e.button !== 2);
                 }
             }
         }
@@ -217,7 +213,7 @@ export class FlowDiagram {
     }
 
     onDoubleClick(e: MouseEvent) {
-        if (this.diagram && !this.readonly) {
+        if (this.diagram && !this.options.readonly) {
             let selObj = this.diagram.selection.getSelectObj();
             if (selObj && selObj.isLabel) {
                 selObj = selObj.owner;

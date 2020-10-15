@@ -15,7 +15,7 @@ export class Toolbox {
 
     async render(theme: string, descriptors = StandardDescriptors) {
         const div = document.createElement('div') as HTMLDivElement;
-        div.className = `toolbox toolbox-${theme || ''}`;
+        div.className = `flowbee-toolbox flowbee-toolbox-${theme || ''}`;
         const ul = document.createElement('ul') as HTMLUListElement;
         let tabIndex = 1;
         for (const descriptor of descriptors) {
@@ -24,7 +24,6 @@ export class Toolbox {
             li.tabIndex = tabIndex++;
             if (descriptor.icon) {
                 const iconDiv = document.createElement('div') as HTMLDivElement;
-                iconDiv.className = 'toolbox-icon';
                 const iconImg = document.createElement('img') as HTMLImageElement;
                 const iconBase = this.options.iconBase ? this.options.iconBase : '';
                 let icon = descriptor.icon;
@@ -46,10 +45,9 @@ export class Toolbox {
                 iconDiv.appendChild(iconImg);
                 li.appendChild(iconDiv);
             }
-            const labelDiv = document.createElement('div') as HTMLDivElement;
-            labelDiv.className = 'toolbox-label';
-            labelDiv.appendChild(document.createTextNode(descriptor.label));
-            li.appendChild(labelDiv);
+            const label = document.createElement('label') as HTMLLabelElement;
+            label.appendChild(document.createTextNode(descriptor.label));
+            li.appendChild(label);
             ul.appendChild(li);
         }
         div.appendChild(ul);

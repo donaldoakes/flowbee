@@ -20,13 +20,14 @@ export class Diagram extends Shape {
   pauseDescriptor;
   taskDescriptor;
 
-  constructor(canvas, options, descriptors, editable) {
+  readonly = false;
+
+  constructor(canvas, options, descriptors) {
     super(canvas.getContext("2d"), options);
     this.canvas = canvas;
     this.options = options;
     this.dialog = null; // TODO: see this.onDelete()
     this.descriptors = descriptors;
-    this.editable = editable && editable.toString() === 'true';
     this.flowElementType = 'flow';
     this.isDiagram = true;
     this.context = this.canvas.getContext("2d");
@@ -39,7 +40,7 @@ export class Diagram extends Shape {
     if (zoomControls.length === 1) {
       var diagram = this;
       this.zoomControl = zoomControls[0];
-      if (this.editable && Toolbox) {
+      if (!this.readonly && Toolbox) {
         this.zoomControl.style.top = "90px";
         this.zoomControl.style.right = '270px';
       }
@@ -396,7 +397,7 @@ export class Diagram extends Shape {
     canvasDisplay.w += Diagram.BOUNDARY_DIM;
     canvasDisplay.h += Diagram.BOUNDARY_DIM;
 
-    if (this.editable && Toolbox) {
+    if (!this.readonly && Toolbox) {
       var toolbox = Toolbox.getToolbox();
       // fill available
       var parentWidth = this.canvas.parentElement.offsetWidth;
@@ -1373,7 +1374,7 @@ export class Diagram extends Shape {
 
     var selObj = this.getHoverObj(x, y);
 
-    if (this.editable && e.ctrlKey) {
+    if (!this.readonly && e.ctrlKey) {
       if (selObj) {
         if (this.selection.includes(selObj)) {
           this.selection.remove(selObj);
@@ -1391,7 +1392,7 @@ export class Diagram extends Shape {
         this.unselect();
         if (this.selection.getSelectObj()) {
           this.selection.getSelectObj().select();
-          if (this.editable && e.shiftKey && this.selection.getSelectObj().isStep) {
+          if (!this.readonly && e.shiftKey && this.selection.getSelectObj().isStep) {
             this.shiftDrag = true;
           }
         }
@@ -1439,7 +1440,7 @@ export class Diagram extends Shape {
     this.anchor = -1;
     this.hoverObj = this.getHoverObj(x, y);
     if (this.hoverObj) {
-      if (this.editable && (this.hoverObj === this.selection.getSelectObj())) {
+      if (!this.readonly && (this.hoverObj === this.selection.getSelectObj())) {
         this.anchor = this.hoverObj.getAnchor(x, y);
         if (this.anchor >= 0) {
           if (this.hoverObj.isLink) {
@@ -1468,7 +1469,7 @@ export class Diagram extends Shape {
   }
 
   onMouseDrag(e) {
-    if (this.editable && this.dragX && this.dragY && !e.ctrlKey) {
+    if (!this.readonly && this.dragX && this.dragY && !e.ctrlKey) {
       var rect = this.canvas.getBoundingClientRect();
       var x = e.clientX - rect.left;
       var y = e.clientY - rect.top;
