@@ -12,6 +12,7 @@ export class FlowDiagram {
     options: DiagramOptions;
     private diagram: Diagram;
     private diagramStyle: DiagramStyle;
+    flow: Flow;
 
     private down = false;
     private dragging = false;
@@ -83,7 +84,7 @@ export class FlowDiagram {
     /**
      * Parse and render from text
      * @param theme theme name
-     * @param text json or yaml
+     * @param flow text (json or yaml), or Flow
      * @param file file name
      * @param instance runtime instance (TODO: define class)
      * @param step step id or step instance id to highlight
@@ -91,24 +92,19 @@ export class FlowDiagram {
      * @param instanceEdit
      * @param data hotspots
      */
-    render(theme: string, text: string, file: string, instance?: any, step?: string, animate = false, instanceEdit = false, data?: any) {
-        if (typeof text === 'string') {
-            const flow = this.parse(text, file);
-            if (file) {
-                flow.name = file;
-                const lastDot = flow.name.lastIndexOf('.');
-                if (lastDot > 0) {
-                    flow.name = flow.name.substring(0, lastDot);
-                }
+    render(theme: string, textOrFlow: string | Flow, file: string, instance?: any, step?: string, animate = false, instanceEdit = false, data?: any) {
+        this.flow = typeof textOrFlow === 'string' ? this.parse(textOrFlow, file) : textOrFlow;
+        if (file) {
+            this.flow.name = file;
+            const lastDot = this.flow.name.lastIndexOf('.');
+            if (lastDot > 0) {
+                this.flow.name = this.flow.name.substring(0, lastDot);
             }
-
-            this.diagram.options = merge(this.options, this.diagramStyle.getDrawingOptions(theme));
-
-            this.canvas.style.backgroundColor = this.diagram.options.backgroundColor;
-
-
-            this.draw(flow, instance, step, animate, instanceEdit, data);
         }
+
+        this.diagram.options = merge(this.options, this.diagramStyle.getDrawingOptions(theme));
+        this.canvas.style.backgroundColor = this.diagram.options.backgroundColor;
+        this.draw(this.flow, instance, step, animate, instanceEdit, data);
     }
 
     /**

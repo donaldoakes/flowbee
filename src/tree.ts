@@ -1,5 +1,5 @@
 import { merge } from 'merge-anything';
-import { FlowTreeOptions, flowTreeDefault } from './options';
+import { FlowTreeOptions, flowTreeDefault, Theme } from './options';
 import { TypedEvent, Listener } from './event';
 
 export type FileItemType = 'file' | 'directory';
@@ -26,6 +26,7 @@ export interface FlowTreeSelectEvent {
 export class FlowTree {
 
     options: FlowTreeOptions;
+    private div: HTMLDivElement;
     private tabIndex = 1;
 
     private _onFlowSelect = new TypedEvent<FlowTreeSelectEvent>();
@@ -40,17 +41,20 @@ export class FlowTree {
         this.options = merge(flowTreeDefault, options || {});
     }
 
-    async render(theme: string, fileTree: FileTree) {
-        const div = document.createElement('div') as HTMLDivElement;
-        div.className = `flowbee-tree flowbee-tree-${theme || ''}`;
+    render(theme: string, fileTree: FileTree) {
+        if (this.div) {
+            this.container.removeChild(this.div);
+        }
+        this.div = document.createElement('div') as HTMLDivElement;
+        this.div.className = `flowbee-tree flowbee-tree-${theme || ''}`;
         const ul = document.createElement('ul') as HTMLUListElement;
         ul.style.paddingLeft = '0px';
-        this.renderItem(ul, fileTree);
-        div.appendChild(ul);
-        this.container.appendChild(div);
+        this.renderItem(ul, fileTree, theme);
+        this.div.appendChild(ul);
+        this.container.appendChild(this.div);
     }
 
-    renderItem(ul: HTMLUListElement, item: FileTree) {
+    private renderItem(ul: HTMLUListElement, item: FileTree, theme: string) {
         // TODO honor dark
         if (!item.name.startsWith('.')) {
             if (item.type === 'file') {
@@ -59,8 +63,12 @@ export class FlowTree {
                 li.className = 'flowbee-tree-flow-item';
                 li.tabIndex = this.tabIndex++;
                 if (this.options.fileIcon) {
+                    let icon = this.options.fileIcon;
+                    if (typeof icon !== 'string') {
+                        icon = new Theme(theme).isDark ? icon.dark : icon.light;
+                    }
                     const img = document.createElement('img') as HTMLImageElement;
-                    img.src = this.options.fileIcon;
+                    img.src = icon;
                     img.alt = 'flow';
                     img.className = 'flowbee-flow-icon';
                     li.appendChild(img);
@@ -89,7 +97,7 @@ export class FlowTree {
                 span.appendChild(document.createTextNode(item.name));
                 if (item.children) {
                     for (const child of item.children) {
-                        this.renderItem(dirUl, child);
+                        this.renderItem(dirUl, child, theme);
                     }
                 }
                 li.appendChild(dirUl);

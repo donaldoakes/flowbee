@@ -1,3 +1,10 @@
+export class Theme {
+    constructor(readonly name: string) {}
+    get isDark() {
+        return this.name === 'dark' || this.name.endsWith('-dark');
+    }
+}
+
 export interface DiagramOptions {
     readonly?: boolean;
     iconBase?: string;
@@ -23,12 +30,15 @@ export const toolboxDefault: ToolboxOptions = {
     iconBase: null
 };
 
-export interface FlowTreeOptions {
-    fileIcon?: string;
+export type Icon = {
+    light: string,
+    dark: string
 }
-export const flowTreeDefault: FlowTreeOptions = {
-    fileIcon: 'flow.svg'
-};
+
+export interface FlowTreeOptions {
+    fileIcon?: string | Icon;
+}
+export const flowTreeDefault: FlowTreeOptions = { };
 
 export type Status = {
     name: string,

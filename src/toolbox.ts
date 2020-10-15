@@ -5,6 +5,7 @@ import { StandardDescriptors } from './descriptor';
 export class Toolbox {
 
     options: ToolboxOptions;
+    private div: HTMLDivElement;
 
     constructor(
         readonly container: HTMLElement,
@@ -14,8 +15,11 @@ export class Toolbox {
     }
 
     async render(theme: string, descriptors = StandardDescriptors) {
-        const div = document.createElement('div') as HTMLDivElement;
-        div.className = `flowbee-toolbox flowbee-toolbox-${theme || ''}`;
+        if (this.div) {
+            this.container.removeChild(this.div);
+        }
+        this.div = document.createElement('div') as HTMLDivElement;
+        this.div.className = `flowbee-toolbox flowbee-toolbox-${theme || ''}`;
         const ul = document.createElement('ul') as HTMLUListElement;
         let tabIndex = 1;
         for (const descriptor of descriptors) {
@@ -50,8 +54,8 @@ export class Toolbox {
             li.appendChild(label);
             ul.appendChild(li);
         }
-        div.appendChild(ul);
-        this.container.appendChild(div);
+        this.div.appendChild(ul);
+        this.container.appendChild(this.div);
 
         // events
         ul.onmousedown = (e: MouseEvent) => {
