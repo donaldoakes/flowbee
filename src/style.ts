@@ -9,94 +9,73 @@ export class DiagramStyle {
         this.defaultFontSize = parseFloat(getComputedStyle(canvas).fontSize);
     }
 
+    /**
+     * Translates styles into drawing options for the specified theme
+     * @param theme theme for looking up css diagram styles
+     */
     getDrawingOptions(theme: string): DrawingOptions {
-        const obj = {};
 
-        for (let i = 0; i < document.styleSheets.length; i++) {
-            const styleSheet = document.styleSheets[i];
-            for (let j = 0; j < styleSheet.cssRules.length; j++) {
-                const cssRule = styleSheet.cssRules[j];
-                const selectorText = (cssRule as any).selectorText;
-                if (selectorText) {
+        const styles = this.getStyles(theme);
 
-                    if (selectorText === '.flowbee-diagram' || selectorText.startsWith('.flowbee-diagram ')
-                      || selectorText === `.flowbee-diagram-${theme}` || selectorText.startsWith(`.flowbee-diagram-${theme} `)) {
-                        //
-                        const selTextObj = {};
-                        const style = (cssRule as any).style;
-                        if (style) {
-                            let selTextName = selectorText.substring(1);
-                            if (selTextName === `flowbee-diagram-${theme}`) {
-                                selTextName = 'flowbee-diagram';
-                            } else if (selTextName.startsWith(`flowbee-diagram-${theme} `)) {
-                                const startLen = `flowbee-diagram-${theme}`.length;
-                                selTextName = `flowbee-diagram ${selTextName.substring(startLen + 1)}`;
-                            }
-
-                            for (let k = 0; k < style.length; k++) {
-                                const key = this.mapKey(style[k]);
-                                if (key) {
-                                    const val = style.getPropertyValue(style[k]);
-                                    if (val) {
-                                        selTextObj[key] = val;
-                                    }
-                                }
-                            }
-
-                            const prevSelTextObj = obj[selTextName];
-                            obj[selTextName] = merge(prevSelTextObj || {}, selTextObj);
-                        }
-                    }
-                }
-            }
-        }
-
-        const diagram = obj['flowbee-diagram'];
-        const grid = obj['flowbee-diagram .grid'];
-        const title = obj['flowbee-diagram .title'];
-        const meta = obj['flowbee-diagram .meta'];
-        const milestone = obj['flowbee-diagram .milestone'];
-        const step = obj['flowbee-diagram .step'];
-        step.start = obj['flowbee-diagram .step .start'];
-        step.stop = obj['flowbee-diagram .step .start'];
-        step.pause = obj['flowbee-diagram .step .pause'];
-        const link = obj['flowbee-diagram .link'];
-        link.draw = obj['flowbee-diagram .link .draw'];
-        link.hit = obj['flowbee-diagram .link .hit'];
+        const diagram = styles['flowbee-diagram'];
+        const grid = styles['flowbee-diagram .grid'];
+        const title = styles['flowbee-diagram .title'];
+        const meta = styles['flowbee-diagram .meta'];
+        const milestone = styles['flowbee-diagram .milestone'];
+        const label = styles['flowbee-diagram .label'] || {};
+        label.select = styles['flowbee-diagram .label .select'];
+        const step = styles['flowbee-diagram .step'];
+        step.start = styles['flowbee-diagram .step .start'];
+        step.stop = styles['flowbee-diagram .step .start'];
+        step.pause = styles['flowbee-diagram .step .pause'];
+        step.state = styles['flowbee-diagram .step .state'];
+        step.state.previous = styles['flowbee-diagram .step .state .previous'];
+        const link = styles['flowbee-diagram .link'];
+        link.draw = styles['flowbee-diagram .link .draw'];
+        link.hit = styles['flowbee-diagram .link .hit'];
         link.state = {
-            initiated: obj['flowbee-diagram .link .state .initiated'],
-            traversed: obj['flowbee-diagram .link .state .traversed']
+            initiated: styles['flowbee-diagram .link .state .initiated'],
+            traversed: styles['flowbee-diagram .link .state .traversed']
         };
-        const subflow = obj['flowbee-diagram .subflow'];
-        subflow.hit = obj['flowbee-diagram .subflow .hit'];
-        const note = obj['flowbee-diagram .note'];
-        const anchor = obj['flowbee-diagram .anchor'];
-        anchor.hit = obj['flowbee-diagram .anchor .hit'];
-        const marquee = obj['flowbee-diagram .marquee'];
-        const highlight = obj['flowbee-diagram .highlight'];
-        const template = obj['flowbee-diagram .template'];
-        const data = obj['flowbee-diagram .data'];
+        const subflow = styles['flowbee-diagram .subflow'];
+        subflow.hit = styles['flowbee-diagram .subflow .hit'];
+        const note = styles['flowbee-diagram .note'];
+        const anchor = styles['flowbee-diagram .anchor'];
+        anchor.hit = styles['flowbee-diagram .anchor .hit'];
+        const marquee = styles['flowbee-diagram .marquee'];
+        const highlight = styles['flowbee-diagram .highlight'];
+        const template = styles['flowbee-diagram .template'];
+        const data = styles['flowbee-diagram .data'];
 
         const diagramOptions: DrawingOptions = {
             backgroundColor: diagram['background-color'],
             defaultColor: diagram.color,
-            defaultLineWidth: this.getSize(obj['flowbee-diagram .line'].width),
+            defaultLineWidth: this.getSize(styles['flowbee-diagram .line'].width),
             defaultFont: this.getFont(diagram),
+            padding: this.getSize(diagram.padding),
             drag: {
-                min: this.getSize(obj['flowbee-diagram .drag']['min-width'])
+                min: this.getSize(styles['flowbee-diagram .drag']['min-width'])
             },
             grid: {
                 color: grid.color
             },
             title: {
                 color: title.color,
-                font: this.getFont(title)
+                font: this.getFont(title),
+                visibility: title.visibility
             },
             meta: {
                 color: meta.color
             },
             milestone: {
                 color: milestone['background-color']
+            },
+            label: {
+                select: {
+                    color: label.select.color,
+                    padding: this.getSize(label.select.padding),
+                    roundingRadius: label.select['border-radius']
+                }
             },
             step: {
                 outlineColor: step['border-color'],
@@ -113,6 +92,12 @@ export class DiagramStyle {
                 pause: {
                     color: step['pause'].color,
                     fillColor: step['pause']['background-color']
+                },
+                state: {
+                    width: this.getSize(step.state.width),
+                    previous: {
+                        width: this.getSize(step.state.previous.width)
+                    }
                 }
             },
             link: {
@@ -148,12 +133,12 @@ export class DiagramStyle {
                 roundingRadius: this.getSize(marquee['border-radius'])
             },
             highlight: {
-                margin: this.getSize(highlight.margin),
+                padding: this.getSize(highlight.padding),
                 color: highlight['border-color'],
                 lineWidth: this.getSize(highlight['border-width'])
             },
             hyperlink: {
-                color: obj['flowbee-diagram .hyperlink'].color
+                color: styles['flowbee-diagram .hyperlink'].color
             },
             data: {
                 roundingRadius: this.getSize(data['border-radius'])
@@ -176,6 +161,52 @@ export class DiagramStyle {
         return diagramOptions;
     }
 
+    /**
+     * Creates an object out of diagram styles
+     * @param theme
+     */
+    private getStyles(theme: string): object {
+        const obj = {};
+        for (let i = 0; i < document.styleSheets.length; i++) {
+            const styleSheet = document.styleSheets[i];
+            for (let j = 0; j < styleSheet.cssRules.length; j++) {
+                const cssRule = styleSheet.cssRules[j];
+                const selectorText = (cssRule as any).selectorText;
+                if (selectorText) {
+
+                    if (selectorText === '.flowbee-diagram' || selectorText.startsWith('.flowbee-diagram ')
+                      || selectorText === `.flowbee-diagram-${theme}` || selectorText.startsWith(`.flowbee-diagram-${theme} `)) {
+                        //
+                        const selTextObj = {};
+                        const style = (cssRule as any).style;
+                        if (style) {
+                            let selTextName = selectorText.substring(1);
+                            if (selTextName === `flowbee-diagram-${theme}`) {
+                                selTextName = 'flowbee-diagram';
+                            } else if (selTextName.startsWith(`flowbee-diagram-${theme} `)) {
+                                const startLen = `flowbee-diagram-${theme}`.length;
+                                selTextName = `flowbee-diagram ${selTextName.substring(startLen + 1)}`;
+                            }
+
+                            for (let k = 0; k < style.length; k++) {
+                                const key = this.mapKey(style[k]);
+                                if (key) {
+                                    const val = style.getPropertyValue(style[k]);
+                                    if (val) {
+                                        selTextObj[key] = val;
+                                    }
+                                }
+                            }
+                            const prevSelTextObj = obj[selTextName];
+                            obj[selTextName] = merge(prevSelTextObj || {}, selTextObj);
+                        }
+                    }
+                }
+            }
+        }
+        return obj;
+    }
+
     mapKey(key: string): string | null {
         if (key === 'border-top-color') {
             return 'border-color';
@@ -193,7 +224,12 @@ export class DiagramStyle {
             return 'margin';
         } else if (key.startsWith('margin-')) {
             return null;
-        } else {
+        } else if (key === 'padding-top') {
+            return 'padding';
+        } else if (key.startsWith('padding-')) {
+            return null;
+        }
+        else {
             return key;
         }
     }

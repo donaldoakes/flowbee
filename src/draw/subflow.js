@@ -311,7 +311,7 @@ export class Subflow extends Shape {
       stepX = x + 170;
       stepY = y + 30;
       task = Step.create(diagram, stepId, diagram.taskDescriptor, stepX, stepY);
-      task.step.attributes.TASK_PAGELET = Step.TASK_PAGELET;
+      task.step.attributes.TASK_PAGELET = 'task.pagelet';
       task.step.attributes.STATUS_AFTER_EVENT = 'Cancelled';
       task.step.name = diagram.flow.name + ' Fallout';
       subflow.steps.push(task.step);

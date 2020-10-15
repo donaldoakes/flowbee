@@ -2,12 +2,6 @@ import { Shape } from './shape';
 
 export class Step extends Shape {
 
-  static INST_W = 8;
-  static OLD_INST_W = 4;
-  static MAX_INSTS = 10;
-
-  static TASK_PAGELET = 'task.pagelet'; // TODO layout
-
   constructor(diagram, step) {
     super(diagram.canvas.getContext("2d"), diagram.options, step);
     this.diagram = diagram;
@@ -218,10 +212,10 @@ export class Step extends Shape {
 
   highlight() {
     this.diagram.oval(
-      this.display.x - this.diagram.options.highlight.margin,
-      this.display.y - this.diagram.options.highlight.margin,
-      this.display.w + (2 * this.diagram.options.highlight.margin),
-      this.display.h + (2 * this.diagram.options.highlight.margin),
+      this.display.x - this.diagram.options.highlight.padding,
+      this.display.y - this.diagram.options.highlight.padding,
+      this.display.w + (2 * this.diagram.options.highlight.padding),
+      this.display.h + (2 * this.diagram.options.highlight.padding),
       this.diagram.options.highlight.color,
       null,
       this.diagram.options.highlight.lineWidth

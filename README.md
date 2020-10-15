@@ -1,5 +1,5 @@
 # flowbee (alpha)
-Docs are coming.
+Docs are coming. In the meantime see [flowbee-demo](https://github.com/donaldoakes/flowbee-demo).
 
 ## Install
 npm install --save flowbee

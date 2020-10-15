@@ -2,10 +2,6 @@ import { Shape } from './shape';
 
 export class Label extends Shape {
 
-  static SEL_COLOR = '#e91e63';
-  static SEL_PAD = 4;
-  static SEL_ROUNDING_RADIUS = 4;
-
   constructor(owner, text, display, font) {
     super(owner.diagram.canvas.getContext("2d"), owner.diagram.options);
     this.owner = owner;
@@ -45,11 +41,11 @@ export class Label extends Shape {
   }
 
   select() {
-    var x = this.display.x - Label.SEL_PAD;
-    var y = this.display.y - Label.SEL_PAD;
-    var w = this.display.w + Label.SEL_PAD + 2;
-    var h = this.display.h + Label.SEL_PAD;
-    this.diagram.rect(x, y, w, h, Label.SEL_COLOR, Label.SEL_ROUNDING_RADIUS);
+    var x = this.display.x - this.diagram.label.select.padding;
+    var y = this.display.y - this.diagram.label.select.padding;
+    var w = this.display.w + this.diagram.label.select.padding + 2;
+    var h = this.display.h + this.diagram.label.select.padding;
+    this.diagram.rect(x, y, w, h, this.diagram.options.label.select.color, this.diagram.options.label.select.roundingRadius);
   }
 
   move(deltaX, deltaY) {

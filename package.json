@@ -7,6 +7,7 @@
   "module": "dist/main.js",
   "browser": "dist/index.js",
   "style": "dist/css/style.css",
+  "files": [ "dist", "src" ],
   "scripts": {
     "build": "tsc && rollup -c && node-sass src/css/style.scss -o dist/css",
     "watch": "tsc -watch"

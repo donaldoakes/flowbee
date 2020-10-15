@@ -11,10 +11,6 @@ const Toolbox = null; // TODO
 
 export class Diagram extends Shape {
 
-  static BOUNDARY_DIM = 25;
-  static ANIMATION_SPEED = 8; // segments/s;
-  static ANIMATION_LINK_FACTOR = 3; // relative link slice
-
   options;
   readonly = false;
 
@@ -191,7 +187,7 @@ export class Diagram extends Shape {
     if (animate && !this.instance) {
       var sequence = this.getSequence();
       let i = 0;
-      var totalTime = sequence.length * 1000 / Diagram.ANIMATION_SPEED;
+      var totalTime = sequence.length * 1000 / this.options.animationSpeed;
       var linkCt = 0;
       var nonLinkCt = 0;
       sequence.forEach(function (it) {
@@ -203,7 +199,7 @@ export class Diagram extends Shape {
         }
       });
       var nonLinkSlice = totalTime / (nonLinkCt + 2 * linkCt);
-      var linkSlice = Diagram.ANIMATION_LINK_FACTOR * nonLinkSlice;
+      var linkSlice = this.options.animationLinkFactor * nonLinkSlice;
       var timeSlice = nonLinkSlice;
       var s = function () {
         var it = sequence[i];
@@ -397,8 +393,8 @@ export class Diagram extends Shape {
     }
 
     // allow extra room
-    canvasDisplay.w += Diagram.BOUNDARY_DIM;
-    canvasDisplay.h += Diagram.BOUNDARY_DIM;
+    canvasDisplay.w += diagram.options.padding;
+    canvasDisplay.h += diagram.options.padding;
 
     if (!this.readonly && Toolbox) {
       var toolbox = Toolbox.getToolbox();
@@ -511,9 +507,9 @@ export class Diagram extends Shape {
             nonLinkCt++;
           }
         });
-        var totalTime = sequence.length * 1000 / Diagram.ANIMATION_SPEED;
+        var totalTime = sequence.length * 1000 / this.options.animationSpeed;
         var nonLinkSlice = totalTime / (nonLinkCt + 2 * linkCt);
-        var linkSlice = Diagram.ANIMATION_LINK_FACTOR * nonLinkSlice;
+        var linkSlice = this.options.animationLinkFactor * nonLinkSlice;
         var timeSlice = nonLinkSlice;
         let i = 0;
         var s = function () {
@@ -1019,7 +1015,8 @@ export class Diagram extends Shape {
 
   drawState(display, instances, ext, adj, animationSlice /* not used */, color, fill) {
     if (instances) {
-      var count = instances.length > Step.MAX_INSTS ? Step.MAX_INSTS : instances.length;
+      var maxInsts = this.options.maxInstances;
+      var count = instances.length > maxInsts ? maxInsts : instances.length;
       for (var i = 0; i < count; i++) {
         var instance = instances[i];
         var rounding = this.options.defaultRoundingRadius;
@@ -1027,31 +1024,32 @@ export class Diagram extends Shape {
           var status = this.options.statuses[instance.statusCode];
           instance.status = status.name;
           var statusColor = color ? color : status.color;
-          var del = Step.INST_W - Step.OLD_INST_W;
+          var prevWidth = this.options.step.state.previous.width;
+          var del = this.options.step.state.width - prevWidth;
           if (ext) {
             var rem = count - i;
             if (i === 0) {
               this.rect(
-                display.x - Step.OLD_INST_W * rem - del,
-                display.y - Step.OLD_INST_W * rem - del,
-                display.w + Step.OLD_INST_W * 2 * rem + 2 * del,
-                display.h + Step.OLD_INST_W * 2 * rem + 2 * del,
+                display.x - prevWidth * rem - del,
+                display.y - prevWidth * rem - del,
+                display.w + prevWidth * 2 * rem + 2 * del,
+                display.h + prevWidth * 2 * rem + 2 * del,
                 statusColor, rounding, statusColor);
             }
             else {
               this.rect(
-                display.x - Step.OLD_INST_W * rem,
-                display.y - Step.OLD_INST_W * rem,
-                display.w + Step.OLD_INST_W * 2 * rem,
-                display.h + Step.OLD_INST_W * 2 * rem,
+                display.x - prevWidth * rem,
+                display.y - prevWidth * rem,
+                display.w + prevWidth * 2 * rem,
+                display.h + prevWidth * 2 * rem,
                 statusColor, 0, statusColor);
             }
             rem--;
             this.context.clearRect(
-              display.x - Step.OLD_INST_W * rem - 1,
-              display.y - Step.OLD_INST_W * rem - 1,
-              display.w + Step.OLD_INST_W * 2 * rem + 2,
-              display.h + Step.OLD_INST_W * 2 * rem + 2);
+              display.x - prevWidth * rem - 1,
+              display.y - prevWidth * rem - 1,
+              display.w + prevWidth * 2 * rem + 2,
+              display.h + prevWidth * 2 * rem + 2);
           }
           else {
             var x1, y1, w1, h1;
@@ -1068,18 +1066,18 @@ export class Diagram extends Shape {
               h1 = display.h - 2 * del;
             }
             else {
-              x1 = display.x + Step.OLD_INST_W * i + del;
-              y1 = display.y + Step.OLD_INST_W * i + del;
-              w1 = display.w - Step.OLD_INST_W * 2 * i - 2 * del;
-              h1 = display.h - Step.OLD_INST_W * 2 * i - 2 * del;
+              x1 = display.x + prevWidth * i + del;
+              y1 = display.y + prevWidth * i + del;
+              w1 = display.w - prevWidth * 2 * i - 2 * del;
+              h1 = display.h - prevWidth * 2 * i - 2 * del;
               if (w1 > 0 && h1 > 0) {
                 this.rect(x1, y1, w1, h1, statusColor, 0, statusColor);
               }
             }
-            x1 += Step.OLD_INST_W - 1;
-            y1 += Step.OLD_INST_W - 1;
-            w1 -= 2 * Step.OLD_INST_W - 2;
-            h1 -= 2 * Step.OLD_INST_W - 2;
+            x1 += prevWidth - 1;
+            y1 += prevWidth - 1;
+            w1 -= 2 * prevWidth - 2;
+            h1 -= 2 * prevWidth - 2;
             if (w1 > 0 && h1 > 0) {
               if (fill) {
                 this.rect(x1, y1, w1, h1, statusColor, 0, fill);
@@ -1110,10 +1108,10 @@ export class Diagram extends Shape {
     y1 = display.y + size;
     w1 = display.w - 2 * size;
     h1 = display.h - 2 * size;
-    x1 += Step.OLD_INST_W;
-    y1 += Step.OLD_INST_W;
-    w1 -= 2 * Step.OLD_INST_W;
-    h1 -= 2 * Step.OLD_INST_W;
+    x1 += this.options.step.state.previous.width;
+    y1 += this.options.step.state.previous.width;
+    w1 -= 2 * this.options.step.state.previous.width;
+    h1 -= 2 * this.options.step.state.previous.width;
     if (w1 > 0 && h1 > 0) {
       this.context.clearRect(x1, y1, w1, h1);
     }
@@ -1343,7 +1341,7 @@ export class Diagram extends Shape {
           return;
         }
         var winDelta = 0;
-        var bottomY = canvasTopY + shape.display.y + shape.display.h - vDelta + this.options.highlight.margin * 2;
+        var bottomY = canvasTopY + shape.display.y + shape.display.h - vDelta + this.options.highlight.padding * 2;
         if (document.documentElement.clientHeight < bottomY) {
           winDelta = bottomY - document.documentElement.clientHeight;
         }
@@ -1481,11 +1479,11 @@ export class Diagram extends Shape {
 
       if (Math.abs(deltaX) > this.options.drag.min || Math.abs(deltaY) > this.options.drag.min) {
 
-        if (x > rect.right - Diagram.BOUNDARY_DIM) {
-          this.canvas.width = this.canvas.width + Diagram.BOUNDARY_DIM;
+        if (x > rect.right - this.options.padding) {
+          this.canvas.width = this.canvas.width + this.options.padding;
         }
-        if (y > rect.bottom - Diagram.BOUNDARY_DIM) {
-          this.canvas.height = this.canvas.height + Diagram.BOUNDARY_DIM;
+        if (y > rect.bottom - this.options.padding) {
+          this.canvas.height = this.canvas.height + this.options.padding;
         }
 
         var selObj = this.selection.getSelectObj();

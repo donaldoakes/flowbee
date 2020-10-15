@@ -1,3 +1,35 @@
+export interface DiagramOptions {
+    readonly?: boolean;
+    iconBase?: string;
+    websocketUrl?: string;
+    animationSpeed?: number; // segments/s;
+    animationLinkFactor?: number; // relative link slice
+    maxInstances?: number
+}
+
+export const diagramDefault: DiagramOptions = {
+    readonly: false,
+    iconBase: null,
+    websocketUrl: null,
+    animationSpeed: 8,
+    animationLinkFactor: 3,
+    maxInstances: 10
+};
+
+export interface ToolboxOptions {
+    iconBase?: string;
+}
+export const toolboxDefault: ToolboxOptions = {
+    iconBase: null
+};
+
+export interface FlowTreeOptions {
+    fileIcon?: string;
+}
+export const flowTreeDefault: FlowTreeOptions = {
+    fileIcon: 'flow.svg'
+};
+
 export type Status = {
     name: string,
     color: string
@@ -8,13 +40,27 @@ export type Font = {
     size: number
 }
 
+export interface LabelOptions {
+    select?: {
+        color?: string;
+        padding?: number;
+        roundingRadius?: number;
+    }
+}
+
 export interface StepOptions {
     outlineColor?: string;
     roundingRadius?: number;
-    start?: { color?: string, fillColor?: string },
-    stop?: { color?: string, fillColor?: string },
-    pause?: { color?: string, fillColor?: string },
     minSize?: number;
+    start?: { color?: string, fillColor?: string };
+    stop?: { color?: string, fillColor?: string };
+    pause?: { color?: string, fillColor?: string };
+    state?: {
+        width?: number;
+        previous?: {
+            width?: number;
+        }
+    }
 }
 
 export interface LinkOptions {
@@ -51,15 +97,9 @@ export interface AnchorOptions {
 }
 
 export interface HighlightOptions {
-    margin?: number;
+    padding?: number;
     color?: string;
     lineWidth?: number;
-}
-
-export interface DiagramOptions {
-    readonly?: boolean;
-    iconBase?: string;
-    websocketUrl?: string;
 }
 
 export interface DrawingOptions {
@@ -67,11 +107,12 @@ export interface DrawingOptions {
     defaultFont?: Font;
     defaultLineWidth?: number;
     defaultColor?: string;
+    padding?: number;
     meta?: { color: string };
-    data?: { roundingRadius: number };
     drag?: { min: number };
-    title?: { color?: string, font?: Font};
+    title?: { color?: string, font?: Font, visibility?: 'visible' | 'hidden' };
     template?: { font?: Font };
+    label?: LabelOptions;
     milestone?: { color?: string };
     step?: StepOptions;
     link?: LinkOptions;
@@ -82,25 +123,7 @@ export interface DrawingOptions {
     anchor?: AnchorOptions;
     highlight?: HighlightOptions;
     hyperlink?: { color?: string };
+    data?: { roundingRadius: number };
     statuses?: Status[];
 }
 
-export const diagramDefault: DiagramOptions = {
-    readonly: false,
-    iconBase: null,
-    websocketUrl: null
-};
-
-export interface ToolboxOptions {
-    iconBase?: string;
-}
-export const toolboxDefault: ToolboxOptions = {
-    iconBase: null
-};
-
-export interface FlowTreeOptions {
-    fileIcon?: string;
-}
-export const flowTreeDefault: FlowTreeOptions = {
-    fileIcon: 'flow.svg'
-};
