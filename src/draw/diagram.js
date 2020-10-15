@@ -184,7 +184,9 @@ export class Diagram extends Shape {
     this.prepareDisplay();
     var diagram = this;
 
-    this.label.draw(this.options.title.color);
+    if (this.options.title.visibility === 'visible') {
+      this.label.draw(this.options.title.color);
+    }
     var highlighted = null;
     if (animate && !this.instance) {
       var sequence = this.getSequence();

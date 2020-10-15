@@ -1,4 +1,0 @@
-/**
- * Default descriptors
- */
-
