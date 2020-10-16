@@ -1,12 +1,21 @@
+import { Diagram } from './diagram';
+import { Step } from './step';
+import { Link } from './link';
+import { Subflow } from './subflow';
+import { Note } from './note';
+import { Label } from './label';
+
+export type SelectObj = Diagram | Step | Link | Subflow | Note | Label;
+
 export class Selection {
 
-  constructor(diagram) {
-    this.diagram = diagram;
-    this.selectObjs = [];
+  selectObjs: SelectObj[] = [];
+
+  constructor(readonly diagram: Diagram) {
   }
 
-  includes(obj) {
-    for (var i = 0; i < this.selectObjs.length; i++) {
+  includes(obj: SelectObj): boolean {
+    for (let i = 0; i < this.selectObjs.length; i++) {
       if (this.selectObjs[i] === obj) {
         return true;
       }
@@ -14,11 +23,11 @@ export class Selection {
     return false;
   }
 
-  isMulti() {
+  isMulti(): boolean {
     return this.selectObjs.length > 1;
   }
 
-  getSelectObj() {
+  getSelectObj(): SelectObj {
     if (this.selectObjs.length === 0) {
       return null;
     }
@@ -27,25 +36,25 @@ export class Selection {
     }
   }
 
-  setSelectObj(obj) {
+  setSelectObj(obj: SelectObj) {
     this.selectObjs = obj ? [obj] : [];
   }
 
-  add(obj) {
+  add(obj: SelectObj) {
     if (!this.includes(obj)) {
       this.selectObjs.push(obj);
-      if (obj.isStep) {
+      if (obj.type === 'step') {
         // add any contained links
-        var stepLinks;
-        let step = this.diagram.getStep(obj.step.id);
+        let stepLinks;
+        const step = this.diagram.getStep((obj as Step).step.id);
         if (step) {
-          stepLinks = this.diagram.getLinks(obj);
+          stepLinks = this.diagram.getLinks(obj as Step);
         }
         else {
           for (let i = 0; i < this.diagram.subflows.length; i++) {
-            let subflow = this.diagram.subflows[i];
-            let step = subflow.getStep(obj.step.id);
-            stepLinks = subflow.getLinks(obj);
+            const subflow = this.diagram.subflows[i];
+            const step = subflow.getStep((obj as Step).step.id);
+            stepLinks = subflow.getLinks(obj as Step);
             if (stepLinks) {
               break;
             }
@@ -54,7 +63,7 @@ export class Selection {
 
         if (stepLinks) {
           for (let i = 0; i < stepLinks.length; i++) {
-            var stepLink = stepLinks[i];
+            const stepLink = stepLinks[i];
             if (stepLink.from === obj) {
               if (this.includes(stepLink.to)) {
                 this.add(stepLink);
@@ -73,9 +82,9 @@ export class Selection {
     }
   }
 
-  remove(obj) {
-    var newSel = [];
-    for (var i = 0; i < this.selectObjs.length; i++) {
+  remove(obj: SelectObj) {
+    const newSel = [];
+    for (let i = 0; i < this.selectObjs.length; i++) {
       if (this.selectObjs[i] !== obj) {
         newSel.push(this.selectObjs[i]);
       }
@@ -84,19 +93,19 @@ export class Selection {
   }
 
   doDelete() {
-    for (var i = 0; i < this.selectObjs.length; i++) {
-      var selObj = this.selectObjs[i];
-      if (selObj.isStep) {
-        this.diagram.deleteStep(selObj);
+    for (let i = 0; i < this.selectObjs.length; i++) {
+      const selObj = this.selectObjs[i];
+      if (selObj.type === 'step') {
+        this.diagram.deleteStep(selObj as Step);
       }
-      else if (selObj.isLink) {
-        this.diagram.deleteLink(selObj);
+      else if (selObj.type === 'link') {
+        this.diagram.deleteLink(selObj as Link);
       }
-      else if (selObj.isSubflow) {
-        this.diagram.deleteSubflow(selObj);
+      else if (selObj.type === 'subflow') {
+        this.diagram.deleteSubflow(selObj as Subflow);
       }
-      else if (selObj.isNote) {
-        this.diagram.deleteNote(selObj);
+      else if (selObj.type === 'note') {
+        this.diagram.deleteNote(selObj as Note);
       }
     }
   }
@@ -106,12 +115,12 @@ export class Selection {
    */
   reselect() {
     if (this.getSelectObj() && !this.isMulti()) {
-      var selObj = this.getSelectObj();
-      var id = selObj.workflowItem ? selObj.workflowItem.id : null;
-      if (id && typeof id === 'string') {
+      const selObj = this.getSelectObj();
+      const id = selObj.flowItem ? selObj.flowItem.id : null;
+      if (typeof id === 'string') {
         this.setSelectObj(this.diagram.get(id));
         if (!this.getSelectObj()) {
-          for (var i = 0; i < this.diagram.subflows.length; i++) {
+          for (let i = 0; i < this.diagram.subflows.length; i++) {
             this.setSelectObj(this.diagram.subflows[i].get(id));
             if (this.getSelectObj()) {
               break;
@@ -125,24 +134,24 @@ export class Selection {
     }
   }
 
-  move(startX, startY, deltaX, deltaY) {
-    var selection = this;
+  move(startX: number, startY: number, deltaX: number, deltaY: number) {
+    const selection = this;
 
-    if (!this.isMulti() && this.getSelectObj().isLink) {
+    if (!this.isMulti() && this.getSelectObj().type === 'link') {
       // move link label
-      var link = this.getSelectObj();
+      const link = this.getSelectObj() as Link;
       if (link.label && link.label.isHover(startX, startY)) {
         link.moveLabel(deltaX, deltaY);
       }
     }
     else {
       for (let i = 0; i < this.selectObjs.length; i++) {
-        let selObj = this.selectObjs[i];
-        if (selObj.isStep) {
-          let step = this.diagram.getStep(selObj.step.id);
+        const selObj = this.selectObjs[i];
+        if (selObj.type === 'step') {
+          const step = this.diagram.getStep((selObj as Step).step.id);
           if (step) {
             selObj.move(deltaX, deltaY);
-            let links = this.diagram.getLinks(step);
+            const links = this.diagram.getLinks(step);
             for (let j = 0; j < links.length; j++) {
               if (!this.includes(links[j])) {
                 links[j].recalc(step);
@@ -152,12 +161,12 @@ export class Selection {
           else {
             // try subflows
             for (let j = 0; j < this.diagram.subflows.length; j++) {
-              let subflow = this.diagram.subflows[j];
-              let step = subflow.getStep(selObj.step.id);
+              const subflow = this.diagram.subflows[j];
+              const step = subflow.getStep((selObj as Step).step.id);
               if (step) {
                 // only within bounds of subflow
                 selObj.move(deltaX, deltaY, subflow.display);
-                let links = subflow.getLinks(step);
+                const links = subflow.getLinks(step);
                 for (let k = 0; k < links.length; k++) {
                   if (!this.includes(links[k])) {
                     links[k].recalc(step);
@@ -177,8 +186,8 @@ export class Selection {
     this.diagram.draw();
 
     for (let i = 0; i < this.selectObjs.length; i++) {
-      let selObj = this.selectObjs[i];
-      let reselObj = this.find(selObj);
+      const selObj = this.selectObjs[i];
+      const reselObj = this.find(selObj);
       if (reselObj) {
         reselObj.select();
       }
@@ -191,12 +200,12 @@ export class Selection {
    */
   find(obj) {
     if (obj.workflowItem && obj.workflowItem.id) {
-      var found = this.diagram.get(obj.workflowItem.id);
+      let found = this.diagram.get(obj.workflowItem.id);
       if (found) return found;
 
       // try subflows
       for (let i = 0; i < this.diagram.subflows.length; i++) {
-        let subflow = this.diagram.subflows[i];
+        const subflow = this.diagram.subflows[i];
         found = subflow.get(obj.workflowItem.id);
         if (found) return found;
       }

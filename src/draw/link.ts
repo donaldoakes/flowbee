@@ -1,4 +1,9 @@
+import { Diagram } from './diagram';
 import { Label } from './label';
+import { Link as LinkItem } from '../link';
+import { Step } from './step';
+import { FlowItem } from '../item';
+import { Display, LinkDisplay } from './display';
 
 export class Link {
 
@@ -37,21 +42,24 @@ export class Link {
   static ELBOW_THRESHOLD = 0.8;
   static ELBOW_VH_THRESHOLD = 60;
 
-  constructor(diagram, link, from, to) {
-    this.diagram = diagram;
-    this.link = this.workflowItem = link;
-    this.from = from;
-    this.to = to;
-    this.flowElementType = 'link';
-    this.isLink = true;
-    this.dpRatio = 1;
+  flowItem: FlowItem;
+  label?: Label;
+  display: LinkDisplay;
+  dpRatio = 1;
+  instances = null;
+
+  constructor(readonly diagram: Diagram, readonly link: LinkItem, public from: Step, public to: Step) {
+    this.flowItem = { ...link, type: 'link' };
     if (window.devicePixelRatio) {
       this.dpRatio = window.devicePixelRatio;
     }
   }
 
-  draw(animationTimeSlice) {
-    var color = this.getColor();
+  get type(): string { return this.flowItem.type; }
+  get id(): string { return this.flowItem.id; }
+
+  draw(animationTimeSlice?: number) {
+    const color = this.getColor();
 
     this.diagram.context.strokeStyle = color;
     this.diagram.context.fillStyle = color;
@@ -74,26 +82,24 @@ export class Link {
   /**
    * sets display/label and returns an object with w and h for required size
    */
-  prepareDisplay() {
-    var maxDisplay = { w: 0, h: 0 };
+  prepareDisplay(): Display {
+    const maxDisplay = { w: 0, h: 0 };
     this.display = this.getDisplay();
-    // TODO determine effect on maxDisplay
-    // label
-    var labelText = this.link.event === 'FINISH' ? '' : this.link.event + ':';
+    // label TODO determine effect on maxDisplay
+    let labelText = this.link.event === 'FINISH' ? '' : this.link.event + ':';
     labelText += this.link.result ? this.link.result : '';
     if (labelText.length > 0) {
       this.label = new Label(this, labelText, { x: this.display.x, y: this.display.y + Link.LABEL_CORR }, this.diagram.options.defaultFont);
       this.label.prepareDisplay();
     }
-
     return maxDisplay;
   }
 
-  getDisplay() {
-    var display = {};
-    var displayAttr = this.link.attributes.display;
+  getDisplay(): LinkDisplay {
+    const display: LinkDisplay = {};
+    const displayAttr = this.link.attributes.display;
     if (displayAttr) {
-      var vals = displayAttr.split(',');
+      const vals = displayAttr.split(',');
       display.xs = [];
       display.ys = [];
       vals.forEach(function (val) {
@@ -121,24 +127,24 @@ export class Link {
     return display;
   }
 
-  setDisplay(display) {
+  setDisplay(display: LinkDisplay) {
     if (!this.link.attributes) {
       this.link.attributes = {};
     }
     this.link.attributes.display = this.getAttr(display);
   }
 
-  getAttr(display) {
-    var attr = 'type=' + display.type + ',x=' + Math.round(display.x) + ',y=' + Math.round(display.y);
+  getAttr(display: LinkDisplay): string {
+    let attr = 'type=' + display.type + ',x=' + Math.round(display.x) + ',y=' + Math.round(display.y);
     attr += ',xs=';
-    for (var i = 0; i < display.xs.length; i++) {
+    for (let i = 0; i < display.xs.length; i++) {
       if (i > 0) {
         attr += '&';
       }
       attr += Math.round(display.xs[i]);
     }
     attr += ',ys=';
-    for (i = 0; i < display.ys.length; i++) {
+    for (let i = 0; i < display.ys.length; i++) {
       if (i > 0) {
         attr += '&';
       }
@@ -150,15 +156,15 @@ export class Link {
   /**
    * only for the label
    */
-  setDisplayAttr(x, y, _w, _h) {
+  setDisplayAttr(x: number, y: number, _w: number, _h: number) {
     this.setDisplay({ x, y, type: this.display.type, xs: this.display.xs, ys: this.display.ys });
   }
 
-  getColor() {
-    var color = Link.EVENTS[this.link.event].color;
+  getColor(): string {
+    let color = Link.EVENTS[this.link.event].color;
     if (this.diagram.instance) {
       if (this.instances && this.instances.length > 0) {
-        var latest = this.instances[0];
+        const latest = this.instances[0];
         if (latest.statusCode === 1) {
           color = this.diagram.options.link.colors.initiated;
         }
@@ -176,15 +182,15 @@ export class Link {
   /**
    * if hitX and hitY are passed, checks for hover instead of stroking
    */
-  drawConnector(hitX, hitY, animationTimeSlice) {
-    var context = this.diagram.context;
-    var type = this.display.type;
-    var xs = this.display.xs;
-    var ys = this.display.ys;
+  drawConnector(hitX: number, hitY: number, animationTimeSlice?: number): boolean {
+    const context = this.diagram.context;
+    const type = this.display.type;
+    const xs = this.display.xs;
+    const ys = this.display.ys;
 
-    var hit = false;
+    let hit = false;
 
-    var color = this.getColor();
+    const color = this.getColor();
     context.strokeStyle = color;
     context.fillStyle = color;
 
@@ -203,9 +209,9 @@ export class Link {
       else {
         // TODO: make use of Link.CORR
         context.beginPath();
-        var horizontal = ys[0] === ys[1] && (xs[0] !== xs[1] || xs[1] === xs[2]);
+        let horizontal = ys[0] === ys[1] && (xs[0] !== xs[1] || xs[1] === xs[2]);
         context.moveTo(xs[0], ys[0]);
-        for (var i = 1; i < xs.length; i++) {
+        for (let i = 1; i < xs.length; i++) {
           if (horizontal) {
             context.lineTo(xs[i] > xs[i - 1] ? xs[i] - Link.CR : xs[i] + Link.CR, ys[i]);
             if (i < xs.length - 1) {
@@ -229,7 +235,7 @@ export class Link {
       }
     }
     else if (type === Link.LINK_TYPES.STRAIGHT) {
-      var segments = [];
+      const segments: LineSegment[] = [];
       xs.forEach(function (_x, i) {
         if (i < xs.length - 1) {
           segments.push({
@@ -239,8 +245,8 @@ export class Link {
         }
       });
       if (animationTimeSlice) {
-        var linkThis = this;
-        segments[xs.length - 2].lineEnd = function (context) {
+        const linkThis = this;
+        segments[xs.length - 2].lineEnd = function (context: CanvasRenderingContext2D) {
           context.strokeStyle = linkThis.getColor();
           linkThis.drawConnectorArrow.call(linkThis, context);
           context.strokeStyle = linkThis.diagram.options.defaultColor;
@@ -249,7 +255,7 @@ export class Link {
       }
       else {
         if (hitX) {
-          let dpRatio = this.dpRatio;
+          const dpRatio = this.dpRatio;
           segments.forEach(function (seg) {
             context.beginPath();
             context.moveTo(seg.from.x, seg.from.y);
@@ -276,18 +282,18 @@ export class Link {
     return hit;
   }
 
-  drawAutoElbowConnector(context, hitX, hitY, animationTimeSlice) {
-    var xs = this.display.xs;
-    var ys = this.display.ys;
-    var t;
-    var xcorr = xs[0] < xs[1] ? Link.CORR : -Link.CORR;
-    var ycorr = ys[0] < ys[1] ? Link.CORR : -Link.CORR;
-    var drawArrow = null;
-    var segments = [];
-    var options = this.diagram.options;
+  drawAutoElbowConnector(context: CanvasRenderingContext2D, hitX: number, hitY: number, animationTimeSlice?: number): boolean {
+    const xs = this.display.xs;
+    const ys = this.display.ys;
+    let t;
+    const xcorr = xs[0] < xs[1] ? Link.CORR : -Link.CORR;
+    const ycorr = ys[0] < ys[1] ? Link.CORR : -Link.CORR;
+    let drawArrow = null;
+    const segments = [];
+    const options = this.diagram.options;
     if (animationTimeSlice) {
-      var linkThis = this;
-      drawArrow = function (context) {
+      const linkThis = this;
+      drawArrow = function (context: CanvasRenderingContext2D) {
         context.strokeStyle = linkThis.getColor();
         linkThis.drawConnectorArrow.call(linkThis, context);
         context.strokeStyle = options.defaultColor;
@@ -381,8 +387,8 @@ export class Link {
         if (animationTimeSlice) {
           let from = { x: xs[0] - xcorr, y: ys[0] };
           let to = { x: xs[1] > xs[0] ? xs[1] - Link.CR : xs[1] + Link.CR, y: ys[0] };
-          let curveTo = { x: xs[1], y: ys[1] > ys[0] ? ys[0] + Link.CR : ys[0] - Link.CR };
-          let curve = { cpx: xs[1], cpy: ys[0], x: curveTo.x, y: curveTo.y };
+          const curveTo = { x: xs[1], y: ys[1] > ys[0] ? ys[0] + Link.CR : ys[0] - Link.CR };
+          const curve = { cpx: xs[1], cpy: ys[0], x: curveTo.x, y: curveTo.y };
           segments.push({ from: from, to: to, lineEnd: curve });
           from = curveTo;
           to = { x: xs[1], y: ys[1] };
@@ -400,8 +406,8 @@ export class Link {
         if (animationTimeSlice) {
           let from = { x: xs[0], y: ys[0] - ycorr };
           let to = { x: xs[0], y: ys[1] > ys[0] ? ys[1] - Link.CR : ys[1] + Link.CR };
-          let curveTo = { x: xs[1] > xs[0] ? xs[0] + Link.CR : xs[0] - Link.CR, y: ys[1] };
-          let curve = { cpx: xs[0], cpy: ys[1], x: curveTo.x, y: curveTo.y };
+          const curveTo = { x: xs[1] > xs[0] ? xs[0] + Link.CR : xs[0] - Link.CR, y: ys[1] };
+          const curve = { cpx: xs[0], cpy: ys[1], x: curveTo.x, y: curveTo.y };
           segments.push({ from: from, to: to, lineEnd: curve });
           from = curveTo;
           to = { x: xs[1], y: ys[1] };
@@ -425,18 +431,19 @@ export class Link {
     else {
       context.stroke();
     }
+    return false;
   }
 
-  drawConnectorArrow(context, hitX, hitY) {
-    var type = this.display.type;
-    var xs = this.display.xs;
-    var ys = this.display.ys;
-    var p = 12;
-    var slope;
-    var x, y;
+  drawConnectorArrow(context: CanvasRenderingContext2D, hitX: number, hitY: number) {
+    const type = this.display.type;
+    const xs = this.display.xs;
+    const ys = this.display.ys;
+    const p = 12;
+    let slope;
+    let x, y;
     if (type === Link.LINK_TYPES.STRAIGHT) {
-      var p2 = xs.length - 1;
-      var p1 = p2 - 1;
+      const p2 = xs.length - 1;
+      const p1 = p2 - 1;
       x = xs[p2];
       y = ys[p2];
       slope = this.getSlope(xs[p1], ys[p1], xs[p2], ys[p2]);
@@ -462,7 +469,7 @@ export class Link {
     }
     else {
       // ELBOW/ELBOWH/ELBOWV, control points > 2
-      var k = xs.length - 1;
+      const k = xs.length - 1;
       if (xs[k] === xs[k - 1] && (ys[k] !== ys[k - 1] || ys[k - 1] === ys[k - 2])) {
         // verticle arrow
         x = xs[k];
@@ -476,8 +483,8 @@ export class Link {
       }
     }
     // convert point and slope to polygon
-    var dl = slope - 2.7052; // 25 degrees
-    var dr = slope + 2.7052; // 25 degrees
+    const dl = slope - 2.7052; // 25 degrees
+    const dr = slope + 2.7052; // 25 degrees
 
     context.beginPath();
     context.moveTo(x, y);
@@ -492,10 +499,10 @@ export class Link {
     }
   }
 
-  getAutoElbowLinkType() {
-    var type = this.display.type;
-    var xs = this.display.xs;
-    var ys = this.display.ys;
+  getAutoElbowLinkType(): number {
+    const type = this.display.type;
+    const xs = this.display.xs;
+    const ys = this.display.ys;
 
     if (type === Link.LINK_TYPES.ELBOWH) {
       if (xs[0] === xs[1]) {
@@ -544,18 +551,18 @@ export class Link {
     }
   }
 
-  recalc(step) {
-    var type = this.display.type;
-    var xs = this.display.xs;
-    var ys = this.display.ys;
-    var x = this.display.x;
-    var y = this.display.y;
+  recalc(step: Step) {
+    const type = this.display.type;
+    const xs = this.display.xs;
+    const ys = this.display.ys;
+    const x = this.display.x;
+    const y = this.display.y;
 
-    var n = xs.length;
-    var k;
+    const n = xs.length;
+    let k;
     // remember relative label position
-    var labelSlope = this.getSlope(xs[0], ys[0], x, y) - this.getSlope(xs[0], ys[0], xs[n - 1], ys[n - 1]);
-    var labelDist = this.getDist(xs[0], ys[0], xs[n - 1], ys[n - 1]);
+    let labelSlope = this.getSlope(xs[0], ys[0], x, y) - this.getSlope(xs[0], ys[0], xs[n - 1], ys[n - 1]);
+    let labelDist = this.getDist(xs[0], ys[0], xs[n - 1], ys[n - 1]);
     if (labelDist < 5.0) {
       labelDist = 0.5;
     }
@@ -605,8 +612,8 @@ export class Link {
     }
     else {
       // controlled ELBOW, ELBOWH, ELBOWV
-      var wasHorizontal = !this.isAnchorHorizontal(0);
-      var horizontalFirst = (Math.abs(this.from.display.x - this.to.display.x) >= Math.abs(this.from.display.y - this.to.display.y));
+      const wasHorizontal = !this.isAnchorHorizontal(0);
+      const horizontalFirst = (Math.abs(this.from.display.x - this.to.display.x) >= Math.abs(this.from.display.y - this.to.display.y));
       if (type === Link.LINK_TYPES.ELBOW && wasHorizontal !== horizontalFirst) {
         this.calc();
       }
@@ -678,21 +685,21 @@ export class Link {
     this.setDisplay(this.display);
   }
 
-  calc(points) {
-    var type = this.display.type;
-    var xs = this.display.xs;
-    var ys = this.display.ys;
-    var x1 = this.from.display.x;
-    var y1 = this.from.display.y;
-    var w1 = this.from.display.w;
-    var h1 = this.from.display.h;
-    var x2 = this.to.display.x;
-    var y2 = this.to.display.y;
-    var w2 = this.to.display.w;
-    var h2 = this.to.display.h;
+  calc(points?: number) {
+    const type = this.display.type;
+    let xs = this.display.xs;
+    let ys = this.display.ys;
+    const x1 = this.from.display.x;
+    const y1 = this.from.display.y;
+    const w1 = this.from.display.w;
+    const h1 = this.from.display.h;
+    const x2 = this.to.display.x;
+    const y2 = this.to.display.y;
+    const w2 = this.to.display.w;
+    const h2 = this.to.display.h;
 
-    var n = points ? points : (xs.length < 2 ? 2 : xs.length);
-    var i;
+    const n = points ? points : (xs.length < 2 ? 2 : xs.length);
+    let i: number;
 
     if (type === Link.LINK_TYPES.STRAIGHT) {
       xs = this.display.xs = [];
@@ -745,9 +752,9 @@ export class Link {
     }
     else {
       // ELBOW, ELBOWH, ELBOWV with middle control points
-      var horizontalFirst = type === Link.LINK_TYPES.ELBOWH || (type === Link.LINK_TYPES.ELBOW && Math.abs(x1 - x2) >= Math.abs(y1 - y2));
-      var evenN = n % 2 === 0;
-      var horizontalLast = (horizontalFirst && evenN) || (!horizontalFirst && !evenN);
+      const horizontalFirst = type === Link.LINK_TYPES.ELBOWH || (type === Link.LINK_TYPES.ELBOW && Math.abs(x1 - x2) >= Math.abs(y1 - y2));
+      const evenN = n % 2 === 0;
+      const horizontalLast = (horizontalFirst && evenN) || (!horizontalFirst && !evenN);
       xs = this.display.xs = [];
       ys = this.display.ys = [];
       for (i = 0; i < n; i++) {
@@ -799,9 +806,9 @@ export class Link {
     this.setDisplay(this.display);
   }
 
-  isAnchorHorizontal(anchor) {
-    var p = anchor - 1;
-    var n = anchor + 1;
+  isAnchorHorizontal(anchor): boolean {
+    const p = anchor - 1;
+    const n = anchor + 1;
     if (p >= 0 && this.display.xs[p] !== this.display.xs[anchor] && this.display.ys[p] === this.display.ys[anchor]) {
       return true;
     }
@@ -814,14 +821,14 @@ export class Link {
   }
 
   calcLabel() {
-    var type = this.display.type;
-    var xs = this.display.xs;
-    var ys = this.display.ys;
+    const type = this.display.type;
+    const xs = this.display.xs;
+    const ys = this.display.ys;
 
-    var x1 = this.from.display.x;
-    var x2 = this.to.display.x;
+    const x1 = this.from.display.x;
+    const x2 = this.to.display.x;
 
-    var n = xs.length;
+    const n = xs.length;
 
     if (type === Link.LINK_TYPES.STRAIGHT) {
       this.display.x = (xs[0] + xs[n - 1]) / 2;
@@ -834,7 +841,7 @@ export class Link {
     }
     else {
       // ELBOW, ELBOWH, ELBOWV with middle control points
-      var horizontalFirst = ys[0] === ys[1];
+      const horizontalFirst = ys[0] === ys[1];
       if (n <= 3) {
         if (horizontalFirst) {
           this.display.x = (x1 + x2) / 2 - 40;
@@ -859,9 +866,9 @@ export class Link {
   }
 
   calcAutoElbow() {
-    var type = this.display.type;
-    var xs = this.display.xs;
-    var ys = this.display.ys;
+    const type = this.display.type;
+    const xs = this.display.xs;
+    const ys = this.display.ys;
 
     if (this.to.display.x + this.to.display.w >= this.from.display.x && this.to.display.x <= this.from.display.x + this.from.display.w) {
       // V
@@ -954,8 +961,8 @@ export class Link {
   /**
    * in polar degrees
    */
-  getSlope(x1, y1, x2, y2) {
-    var slope;
+  getSlope(x1: number, y1: number, x2: number, y2: number): number {
+    let slope: number;
     if (x1 === x2) {
       slope = (y1 < y2) ? Math.PI / 2 : -Math.PI / 2;
     }
@@ -973,16 +980,16 @@ export class Link {
     return slope;
   }
 
-  getDist(x1, y1, x2, y2) {
+  getDist(x1: number, y1: number, x2: number, y2: number): number {
     return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
   }
 
   select() {
-    var context = this.diagram.context;
+    const context = this.diagram.context;
     context.fillStyle = this.diagram.options.anchor.color;
-    for (var i = 0; i < this.display.xs.length; i++) {
-      var x = this.display.xs[i];
-      var y = this.display.ys[i];
+    for (let i = 0; i < this.display.xs.length; i++) {
+      const x = this.display.xs[i];
+      const y = this.display.ys[i];
       context.fillRect(
         x - this.diagram.options.anchor.width,
         y - this.diagram.options.anchor.width,
@@ -996,14 +1003,14 @@ export class Link {
     context.fillStyle = this.diagram.options.defaultColor;
   }
 
-  isHover(x, y) {
+  isHover(x: number, y: number): boolean {
     return (this.label && this.label.isHover(x, y)) || this.drawConnector(x, y);
   }
 
-  getAnchor(x, y) {
-    for (var i = 0; i < this.display.xs.length; i++) {
-      var cx = this.display.xs[i];
-      var cy = this.display.ys[i];
+  getAnchor(x: number, y: number): number {
+    for (let i = 0; i < this.display.xs.length; i++) {
+      const cx = this.display.xs[i];
+      const cy = this.display.ys[i];
       if (Math.abs(cx - x) <= this.diagram.options.anchor.hitWidth && Math.abs(cy - y) <= this.diagram.options.anchor.hitWidth) {
         return i;
       }
@@ -1011,8 +1018,8 @@ export class Link {
     return -1;
   }
 
-  move(deltaX, deltaY) {
-    var display = {
+  move(deltaX: number, deltaY: number) {
+    const display = {
       type: this.display.type,
       x: this.display.x + deltaX,
       y: this.display.y + deltaY,
@@ -1032,15 +1039,15 @@ export class Link {
     this.setDisplay(display);
   }
 
-  moveAnchor(anchor, deltaX, deltaY) {
-    var display = {
+  moveAnchor(anchor: number, deltaX: number, deltaY: number) {
+    const display = {
       type: this.display.type,
       x: this.display.x,
       y: this.display.y,
       xs: [],
       ys: []
     };
-    for (var i = 0; i < this.display.xs.length; i++) {
+    for (let i = 0; i < this.display.xs.length; i++) {
       if (i === anchor) {
         display.xs.push(this.display.xs[i] + deltaX);
         display.ys.push(this.display.ys[i] + deltaY);
@@ -1074,10 +1081,10 @@ export class Link {
     this.setDisplay(display);
   }
 
-  setFrom(fromStep) {
-    var newLinks = [];
+  setFrom(fromStep: Step) {
+    const newLinks = [];
     for (let i = 0; i < this.from.step.links.length; i++) {
-      var fromTrans = this.from.step.links[i];
+      const fromTrans = this.from.step.links[i];
       if (this.link.id === fromTrans.id) {
         if (!fromStep.step.links) {
           fromStep.step.links = [];
@@ -1092,9 +1099,9 @@ export class Link {
     this.from = fromStep;
   }
 
-  setTo(toStep) {
+  setTo(toStep: Step) {
     for (let i = 0; i < this.from.step.links.length; i++) {
-      var fromTrans = this.from.step.links[i];
+      const fromTrans = this.from.step.links[i];
       if (this.link.id === fromTrans.id) {
         fromTrans.to = toStep.step.id;
         break;
@@ -1103,7 +1110,7 @@ export class Link {
     this.to = toStep;
   }
 
-  moveLabel(deltaX, deltaY) {
+  moveLabel(deltaX: number, deltaY: number) {
     this.setDisplay({
       type: this.display.type,
       x: this.display.x + deltaX,
@@ -1113,24 +1120,39 @@ export class Link {
     });
   }
 
-  static create(diagram, idNum, from, to) {
-    var flowLink = Link.flowLink(idNum, to.step.id);
-    var link = new Link(diagram, flowLink, from, to);
+  resize(_x: number, _y: number, deltaX: number, deltaY: number) {
+    // not applicable
+  }
+
+  static create(diagram: Diagram, idNum: number, from: Step, to: Step) {
+    const linkItem = Link.linkItem(idNum, to.step.id);
+    const link = new Link(diagram, linkItem, from, to);
     if (!from.step.links) {
       from.step.links = [];
     }
-    from.step.links.push(flowLink);
+    from.step.links.push(linkItem);
     link.display = { type: Link.LINK_TYPES.ELBOW, x: 0, y: 0, xs: [0, 0], ys: [0, 0] };
     link.calc();
     return link;
   }
 
-  static flowLink(idNum, toId) {
+  static linkItem(idNum: number, toId: string): LinkItem {
     return {
       id: 'L' + idNum,
       event: 'FINISH',
-      to: toId
+      to: toId,
+      type: 'link'
     };
   }
 }
 
+export type LineSegment = {
+  from: { x: number, y: number },
+  to: { x: number, y: number },
+  lineEnd?: {
+    x: number,
+    y: number,
+    cpx: number,
+    cpy: number
+  } | ((context: CanvasRenderingContext2D) => void)
+}

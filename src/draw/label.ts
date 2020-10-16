@@ -1,19 +1,24 @@
+import { Display, Font } from './display';
+import { Diagram } from './diagram';
 import { Shape } from './shape';
 
 export class Label extends Shape {
 
-  constructor(owner, text, display, font) {
-    super(owner.diagram.canvas.getContext("2d"), owner.diagram.options);
-    this.owner = owner;
+  diagram: Diagram;
+  subtext?: string;
+  instances = null;
+
+  get type() { return 'label'; }
+
+  constructor(readonly owner: any, readonly text: string, readonly display: Display, readonly font: Font) {
+    super(owner.diagram.canvas.getContext("2d"), owner.diagram.options, owner.flowItem);
     this.diagram = owner.diagram;
     this.text = text;
     this.display = display; // just x, y except for flow owner
     this.font = font;
-    this.workflowItem = owner.workflowItem;
-    this.isLabel = true;
   }
 
-  draw(color) {
+  draw(color?: string) {
     if (this.font) {
       this.diagram.context.font = this.font.name;
     }
@@ -28,30 +33,34 @@ export class Label extends Shape {
     this.diagram.context.fillStyle = this.diagram.options.defaultColor;
   }
 
-  prepareDisplay() {
+  prepareDisplay(): Display {
     if (this.font) {
       this.diagram.context.font = this.font.name;
     }
-    var textMetrics = this.diagram.context.measureText(this.text);
+    const textMetrics = this.diagram.context.measureText(this.text);
     this.display.w = textMetrics.width;
     this.display.h = this.font.size;
-    var maxDisplay = { w: this.display.w + this.display.x, h: this.display.h + this.display.y };
+    const maxDisplay = { w: this.display.w + this.display.x, h: this.display.h + this.display.y };
     this.diagram.context.font = this.diagram.options.defaultFont.name;
     return maxDisplay;
   }
 
   select() {
-    var x = this.display.x - this.diagram.label.select.padding;
-    var y = this.display.y - this.diagram.label.select.padding;
-    var w = this.display.w + this.diagram.label.select.padding + 2;
-    var h = this.display.h + this.diagram.label.select.padding;
+    const x = this.display.x - this.diagram.options.label.select.padding;
+    const y = this.display.y - this.diagram.options.label.select.padding;
+    const w = this.display.w + this.diagram.options.label.select.padding + 2;
+    const h = this.display.h + this.diagram.options.label.select.padding;
     this.diagram.rect(x, y, w, h, this.diagram.options.label.select.color, this.diagram.options.label.select.roundingRadius);
   }
 
-  move(deltaX, deltaY) {
-    var x = this.display.x + deltaX;
-    var y = this.display.y + deltaY;
+  move(deltaX: number, deltaY: number) {
+    const x = this.display.x + deltaX;
+    const y = this.display.y + deltaY;
     this.setDisplayAttr(x, y, Math.round(this.display.w), this.display.h);
+  }
+
+  resize(_x: number, _y: number, deltaX: number, deltaY: number) {
+    // not applicable
   }
 }
 

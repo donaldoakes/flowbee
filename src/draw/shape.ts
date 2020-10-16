@@ -1,20 +1,31 @@
+import { FlowItem } from '../item';
+import { Display } from './display';
+import { DrawingOptions } from '../options';
+
 /**
  * Base class for rectangular diagram elements
  */
 export class Shape {
 
-  constructor(context, options, workflowItem) {
-    this.context = context;
-    this.options = options;
-    this.workflowItem = workflowItem;
+  display: Display;
+  flowItem?: FlowItem;
+
+  constructor(
+    readonly context: CanvasRenderingContext2D,
+    readonly options: DrawingOptions,
+    flowItem?: FlowItem) {
+      this.flowItem = flowItem;
   }
 
-  // get a display object from an attribute value
-  getDisplay() {
-    var displayAttr = this.workflowItem.attributes.display;
-    var display = {};
+  get type(): string { return this.flowItem.type; }
+  get id(): string { return this.flowItem.id; }
+
+  // get a display object from attribute value
+  getDisplay(): Display {
+    const displayAttr = this.flowItem.attributes.display;
+    const display: Display = {};
     if (displayAttr) {
-      var vals = displayAttr.split(',');
+      const vals = displayAttr.split(',');
       vals.forEach(function (val) {
         if (val.startsWith('x=')) {
           display.x = parseInt(val.substring(2));
@@ -33,31 +44,31 @@ export class Shape {
     return display;
   }
 
-  setDisplayAttr(x, y, w, h) {
-    var attr = 'x=' + x + ',y=' + y;
+  setDisplayAttr(x: number, y: number, w: number, h: number) {
+    let attr = 'x=' + x + ',y=' + y;
     if (w) {
       attr += ',w=' + w + ',h=' + h;
     }
-    this.workflowItem.attributes.display = attr;
+    this.flowItem.attributes.display = attr;
   }
 
-  getAttr(display) {
-    var attr = 'x=' + display.x + ',y=' + display.y;
+  getAttr(display: Display): string {
+    let attr = 'x=' + display.x + ',y=' + display.y;
     if (display.w) {
       attr += ',w=' + display.w + ',h=' + display.h;
     }
     return attr;
   }
 
-  isHover(x, y) {
+  isHover(x: number, y: number) {
     return x >= this.display.x && x <= this.display.x + this.display.w &&
       y >= this.display.y && y <= this.display.y + this.display.h;
   }
 
   select() {
-    var display = this.display;
+    const display = this.display;
     this.context.fillStyle = this.options.anchor.color;
-    var s = this.options.anchor.width;
+    const s = this.options.anchor.width;
     this.context.fillRect(display.x - s, display.y - s, s * 2, s * 2);
     this.context.fillRect(display.x + display.w - s, display.y - s, s * 2, s * 2);
     this.context.fillRect(display.x + display.w - 2, display.y + display.h - s, s * 2, s * 2);
@@ -65,7 +76,7 @@ export class Shape {
     this.context.fillStyle = this.options.defaultColor;
   }
 
-  getAnchor(x, y) {
+  getAnchor(x: number, y: number): number {
     if (Math.abs(this.display.x - x) <= this.options.anchor.hitWidth && Math.abs(this.display.y - y) <= this.options.anchor.hitWidth) {
       return 0;
     }
@@ -83,10 +94,10 @@ export class Shape {
     }
   }
 
-  resizeDisplay(x, y, deltaX, deltaY, min, limDisplay) {
-    var anchor = this.getAnchor(x, y);
-    var display = { x: this.display.x, y: this.display.y, w: this.display.w, h: this.display.h };
-    var t1, t2;
+  resizeDisplay(x: number, y: number, deltaX: number, deltaY: number, min: number, limDisplay?: Display) {
+    const anchor = this.getAnchor(x, y);
+    const display = { x: this.display.x, y: this.display.y, w: this.display.w, h: this.display.h };
+    let t1: number, t2: number;
     if (anchor === 0) {
       t1 = display.x + display.w;
       t2 = display.y + display.h;

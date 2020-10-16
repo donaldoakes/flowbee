@@ -1,81 +1,111 @@
 import { Shape } from './shape';
-import { Selection } from './selection';
+import { Selection, SelectObj } from './selection';
 import { Label } from './label';
 import { Step } from './step';
-import { Link } from './link';
+import { Link, LineSegment } from './link';
 import { Subflow } from './subflow';
 import { Note } from './note';
 import { Marquee } from './marquee';
+import { Descriptor } from '../descriptor';
+import { DiagramOptions, DrawingOptions } from '../options';
+import { Flow } from '../flow';
+import { Display } from './display';
+import { FlowItemType } from '../item';
 
 const Toolbox = null; // TODO
 
 export class Diagram extends Shape {
 
-  options;
+  context: CanvasRenderingContext2D
+  flow: Flow;
+  label: Label;
+  steps: Step[];
+  links: Link[];
+  subflows: Subflow[];
+  notes: Note[];
   readonly = false;
+  marquee?: Marquee;
+  dialog = null; // TODO: see this.onDelete()
+  anchor = -1;
+  selection: Selection;
+  containerId?: string;
+  stepId?: string;
+  instance = null;
+  instances = null;
+  stepInstanceId?: string;
+  drawBoxes = true;
+  allowInstanceEdit = false;
+  editInstanceId?: string;
+  data?: any;
 
-  startDescriptor;
-  stopDescriptor;
-  pauseDescriptor;
-  taskDescriptor;
+  images?: {[key: string]: HTMLImageElement};
 
-  constructor(canvas, options, descriptors) {
+  // TODO extract zoom
+  zoom = 100;
+  zoomControl?: HTMLElement;
+  origPanelWidth?: number;
+
+  startDescriptor: Descriptor;
+  stopDescriptor: Descriptor;
+  pauseDescriptor: Descriptor;
+  taskDescriptor: Descriptor;
+
+  constructor(
+    readonly canvas: HTMLCanvasElement,
+    public options: DiagramOptions & DrawingOptions,
+    public descriptors: Descriptor[]
+  ) {
     super(canvas.getContext("2d"), options);
-    this.canvas = canvas;
-    this.options = options;
-    this.dialog = null; // TODO: see this.onDelete()
+    this.dialog = null;
     this.descriptors = descriptors;
-    this.flowElementType = 'flow';
-    this.isDiagram = true;
     this.context = this.canvas.getContext("2d");
     this.anchor = -1;
     this.selection = new Selection(this);
 
-    // zoom setup
-    this.zoom = 100;
-    var zoomControls = document.getElementsByClassName('flow-zoom');
+    // zoom setup TODO refactor
+    const zoomControls = document.getElementsByClassName('flow-zoom');
     if (zoomControls.length === 1) {
-      var diagram = this;
-      this.zoomControl = zoomControls[0];
+      const diagram = this;
+      this.zoomControl = zoomControls[0] as HTMLElement;
       if (!this.readonly && Toolbox) {
         this.zoomControl.style.top = "90px";
         this.zoomControl.style.right = '270px';
       }
-      var rangeInput = diagram.zoomControl.getElementsByTagName('input')[0];
+      const rangeInput = diagram.zoomControl.getElementsByTagName('input')[0] as HTMLInputElement;
       this.zoomControl.oninput = function (e) {
-        diagram.zoomCanvas(parseInt(e.target.value));
+        diagram.zoomCanvas(parseInt((e.target as HTMLInputElement).value));
       };
       this.zoomControl.onchange = function (e) {
         diagram.adjustSection();
       };
       this.zoomControl.onclick = function (e) {
         e.preventDefault();
-        if (e.target.className) {
-          if (e.target.className.endsWith('zoom-in') && diagram.zoom < 200) {
+        if ((e.target as HTMLElement).className) {
+          if ((e.target as HTMLElement).className.endsWith('zoom-in') && diagram.zoom < 200) {
             diagram.zoomCanvas(diagram.zoom + 20);
-            rangeInput.value = diagram.zoom + 20;
+            rangeInput.value = '' + (diagram.zoom + 20);
             diagram.adjustSection();
           }
-          else if (e.target.className.endsWith('zoom-out') && diagram.zoom > 20) {
+          else if ((e.target as HTMLElement).className.endsWith('zoom-out') && diagram.zoom > 20) {
             diagram.zoomCanvas(diagram.zoom - 20);
-            rangeInput.value = diagram.zoom - 20;
+            rangeInput.value = '' + (diagram.zoom - 20);
             diagram.adjustSection();
           }
         }
       };
       // zoom hover title
       rangeInput.onmousemove = function (e) {
-        var rect = rangeInput.getBoundingClientRect();
-        var x = e.clientX - rect.left;
-        var pct = (x / rangeInput.clientWidth) * 100;
-        var z = parseInt(rangeInput.min) + (parseInt(rangeInput.max) - parseInt(rangeInput.min)) * pct / 100;
+        const rect = rangeInput.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const pct = (x / rangeInput.clientWidth) * 100;
+        let z = parseInt(rangeInput.min) + (parseInt(rangeInput.max) - parseInt(rangeInput.min)) * pct / 100;
         if (z > (diagram.zoom - 10) && z < (diagram.zoom + 10)) {
           z = diagram.zoom;
         }
         rangeInput.title = Math.round(z) + '%';
       };
       // show/hide/close
-      var closeBtn = this.zoomControl.getElementsByClassName('zoom-close')[0];
+      const closeBtn = this.zoomControl.getElementsByClassName('zoom-close')[0] as HTMLButtonElement;
       this.zoomControl.onmouseover = function (e) {
         closeBtn.style.visibility = 'visible';
       };
@@ -84,13 +114,13 @@ export class Diagram extends Shape {
       };
       closeBtn.onclick = function (e) {
         diagram.zoomControl.style.visibility = 'hidden';
-        this.style.visibility = 'hidden';
+        (e.target as HTMLElement).style.visibility = 'hidden';
       };
       // pinch gesture
       window.addEventListener('wheel', function (e) {
         if (e.ctrlKey) {
           e.preventDefault();
-          var z = diagram.zoom - e.deltaY;
+          let z = diagram.zoom - e.deltaY;
           if (z < 20) {
             z = 20;
           }
@@ -98,23 +128,21 @@ export class Diagram extends Shape {
             z = 200;
           }
           diagram.zoomCanvas(z);
-          rangeInput.value = diagram.zoom;
+          rangeInput.value = '' + diagram.zoom;
           diagram.adjustSection();
         }
       }, { passive: false });
     }
   }
 
-  get diagram() {
-    return this;
-  }
+  get diagram(): Diagram { return this; }
 
-  zoomCanvas(zoom) {
+  zoomCanvas(zoom: number) {
     this.zoom = zoom;
-    var scale = zoom / 100;
-    var dw = this.canvas.width * scale - this.canvas.width;
-    var dh = this.canvas.height * scale - this.canvas.height;
-    var dpRatio = window.devicePixelRatio || 1;
+    const scale = zoom / 100;
+    const dw = this.canvas.width * scale - this.canvas.width;
+    const dh = this.canvas.height * scale - this.canvas.height;
+    const dpRatio = window.devicePixelRatio || 1;
     this.canvas.style.transform = 'translate(' + (dw / (2 * dpRatio)) + 'px,' + (dh / (2 * dpRatio)) + 'px) scale(' + scale + ')';
   }
 
@@ -122,39 +150,39 @@ export class Diagram extends Shape {
    * adjust section to accommodate zoomed canvas
    */
   adjustSection() {
-    var sections = document.getElementsByClassName('zoom-section');
+    const sections = document.getElementsByClassName('zoom-section');
     if (sections.length) {
-      var section = sections[0];
-      var scale = this.zoom / 100;
-      var cw = this.canvas.style.width.substring(0, this.canvas.style.width.length - 2);
-      var w = (cw ? parseInt(cw) : this.canvas.width) * scale; // canvas style width not populated on windows
-      var panels = document.getElementsByClassName('panel-full-width');
+      const section = sections[0];
+      const scale = this.zoom / 100;
+      const cw = this.canvas.style.width.substring(0, this.canvas.style.width.length - 2);
+      let w = (cw ? parseInt(cw) : this.canvas.width) * scale; // canvas style width not populated on windows
+      const panels = document.getElementsByClassName('panel-full-width');
       if (panels.length) {
         // don't shrink width smaller than original panel width
         if (!this.origPanelWidth) {
-          this.origPanelWidth = panels[0].offsetWidth;
+          this.origPanelWidth = (panels[0] as HTMLElement).offsetWidth;
         }
         if (w < this.origPanelWidth - 37) {
           w = this.origPanelWidth - 37;
         }
       }
-      var ch = this.canvas.style.height.substring(0, this.canvas.style.height.length - 2);
-      var h = (ch ? parseInt(ch) : this.canvas.height) * scale;
+      const ch = this.canvas.style.height.substring(0, this.canvas.style.height.length - 2);
+      let h = (ch ? parseInt(ch) : this.canvas.height) * scale;
       if (h < 540) {
         h = 540;
       }
-      section.style.width = (w + 20) + 'px';
-      section.style.height = (h + 20) + 'px';
+      (section as HTMLElement).style.width = (w + 20) + 'px';
+      (section as HTMLElement).style.height = (h + 20) + 'px';
     }
   }
 
   /**
    * params are only passed during initial draw
    */
-  draw(flow, instance, step, animate, instanceEdit, data) {
+  draw(flow?: Flow, instance?: any, step?: string, animate = false, editInstanceId?: string, data?: any) {
     if (flow) {
       this.flow = flow;
-      super.workflowItem = flow;
+      this.flowItem = { ...flow, type: 'flow' };
       this.drawBoxes = flow.attributes.NodeStyle === 'BoxIcon';
     }
     if (step) {
@@ -165,31 +193,25 @@ export class Diagram extends Shape {
         this.stepId = step;
       }
     }
-    if (instance) {
-      this.instance = instance;
-    }
-    if (typeof instanceEdit !== 'undefined') {
-      this.instanceEdit = instanceEdit && instanceEdit.toString() === 'true';
-    }
-    if (data) {
-      this.data = data;
-    }
+    this.instance = instance;
+    this.editInstanceId = editInstanceId;
+    this.data = data;
 
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.prepareDisplay();
-    var diagram = this;
+    const diagram = this;
 
     if (this.options.title.visibility === 'visible') {
       this.label.draw(this.options.title.color);
     }
-    var highlighted = null;
+    let highlighted = null;
     if (animate && !this.instance) {
-      var sequence = this.getSequence();
+      const sequence = this.getSequence();
       let i = 0;
-      var totalTime = sequence.length * 1000 / this.options.animationSpeed;
-      var linkCt = 0;
-      var nonLinkCt = 0;
+      const totalTime = sequence.length * 1000 / this.options.animationSpeed;
+      let linkCt = 0;
+      let nonLinkCt = 0;
       sequence.forEach(function (it) {
         if (it instanceof Link) {
           linkCt++;
@@ -198,20 +220,20 @@ export class Diagram extends Shape {
           nonLinkCt++;
         }
       });
-      var nonLinkSlice = totalTime / (nonLinkCt + 2 * linkCt);
-      var linkSlice = this.options.animationLinkFactor * nonLinkSlice;
-      var timeSlice = nonLinkSlice;
-      var s = function () {
-        var it = sequence[i];
+      const nonLinkSlice = totalTime / (nonLinkCt + 2 * linkCt);
+      const linkSlice = this.options.animationLinkFactor * nonLinkSlice;
+      let timeSlice = nonLinkSlice;
+      const s = function () {
+        const it = sequence[i];
         it.draw(timeSlice);
-        if (it instanceof Step && it.workflowItem.id === diagram.stepId) {
+        if (it instanceof Step && it.flowItem.id === diagram.stepId) {
           it.highlight();
           highlighted = it;
         }
         diagram.scrollIntoView(it, timeSlice);
         i++;
         if (i < sequence.length) {
-          var nextSlice = sequence[i] instanceof Link ? linkSlice : nonLinkSlice;
+          const nextSlice = sequence[i] instanceof Link ? linkSlice : nonLinkSlice;
           setTimeout(s, timeSlice);
           timeSlice = nextSlice;
         }
@@ -225,7 +247,7 @@ export class Diagram extends Shape {
       // draw quickly
       this.steps.forEach(function (step) {
         step.draw();
-        if (step.workflowItem.id === diagram.stepId) {
+        if (step.flowItem.id === diagram.stepId) {
           step.highlight();
           highlighted = step;
         }
@@ -252,21 +274,21 @@ export class Diagram extends Shape {
             socket.send(diagram.instance.id);
           });
           socket.addEventListener('message', function (event) {
-            var message = JSON.parse(event.data);
-            if (message.subtype === 'a') {
-              var step = diagram.getStep('S' + message.id);
+            const message = JSON.parse(event.data);
+            if (message.subtype === 's') {
+              const step = diagram.getStep('S' + message.id);
               if (step) {
                 if (!step.instances) {
                   step.instances = [];
                 }
-                var actInst = step.instances.find(function (inst) {
+                const actInst = step.instances.find(function (inst) {
                   return inst.id === message.instId;
                 });
                 if (actInst) {
                   actInst.statusCode = message.status;
                 }
                 else {
-                  var ai = {
+                  const ai = {
                     stepId: message.id,
                     id: message.instId,
                     statusCode: message.status
@@ -278,13 +300,13 @@ export class Diagram extends Shape {
                 diagram.scrollIntoView(step);
               }
             }
-            else if (message.subtype === 't') {
-              var link = diagram.getLink('L' + message.id);
+            else if (message.subtype === 'l') {
+              const link = diagram.getLink('L' + message.id);
               if (link) {
                 if (!link.instances) {
                   link.instances = [];
                 }
-                var linkInst = link.instances.find(function (inst) {
+                const linkInst = link.instances.find(function (inst) {
                   return inst.id === message.instId;
                 });
                 if (linkInst) {
@@ -324,23 +346,23 @@ export class Diagram extends Shape {
    * (for performance reasons, also initializes steps/links arrays and step descriptors)
    */
   prepareDisplay() {
-    var canvasDisplay = { w: 640, h: 480 };
+    const canvasDisplay = { w: 640, h: 480 };
 
-    var diagram = this; // forEach inner access
+    const diagram = this; // forEach inner access
 
     // label
-    var label = this.flow.name;
-    var lastSlash = label.lastIndexOf('/');
+    let label = this.flow.name;
+    const lastSlash = label.lastIndexOf('/');
     if (lastSlash >= 0 && lastSlash < label.length - 1) {
       label = label.substring(lastSlash + 1);
     }
     if (this.instance && this.instance.template) {
       this.instance.packageName + '/' + this.instance.flowName;
     }
-    var font = this.instance && this.instance.template ? this.options.template.font : this.options.title.font;
+    const font = this.instance && this.instance.template ? this.options.template.font : this.options.title.font;
     diagram.label = new Label(this, label, this.getDisplay(), font);
-    if (this.flow.instanceId) {
-      diagram.label.subtext = this.flow.instanceId;
+    if (this.instance?.id) {
+      diagram.label.subtext = this.instance.id;
     }
     diagram.makeRoom(canvasDisplay, diagram.label.prepareDisplay());
 
@@ -348,7 +370,7 @@ export class Diagram extends Shape {
     diagram.steps = [];
     if (this.flow.steps) {
       this.flow.steps.forEach(function (flowStep) {
-        var step = new Step(diagram, flowStep);
+        const step = new Step(diagram, flowStep);
         step.descriptor = diagram.getDescriptor(flowStep.descriptor);
         diagram.makeRoom(canvasDisplay, step.prepareDisplay());
         diagram.steps.push(step);
@@ -360,7 +382,7 @@ export class Diagram extends Shape {
     diagram.steps.forEach(function (step) {
       if (step.step.links) {
         step.step.links.forEach(function (flowLink) {
-          var link = new Link(diagram, flowLink, step, diagram.getStep(flowLink.to));
+          const link = new Link(diagram, flowLink, step, diagram.getStep(flowLink.to));
           diagram.makeRoom(canvasDisplay, link.prepareDisplay());
           diagram.links.push(link);
         });
@@ -371,7 +393,7 @@ export class Diagram extends Shape {
     diagram.subflows = [];
     if (this.flow.subflows) {
       this.flow.subflows.forEach(function (subproc) {
-        var subflow = new Subflow(diagram, subproc);
+        const subflow = new Subflow(diagram, subproc);
         diagram.makeRoom(canvasDisplay, subflow.prepareDisplay());
         diagram.subflows.push(subflow);
       });
@@ -381,7 +403,7 @@ export class Diagram extends Shape {
     diagram.notes = [];
     if (this.flow.notes) {
       this.flow.notes.forEach(function (flowNote) {
-        var note = new Note(diagram, flowNote);
+        const note = new Note(diagram, flowNote);
         diagram.makeRoom(canvasDisplay, note.prepareDisplay());
         diagram.notes.push(note);
       });
@@ -396,22 +418,23 @@ export class Diagram extends Shape {
     canvasDisplay.w += diagram.options.padding;
     canvasDisplay.h += diagram.options.padding;
 
-    if (!this.readonly && Toolbox) {
-      var toolbox = Toolbox.getToolbox();
-      // fill available
-      var parentWidth = this.canvas.parentElement.offsetWidth;
-      if (toolbox) {
-        parentWidth -= toolbox.getWidth();
-      }
-      if (canvasDisplay.w < parentWidth) {
-        canvasDisplay.w = parentWidth;
-      }
-      if (toolbox && canvasDisplay.h < toolbox.getHeight()) {
-        canvasDisplay.h = toolbox.getHeight();
-      }
-    }
+    // TODO embedded toolbox (like Hub)
+    // if (!this.readonly && Toolbox) {
+    //   var toolbox = Toolbox.getToolbox();
+    //   // fill available
+    //   var parentWidth = this.canvas.parentElement.offsetWidth;
+    //   if (toolbox) {
+    //     parentWidth -= toolbox.getWidth();
+    //   }
+    //   if (canvasDisplay.w < parentWidth) {
+    //     canvasDisplay.w = parentWidth;
+    //   }
+    //   if (toolbox && canvasDisplay.h < toolbox.getHeight()) {
+    //     canvasDisplay.h = toolbox.getHeight();
+    //   }
+    // }
 
-    var dpRatio = 1;
+    let dpRatio = 1;
     if (window.devicePixelRatio) {
       dpRatio = window.devicePixelRatio;
     }
@@ -425,7 +448,7 @@ export class Diagram extends Shape {
       this.canvas.height = canvasDisplay.h * dpRatio;
       this.canvas.style.width = canvasDisplay.w + 'px';
       this.canvas.style.height = canvasDisplay.h + 'px';
-      var ctx = this.canvas.getContext('2d');
+      const ctx = this.canvas.getContext('2d');
       ctx.scale(dpRatio, dpRatio);
     }
   }
@@ -433,8 +456,8 @@ export class Diagram extends Shape {
   /**
    * post-animation callback is the only way to prevent notes from screwing up context font (why?)
    */
-  applyState(animate, callback) {
-    var diagram = this; // forEach inner access
+  applyState(animate: boolean, callback: () => void) {
+    const diagram = this; // forEach inner access
 
     if (this.flow.steps) {
       this.flow.steps.forEach(function (step) {
@@ -452,7 +475,7 @@ export class Diagram extends Shape {
 
     if (this.flow.subflows) {
       this.flow.subflows.forEach(function (subproc) {
-        var subflow = diagram.getSubflow(subproc.id);
+        const subflow = diagram.getSubflow(subproc.id);
         subflow.instances = diagram.getSubflowInstances(subproc.id);
         // needed for subflow & task instance retrieval
         subflow.mainFlowInstanceId = diagram.instance.id;
@@ -471,11 +494,11 @@ export class Diagram extends Shape {
       });
     }
 
-    var highlighted = null;
-    var sequence = this.getSequence(true);
+    let highlighted = null;
+    const sequence = this.getSequence(true);
     if (sequence) {
-      var update = function (it, slice) {
-        var highlight = false;
+      const update = function (it, slice) {
+        let highlight = false;
         if (it instanceof Step) {
           if (animate) {
             // TODO: more sensible live scrolling based on ultimate endpoint (esp highlight)
@@ -497,8 +520,8 @@ export class Diagram extends Shape {
       };
 
       if (animate) {
-        var linkCt = 0;
-        var nonLinkCt = 0;
+        let linkCt = 0;
+        let nonLinkCt = 0;
         sequence.forEach(function (it) {
           if (it instanceof Link) {
             linkCt++;
@@ -507,16 +530,16 @@ export class Diagram extends Shape {
             nonLinkCt++;
           }
         });
-        var totalTime = sequence.length * 1000 / this.options.animationSpeed;
-        var nonLinkSlice = totalTime / (nonLinkCt + 2 * linkCt);
-        var linkSlice = this.options.animationLinkFactor * nonLinkSlice;
-        var timeSlice = nonLinkSlice;
+        const totalTime = sequence.length * 1000 / this.options.animationSpeed;
+        const nonLinkSlice = totalTime / (nonLinkCt + 2 * linkCt);
+        const linkSlice = this.options.animationLinkFactor * nonLinkSlice;
+        let timeSlice = nonLinkSlice;
         let i = 0;
-        var s = function () {
+        const s = function () {
           update(sequence[i], timeSlice);
           i++;
           if (i < sequence.length) {
-            var nextSlice = sequence[i] instanceof Link ? linkSlice : nonLinkSlice;
+            const nextSlice = sequence[i] instanceof Link ? linkSlice : nonLinkSlice;
             setTimeout(s, timeSlice);
             timeSlice = nextSlice;
           }
@@ -537,12 +560,12 @@ export class Diagram extends Shape {
   }
 
   applyData() {
-    var diagram = this; // forEach inner access
+    const diagram = this; // forEach inner access
 
     if (this.data.hotspots && this.data.hotspots.length) {
-      let hottest = this.data.hotspots.reduce((max, cur) => cur.ms > max.ms ? cur : max);
+      const hottest = this.data.hotspots.reduce((max, cur) => cur.ms > max.ms ? cur : max);
       diagram.steps.forEach(function (step) {
-        let hotspot = diagram.data.hotspots.find(hs => ('S' + hs.id) === step.step.id);
+        const hotspot = diagram.data.hotspots.find(hs => ('S' + hs.id) === step.step.id);
         if (hotspot && hotspot.ms) {
           step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
           step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
@@ -552,7 +575,7 @@ export class Diagram extends Shape {
       if (diagram.subflows) {
         diagram.subflows.forEach(function (subflow) {
           subflow.steps.forEach(function (step) {
-            let hotspot = diagram.data.hotspots.find(hs => ('S' + hs.id) === step.step.id);
+            const hotspot = diagram.data.hotspots.find(hs => ('S' + hs.id) === step.step.id);
             if (hotspot && hotspot.ms) {
               step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
               step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
@@ -564,26 +587,26 @@ export class Diagram extends Shape {
     }
   }
 
-  getSequence(runtime) {
-    var seq = [];
-    var start = this.getStart();
+  getSequence(runtime = false): (Step | Link| Subflow)[] {
+    const seq: (Step | Link | Subflow)[] = [];
+    const start = this.getStart();
     if (start) {
       seq.push(start);
       this.addSequence(start, seq, runtime);
-      var subflows = this.subflows.slice();
+      const subflows = this.subflows.slice();
       subflows.sort(function (sf1, sf2) {
         if (Math.abs(sf1.display.y - sf2.display.y) > 100) {
-          return sf1.y - sf2.y;
+          return sf1.display.y - sf2.display.y;
         }
         // otherwise closest to top-left of canvas
         return Math.sqrt(Math.pow(sf1.display.x, 2) + Math.pow(sf1.display.y, 2)) -
           Math.sqrt(Math.pow(sf2.display.x, 2) + Math.pow(sf2.display.y, 2));
       });
-      var diagram = this;
+      const diagram = this;
       subflows.forEach(function (subflow) {
         if (!runtime || subflow.instances.length > 0) {
           seq.push(subflow);
-          var substart = subflow.getStart();
+          const substart = subflow.getStart();
           if (substart) {
             seq.push(substart);
             diagram.addSequence(substart, seq, runtime);
@@ -594,13 +617,13 @@ export class Diagram extends Shape {
     return seq;
   }
 
-  addSequence(step, sequence, runtime) {
-    var outSteps = [];
-    var stepIdToInLinks = {};
+  addSequence(step: Step, sequence: (Step | Link | Subflow)[], runtime = false) {
+    const outSteps = [];
+    const stepIdToInLinks = {};
     this.getOutLinks(step).forEach(function (link) {
       if (!runtime || link.instances.length > 0) {
-        var outStep = link.to;
-        var exist = stepIdToInLinks[outStep.step.id];
+        const outStep = link.to;
+        const exist = stepIdToInLinks[outStep.step.id];
         if (!exist) {
           stepIdToInLinks[outStep.step.id] = [link];
           outSteps.push(outStep);
@@ -632,22 +655,22 @@ export class Diagram extends Shape {
         Math.sqrt(Math.pow(s2.display.x, 2) + Math.pow(s2.display.y, 2));
     });
 
-    var diagram = this;
-    var proceedSteps = []; // those not already covered
+    const diagram = this;
+    const proceedSteps = []; // those not already covered
     outSteps.forEach(function (step) {
-      var links = stepIdToInLinks[step.step.id];
+      const links = stepIdToInLinks[step.step.id];
       if (links) {
         links.forEach(function (link) {
-          var l = sequence.find(function (it) {
-            return it.workflowItem.id === link.link.id;
+          const l = sequence.find(function (it) {
+            return it.flowItem.id === link.link.id;
           });
           if (!l) {
             sequence.push(link);
           }
         });
       }
-      var s = sequence.find(function (it) {
-        return it.workflowItem.id === step.step.id;
+      const s = sequence.find(function (it) {
+        return it.flowItem.id === step.step.id;
       });
       if (!s) {
         sequence.push(step);
@@ -659,15 +682,15 @@ export class Diagram extends Shape {
     });
   }
 
-  getStart() {
-    for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.descriptor === this.startdescriptor.name) {
+  getStart(): Step | undefined {
+    for (let i = 0; i < this.steps.length; i++) {
+      if (this.steps[i].step.descriptor === this.startDescriptor.name) {
         return this.steps[i];
       }
     }
   }
 
-  makeRoom(canvasDisplay, display) {
+  makeRoom(canvasDisplay: Display, display: Display) {
     if (display.w > canvasDisplay.w) {
       canvasDisplay.w = display.w;
     }
@@ -676,25 +699,25 @@ export class Diagram extends Shape {
     }
   }
 
-  getStep(stepId) {
-    for (var i = 0; i < this.steps.length; i++) {
+  getStep(stepId: string): Step | undefined {
+    for (let i = 0; i < this.steps.length; i++) {
       if (this.steps[i].step.id === stepId) {
         return this.steps[i];
       }
     }
   }
 
-  getLink(linkId) {
-    for (var i = 0; i < this.links.length; i++) {
+  getLink(linkId: string): Link | undefined {
+    for (let i = 0; i < this.links.length; i++) {
       if (this.links[i].link.id === linkId) {
         return this.links[i];
       }
     }
   }
 
-  getLinks(step) {
-    var links = [];
-    for (var i = 0; i < this.links.length; i++) {
+  getLinks(step: Step): Link[] {
+    const links: Link[] = [];
+    for (let i = 0; i < this.links.length; i++) {
       if (step.step.id === this.links[i].to.step.id || step.step.id === this.links[i].from.step.id) {
         links.push(this.links[i]);
       }
@@ -702,8 +725,8 @@ export class Diagram extends Shape {
     return links;
   }
 
-  getOutLinks(step) {
-    var links = [];
+  getOutLinks(step: Step): Link[] {
+    let links: Link[] = [];
     for (let i = 0; i < this.links.length; i++) {
       if (step.step.id === this.links[i].from.step.id) {
         links.push(this.links[i]);
@@ -715,23 +738,23 @@ export class Diagram extends Shape {
     return links;
   }
 
-  getSubflow(subflowId) {
-    for (var i = 0; i < this.subflows.length; i++) {
+  getSubflow(subflowId: string): Subflow | undefined {
+    for (let i = 0; i < this.subflows.length; i++) {
       if (this.subflows[i].subflow.id === subflowId) {
         return this.subflows[i];
       }
     }
   }
 
-  getNote(noteId) {
-    for (var i = 0; i < this.notes.length; i++) {
+  getNote(noteId: string): Note | undefined {
+    for (let i = 0; i < this.notes.length; i++) {
       if (this.notes[i].note.id === noteId) {
         return this.notes[i];
       }
     }
   }
 
-  get(id) {
+  get(id: string): Step | Link | Subflow | Note {
     if (id.startsWith('S')) {
       return this.getStep(id);
     }
@@ -750,9 +773,9 @@ export class Diagram extends Shape {
    * Whether the obj can be edited at instance level.
    * Cannot have instances and (TODO) must be reachable downstream of a currently paused step.
    */
-  isInstanceEditable(id) {
-    if (this.instanceEdit) {
-      var obj = this.get(id);
+  isInstanceEditable(id: string): boolean {
+    if (this.allowInstanceEdit) {
+      let obj = this.get(id);
       if (!obj && this.subflows) {
         for (let i = 0; i < this.subflows.length; i++) {
           obj = this.subflows[i].get(id);
@@ -760,7 +783,7 @@ export class Diagram extends Shape {
         }
       }
       if (obj) {
-        if (obj.isSubflow && obj.instances && obj.instances.length === 1 && obj.instances[0].status === 'In Progress') {
+        if (obj.type === 'subflow' && obj.instances && obj.instances.length === 1 && obj.instances[0].status === 'In Progress') {
           return true;
         }
         if (!obj.instances || !obj.instances.length) {
@@ -770,20 +793,24 @@ export class Diagram extends Shape {
     }
   }
 
-  getDescriptor(id) {
+  getDescriptor(name: string): Descriptor {
     if (this.descriptors) {
-      for (var i = 0; i < this.descriptors.length; i++) {
-        var descriptor = this.descriptors[i];
-        if (descriptor.name && descriptor.name === id) {
+      for (let i = 0; i < this.descriptors.length; i++) {
+        const descriptor = this.descriptors[i];
+        if (descriptor.name === name) {
           return descriptor;
         }
       }
     }
     // not found -- return placeholder
-    return { id, icon: 'shape:step', label: 'Unknown Descriptor' };
+    return {
+      name: 'Step',
+      icon: 'shape:step',
+      label: 'Unknown Descriptor'
+    };
   }
 
-  findInSubflows(x, y) {
+  findInSubflows(x: number, y: number): Subflow | undefined {
     if (this.subflows) {
       for (let i = 0; i < this.subflows.length; i++) {
         if (this.subflows[i].isHover(x, y)) {
@@ -793,22 +820,22 @@ export class Diagram extends Shape {
     }
   }
 
-  addStep(descriptor, x, y) {
-    var descrip = this.getDescriptor(descriptor);
-    var steps = this.steps.slice(0);
+  addStep(descriptorName: string, x: number, y: number) {
+    const descriptor = this.getDescriptor(descriptorName);
+    let steps = this.steps.slice(0);
     if (this.subflows) {
       for (let i = 0; i < this.subflows.length; i++) {
         steps = steps.concat(this.subflows[i].steps);
       }
     }
-    var step = Step.create(this, this.genId(steps, 'step'), descrip, x, y);
-    var hoverObj = this.getHoverObj(x, y);
-    if (hoverObj && hoverObj.isSubflow) {
-      hoverObj.subflow.steps.push(step.step);
-      hoverObj.steps.push(step);
+    const step = Step.create(this, this.genId(steps, 'step'), descriptor, x, y);
+    const hoverObj = this.getHoverObj(x, y);
+    if (hoverObj && hoverObj.type === 'subflow') {
+      (hoverObj as Subflow).subflow.steps.push(step.step);
+      (hoverObj as Subflow).steps.push(step);
     }
     else {
-      var subflow = this.findInSubflows(x, y);
+      const subflow = this.findInSubflows(x, y);
       if (subflow) {
         subflow.subflow.steps.push(step.step);
         subflow.steps.push(step);
@@ -820,17 +847,17 @@ export class Diagram extends Shape {
     }
   }
 
-  addLink(from, to) {
-    var links = this.links.slice(0);
+  addLink(from: Step, to: Step) {
+    let links = this.links.slice(0);
     if (this.subflows) {
       for (let i = 0; i < this.subflows.length; i++) {
         links = links.concat(this.subflows[i].links);
       }
     }
-    var link = Link.create(this, this.genId(links, 'link'), from, to);
-    var destSubflow = null;
+    const link = Link.create(this, this.genId(links, 'link'), from, to);
+    let destSubflow = null;
     if (this.subflows) {
-      for (var i = 0; i < this.subflows.length; i++) {
+      for (let i = 0; i < this.subflows.length; i++) {
         if (this.subflows[i].get(to.step.id)) {
           destSubflow = this.subflows[i];
         }
@@ -844,11 +871,11 @@ export class Diagram extends Shape {
     }
   }
 
-  addSubflow(type, x, y) {
-    var startStepId = this.genId(this.steps, 'step');
-    var startLinkId = this.genId(this.links, 'link');
-    var subprocId = this.genId(this.subflows, 'subflow');
-    var subflow = Subflow.create(this, subprocId, startStepId, startLinkId, type, x, y);
+  addSubflow(type: string, x: number, y: number) {
+    const startStepId = this.genId(this.steps, 'step');
+    const startLinkId = this.genId(this.links, 'link');
+    const subprocId = this.genId(this.subflows, 'subflow');
+    const subflow = Subflow.create(this, subprocId, startStepId, startLinkId, type, x, y);
     if (!this.flow.subflows) {
       this.flow.subflows = [];
     }
@@ -856,17 +883,17 @@ export class Diagram extends Shape {
     this.subflows.push(subflow);
   }
 
-  addNote(x, y) {
-    var note = Note.create(this, this.genId(this.notes, 'note'), x, y);
+  addNote(x: number, y: number) {
+    const note = Note.create(this, this.genId(this.notes, 'note'), x, y);
     this.flow.notes.push(note.note);
     this.notes.push(note);
   }
 
-  genId(items, flowElementType) {
-    var maxId = 0;
+  genId(items: (Step | Link | Subflow | Note)[], type: FlowItemType): number {
+    let maxId = 0;
     if (items) {
       items.forEach(function (item) {
-        var itemId = parseInt(item[flowElementType].id.substring(1));
+        const itemId = parseInt(item.id.substring(1));
         if (itemId > maxId) {
           maxId = itemId;
         }
@@ -875,10 +902,10 @@ export class Diagram extends Shape {
     return maxId + 1;
   }
 
-  deleteStep(step) {
-    var idx = -1;
+  deleteStep(step: Step) {
+    let idx = -1;
     for (let i = 0; i < this.steps.length; i++) {
-      var s = this.steps[i];
+      const s = this.steps[i];
       if (step.step.id === s.step.id) {
         idx = i;
         break;
@@ -888,7 +915,7 @@ export class Diagram extends Shape {
       this.flow.steps.splice(idx, 1);
       this.steps.splice(idx, 1);
       for (let i = 0; i < this.links.length; i++) {
-        var link = this.links[i];
+        const link = this.links[i];
         if (link.to.step.id === step.step.id) {
           this.deleteLink(link);
         }
@@ -901,10 +928,10 @@ export class Diagram extends Shape {
     }
   }
 
-  deleteLink(link) {
-    var idx = -1;
+  deleteLink(link: Link) {
+    let idx = -1;
     for (let i = 0; i < this.links.length; i++) {
-      var l = this.links[i];
+      const l = this.links[i];
       if (l.link.id === link.link.id) {
         idx = i;
         break;
@@ -912,7 +939,7 @@ export class Diagram extends Shape {
     }
     if (idx >= 0) {
       this.links.splice(idx, 1);
-      var tidx = -1;
+      let tidx = -1;
       for (let i = 0; i < link.from.step.links.length; i++) {
         if (link.from.step.links[i].id === link.link.id) {
           tidx = i;
@@ -930,10 +957,10 @@ export class Diagram extends Shape {
     }
   }
 
-  deleteSubflow(subflow) {
-    var idx = -1;
+  deleteSubflow(subflow: Subflow) {
+    let idx = -1;
     for (let i = 0; i < this.subflows.length; i++) {
-      var s = this.subflows[i];
+      const s = this.subflows[i];
       if (s.subflow.id === subflow.subflow.id) {
         idx = i;
         break;
@@ -945,10 +972,10 @@ export class Diagram extends Shape {
     }
   }
 
-  deleteNote(note) {
-    var idx = -1;
+  deleteNote(note: Note) {
+    let idx = -1;
     for (let i = 0; i < this.notes.length; i++) {
-      var n = this.notes[i];
+      const n = this.notes[i];
       if (n.note.id === note.note.id) {
         idx = i;
         break;
@@ -960,13 +987,13 @@ export class Diagram extends Shape {
     }
   }
 
-  getStepInstances(id) {
+  getStepInstances(stepId: string) {
     if (this.instance) {
-      var insts = []; // should always return something, even if empty
+      const insts = []; // should always return something, even if empty
       if (this.instance.steps) {
-        var flowInstId = this.instance.id;
+        const flowInstId = this.instance.id;
         this.instance.steps.forEach(function (stepInst) {
-          if ('S' + stepInst.stepId === id) {
+          if ('S' + stepInst.stepId === stepId) {
             stepInst.flowInstanceId = flowInstId; // needed for subflow & task instance retrieval
             insts.push(stepInst);
           }
@@ -979,12 +1006,12 @@ export class Diagram extends Shape {
     }
   }
 
-  getLinkInstances(id) {
+  getLinkInstances(linkId: string) {
     if (this.instance) {
-      var insts = []; // should always return something, even if empty
+      const insts = []; // should always return something, even if empty
       if (this.instance.links) {
         this.instance.links.forEach(function (linkInst) {
-          if ('L' + linkInst.linkId === id) {
+          if ('L' + linkInst.linkId === linkId) {
             insts.push(linkInst);
           }
         });
@@ -996,12 +1023,12 @@ export class Diagram extends Shape {
     }
   }
 
-  getSubflowInstances(id) {
+  getSubflowInstances(linkId: string) {
     if (this.instance) {
-      var insts = []; // should always return something, even if empty
+      const insts = []; // should always return something, even if empty
       if (this.instance.subflows) {
         this.instance.subflows.forEach(function (subInst) {
-          if ('F' + subInst.flowId === id) {
+          if ('F' + subInst.flowId === linkId) {
             insts.push(subInst);
           }
         });
@@ -1013,28 +1040,28 @@ export class Diagram extends Shape {
     }
   }
 
-  drawState(display, instances, ext, adj, animationSlice /* not used */, color, fill) {
+  drawState(display: Display, instances, ext = false, adj = 0, animationSlice?: number /* not used */, color?: string, fill?: string, opacity?: number) {
     if (instances) {
-      var maxInsts = this.options.maxInstances;
-      var count = instances.length > maxInsts ? maxInsts : instances.length;
-      for (var i = 0; i < count; i++) {
-        var instance = instances[i];
-        var rounding = this.options.defaultRoundingRadius;
+      const maxInsts = this.options.maxInstances;
+      const count = instances.length > maxInsts ? maxInsts : instances.length;
+      for (let i = 0; i < count; i++) {
+        const instance = instances[i];
+        const rounding = this.options.step.roundingRadius;
         if (instance.statusCode) {
-          var status = this.options.statuses[instance.statusCode];
+          const status = this.options.statuses[instance.statusCode];
           instance.status = status.name;
-          var statusColor = color ? color : status.color;
-          var prevWidth = this.options.step.state.previous.width;
-          var del = this.options.step.state.width - prevWidth;
+          const statusColor = color ? color : status.color;
+          const prevWidth = this.options.step.state.previous.width;
+          const del = this.options.step.state.width - prevWidth;
           if (ext) {
-            var rem = count - i;
+            let rem = count - i;
             if (i === 0) {
               this.rect(
                 display.x - prevWidth * rem - del,
                 display.y - prevWidth * rem - del,
                 display.w + prevWidth * 2 * rem + 2 * del,
                 display.h + prevWidth * 2 * rem + 2 * del,
-                statusColor, rounding, statusColor);
+                statusColor, rounding, statusColor, opacity);
             }
             else {
               this.rect(
@@ -1042,7 +1069,7 @@ export class Diagram extends Shape {
                 display.y - prevWidth * rem,
                 display.w + prevWidth * 2 * rem,
                 display.h + prevWidth * 2 * rem,
-                statusColor, 0, statusColor);
+                statusColor, 0, statusColor, opacity);
             }
             rem--;
             this.context.clearRect(
@@ -1052,14 +1079,14 @@ export class Diagram extends Shape {
               display.h + prevWidth * 2 * rem + 2);
           }
           else {
-            var x1, y1, w1, h1;
+            let x1: number, y1: number, w1: number, h1: number;
             if (i === 0) {
               this.rect(
                 display.x - adj,
                 display.y - adj,
                 display.w + 2 * adj,
                 display.h + 2 * adj,
-                statusColor, rounding, statusColor);
+                statusColor, rounding, statusColor, opacity);
               x1 = display.x + del;
               y1 = display.y + del;
               w1 = display.w - 2 * del;
@@ -1071,7 +1098,7 @@ export class Diagram extends Shape {
               w1 = display.w - prevWidth * 2 * i - 2 * del;
               h1 = display.h - prevWidth * 2 * i - 2 * del;
               if (w1 > 0 && h1 > 0) {
-                this.rect(x1, y1, w1, h1, statusColor, 0, statusColor);
+                this.rect(x1, y1, w1, h1, statusColor, 0, statusColor, opacity);
               }
             }
             x1 += prevWidth - 1;
@@ -1080,7 +1107,7 @@ export class Diagram extends Shape {
             h1 -= 2 * prevWidth - 2;
             if (w1 > 0 && h1 > 0) {
               if (fill) {
-                this.rect(x1, y1, w1, h1, statusColor, 0, fill);
+                this.rect(x1, y1, w1, h1, statusColor, 0, fill, opacity);
               }
               else {
                 this.context.clearRect(x1, y1, w1, h1);
@@ -1092,12 +1119,12 @@ export class Diagram extends Shape {
     }
   }
 
-  drawData(display, size, color, opacity) {
+  drawData(display: Display, size: number, color: string, opacity: number) {
     if (opacity) {
       this.context.globalAlpha = opacity;
     }
-    var rounding = this.options.data.roundingRadius;
-    var x1, y1, w1, h1;
+    const rounding = this.options.data.roundingRadius;
+    let x1: number, y1: number, w1: number, h1: number;
     this.rect(
       display.x,
       display.y,
@@ -1120,7 +1147,7 @@ export class Diagram extends Shape {
     }
   }
 
-  rect(x, y, w, h, border, r, fill, opacity) {
+  rect(x: number, y: number, w: number, h: number, border: string, r: number, fill?: string, opacity?: number) {
     if (opacity) {
       this.context.globalAlpha = opacity;
     }
@@ -1164,14 +1191,14 @@ export class Diagram extends Shape {
     }
   }
 
-  oval(x, y, w, h, color, fill, opacity, width) {
-    var kappa = 0.5522848;
-    var ox = (w / 2) * kappa; // control point offset horizontal
-    var oy = (h / 2) * kappa; // control point offset vertical
-    var xe = x + w; // x-end
-    var ye = y + h; // y-end
-    var xm = x + w / 2; // x-middle
-    var ym = y + h / 2; // y-middle
+  oval(x: number, y: number, w: number, h: number, color: string, fill: string, opacity: number, width?: number) {
+    const kappa = 0.5522848;
+    const ox = (w / 2) * kappa; // control point offset horizontal
+    const oy = (h / 2) * kappa; // control point offset vertical
+    const xe = x + w; // x-end
+    const ye = y + h; // y-end
+    const xm = x + w / 2; // x-middle
+    const ym = y + h / 2; // y-middle
 
     if (color) {
       this.context.strokeStyle = color;
@@ -1209,7 +1236,7 @@ export class Diagram extends Shape {
     }
   }
 
-  drawLine(segments, color, width) {
+  drawLine(segments: LineSegment[], color: string, width?: number) {
     if (color) {
       this.context.strokeStyle = color;
     }
@@ -1217,7 +1244,7 @@ export class Diagram extends Shape {
       this.context.lineWidth = width;
     }
     this.context.beginPath();
-    var diagram = this;
+    const diagram = this;
     segments.forEach(function (seg) {
       diagram.context.moveTo(seg.from.x, seg.from.y);
       diagram.context.lineTo(seg.to.x, seg.to.y);
@@ -1227,22 +1254,22 @@ export class Diagram extends Shape {
     this.context.lineWidth = this.options.defaultLineWidth;
   }
 
-  animateLine(segments, color, width, slice) {
-    var x1 = segments[0].from.x;
-    var y1 = segments[0].from.y;
-    var x2, y2;
-    var i = 0; // segment index
-    var j = 0; // subsegment
-    var context = this.context;
-    var perSeg = Math.ceil(slice / (1000 / 60) / segments.length);
-    var d = function () {
-      var segment = segments[i];
+  animateLine(segments: LineSegment[], color: string, width: number, slice: number) {
+    let x1 = segments[0].from.x;
+    let y1 = segments[0].from.y;
+    let x2: number, y2: number;
+    let i = 0; // segment index
+    let j = 0; // subsegment
+    const context = this.context;
+    const perSeg = Math.ceil(slice / (1000 / 60) / segments.length);
+    const d = function () {
+      const segment = segments[i];
       if (j >= perSeg) {
         i++;
         j = 0;
       }
       else {
-        var lastSeg = j === perSeg - 1;
+        const lastSeg = j === perSeg - 1;
         x2 = lastSeg ? segment.to.x : x1 + (segment.to.x - segment.from.x) / perSeg;
         y2 = lastSeg ? segment.to.y : y1 + (segment.to.y - segment.from.y) / perSeg;
         context.strokeStyle = color;
@@ -1279,9 +1306,9 @@ export class Diagram extends Shape {
     d();
   }
 
-  drawDiamond(x, y, w, h) {
-    var xh = x + w / 2;
-    var yh = y + h / 2;
+  drawDiamond(x: number, y: number, w: number, h: number) {
+    const xh = x + w / 2;
+    const yh = y + h / 2;
     this.context.beginPath();
     this.context.moveTo(x, yh);
     this.context.lineTo(xh, y);
@@ -1292,17 +1319,17 @@ export class Diagram extends Shape {
     this.context.stroke();
   }
 
-  drawIcon(src, x, y) {
+  drawIcon(src: string, x: number, y: number) {
     src = this.options.iconBase ? this.options.iconBase + '/' + src : src;
     if (!this.images) {
       this.images = {};
     }
-    var img = this.images[src];
+    let img = this.images[src];
     if (!img) {
       img = new Image();
       img.src = src;
-      var context = this.context;
-      var images = this.images;
+      const context = this.context;
+      const images = this.images;
       img.onload = function () {
         context.drawImage(img, x, y);
         images[src] = img;
@@ -1316,39 +1343,39 @@ export class Diagram extends Shape {
   /**
    * TODO: horizontal scroll
    */
-  scrollIntoView(shape, timeSlice) {
-    var centerX = shape.display.x + shape.display.w / 2;
-    var centerY = shape.display.y + shape.display.h / 2;
+  scrollIntoView(item: Step | Link | Subflow, timeSlice = 0) {
+    const centerX = item.display.x + item.display.w / 2;
+    const centerY = item.display.y + item.display.h / 2;
 
-    var container = document.body;
+    let container = document.body;
     if (this.containerId) {
       container = document.getElementById(this.containerId);
     }
 
-    var clientRect = this.canvas.getBoundingClientRect();
-    var canvasLeftX = clientRect.left;
-    var canvasTopY = clientRect.top;
+    const clientRect = this.canvas.getBoundingClientRect();
+    const canvasLeftX = clientRect.left;
+    const canvasTopY = clientRect.top;
 
     if (container.scrollHeight > container.clientHeight) {
-      var maxVScroll = container.scrollHeight - container.clientHeight;
-      var centeringVScroll = centerY - container.clientHeight / 2;
+      const maxVScroll = container.scrollHeight - container.clientHeight;
+      const centeringVScroll = centerY - container.clientHeight / 2;
       if (centeringVScroll > 0) {
-        var vScroll = centeringVScroll > maxVScroll ? maxVScroll : centeringVScroll;
-        var vDelta = vScroll - container.scrollTop;
+        const vScroll = centeringVScroll > maxVScroll ? maxVScroll : centeringVScroll;
+        const vDelta = vScroll - container.scrollTop;
         // not sure about other logic, but force scroll for these conditions
         if (timeSlice === 0 && container === document.body) {
           window.scroll(0, vDelta);
           return;
         }
-        var winDelta = 0;
-        var bottomY = canvasTopY + shape.display.y + shape.display.h - vDelta + this.options.highlight.padding * 2;
+        let winDelta = 0;
+        const bottomY = canvasTopY + item.display.y + item.display.h - vDelta + this.options.highlight.padding * 2;
         if (document.documentElement.clientHeight < bottomY) {
           winDelta = bottomY - document.documentElement.clientHeight;
         }
-        var slices = !timeSlice ? 1 : Math.ceil(timeSlice / (1000 / 60));
-        var i = 0;
-        var winScrollY = 0;
-        var scroll = function () {
+        const slices = !timeSlice ? 1 : Math.ceil(timeSlice / (1000 / 60));
+        let i = 0;
+        let winScrollY = 0;
+        const scroll = function () {
           container.scrollTop += vDelta / slices;
           if (winDelta > 0) {
             winScrollY += winDelta / slices;
@@ -1364,16 +1391,21 @@ export class Diagram extends Shape {
     }
   }
 
-  onMouseDown(e) {
-    var rect = this.canvas.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
+  dragX: number;
+  dragY: number;
+  shiftDrag = false;
+  hoverObj: SelectObj;
+
+  onMouseDown(e: MouseEvent) {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
     // starting points for drag
     this.dragX = x;
     this.dragY = y;
 
-    var selObj = this.getHoverObj(x, y);
+    const selObj = this.getHoverObj(x, y);
 
     if (!this.readonly && e.ctrlKey) {
       if (selObj) {
@@ -1393,7 +1425,7 @@ export class Diagram extends Shape {
         this.unselect();
         if (this.selection.getSelectObj()) {
           this.selection.getSelectObj().select();
-          if (!this.readonly && e.shiftKey && this.selection.getSelectObj().isStep) {
+          if (!this.readonly && e.shiftKey && this.selection.getSelectObj().type === 'step') {
             this.shiftDrag = true;
           }
         }
@@ -1401,15 +1433,15 @@ export class Diagram extends Shape {
     }
   }
 
-  onMouseUp(e) {
+  onMouseUp(e: MouseEvent) {
     if (this.shiftDrag && this.dragX && this.dragY) {
-      if (this.selection.getSelectObj() && this.selection.getSelectObj().isStep) {
-        var rect = this.canvas.getBoundingClientRect();
-        var x = e.clientX - rect.left;
-        var y = e.clientY - rect.top;
-        var destObj = this.getHoverObj(x, y);
-        if (destObj && destObj.isStep) {
-          this.addLink(this.selection.getSelectObj(), destObj);
+      if (this.selection.getSelectObj() && this.selection.getSelectObj().type === 'step') {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const destObj = this.getHoverObj(x, y);
+        if (destObj && destObj.type === 'step') {
+          this.addLink(this.selection.getSelectObj() as Step, destObj as Step);
           this.draw();
         }
       }
@@ -1418,7 +1450,7 @@ export class Diagram extends Shape {
 
     if (this.marquee) {
       this.selection.setSelectObj(null);
-      var selObjs = this.marquee.getSelectObjs();
+      const selObjs = this.marquee.getSelectObjs();
       for (let i = 0; i < selObjs.length; i++) {
         selObjs[i].select();
         this.selection.add(selObjs[i]);
@@ -1430,21 +1462,21 @@ export class Diagram extends Shape {
     }
   }
 
-  onMouseOut(e) {
+  onMouseOut(e: MouseEvent) {
     document.body.style.cursor = 'default';
   }
 
-  onMouseMove(e) {
-    var rect = this.canvas.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
+  onMouseMove(e: MouseEvent) {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
     this.anchor = -1;
     this.hoverObj = this.getHoverObj(x, y);
     if (this.hoverObj) {
       if (!this.readonly && (this.hoverObj === this.selection.getSelectObj())) {
         this.anchor = this.hoverObj.getAnchor(x, y);
         if (this.anchor >= 0) {
-          if (this.hoverObj.isLink) {
+          if (this.hoverObj.type === 'link') {
             document.body.style.cursor = 'crosshair';
           }
           else {
@@ -1471,11 +1503,11 @@ export class Diagram extends Shape {
 
   onMouseDrag(e) {
     if (!this.readonly && this.dragX && this.dragY && !e.ctrlKey) {
-      var rect = this.canvas.getBoundingClientRect();
-      var x = e.clientX - rect.left;
-      var y = e.clientY - rect.top;
-      var deltaX = x - this.dragX;
-      var deltaY = y - this.dragY;
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const deltaX = x - this.dragX;
+      const deltaY = y - this.dragY;
 
       if (Math.abs(deltaX) > this.options.drag.min || Math.abs(deltaY) > this.options.drag.min) {
 
@@ -1486,15 +1518,15 @@ export class Diagram extends Shape {
           this.canvas.height = this.canvas.height + this.options.padding;
         }
 
-        var selObj = this.selection.getSelectObj();
+        const selObj = this.selection.getSelectObj();
         if (selObj) {
-          if (this.instanceEdit && (!selObj.workflowItem || !this.isInstanceEditable(selObj.workflowItem.id))) {
+          if (this.allowInstanceEdit && (!selObj.flowItem || !this.isInstanceEditable(selObj.flowItem.id))) {
             return;
           }
 
-          var diagram = this;
+          const diagram = this;
           if (this.shiftDrag) {
-            if (this.selection.getSelectObj().isStep) {
+            if (this.selection.getSelectObj().type === 'step') {
               this.draw();
               this.drawLine([{
                 from: { x: this.dragX, y: this.dragY },
@@ -1504,17 +1536,17 @@ export class Diagram extends Shape {
             }
           }
           else if (this.anchor >= 0) {
-            if (this.selection.getSelectObj().isLink) {
-              let link = this.selection.getSelectObj();
+            if (this.selection.getSelectObj().type === 'link') {
+              const link = this.selection.getSelectObj() as Link;
               link.moveAnchor(this.anchor, x - this.dragX, y - this.dragY);
               if (this.anchor === 0) {
-                let hovStep = this.getHoverStep(x, y);
+                const hovStep = this.getHoverStep(x, y);
                 if (hovStep && link.from.step.id !== hovStep.step.id) {
                   link.setFrom(hovStep);
                 }
               }
-              else if (this.anchor === this.selection.getSelectObj().display.xs.length - 1) {
-                var hovStep = this.getHoverStep(x, y);
+              else if (this.anchor === (this.selection.getSelectObj() as Link).display.xs.length - 1) {
+                const hovStep = this.getHoverStep(x, y);
                 if (hovStep && link.to.step.id !== hovStep.step.id) {
                   link.setTo(hovStep);
                 }
@@ -1522,9 +1554,9 @@ export class Diagram extends Shape {
               this.draw();
             }
             if (this.selection.getSelectObj().resize) {
-              if (this.selection.getSelectObj().isStep) {
-                let stepId = this.selection.getSelectObj().step.id;
-                let step = this.getStep(stepId);
+              if (this.selection.getSelectObj().type === 'step') {
+                const stepId = (this.selection.getSelectObj() as Step).step.id;
+                const step = this.getStep(stepId);
                 if (step) {
                   this.selection.getSelectObj().resize(this.dragX, this.dragY, x - this.dragX, y - this.dragY);
                   this.getLinks(step).forEach(function (link) {
@@ -1534,7 +1566,7 @@ export class Diagram extends Shape {
                 else {
                   // try subflows
                   this.subflows.forEach(function (subflow) {
-                    let step = subflow.getStep(stepId);
+                    const step = subflow.getStep(stepId);
                     if (step) {
                       // only within bounds of subflow
                       diagram.selection.getSelectObj().resize(diagram.dragX, diagram.dragY, x - diagram.dragX, y - diagram.dragY, subflow.display);
@@ -1549,7 +1581,7 @@ export class Diagram extends Shape {
                 this.selection.getSelectObj().resize(this.dragX, this.dragY, x - this.dragX, y - this.dragY);
               }
               this.draw();
-              var obj = this.getHoverObj(x, y);
+              const obj = this.getHoverObj(x, y);
               if (obj) {
                 obj.select();
               }
@@ -1559,7 +1591,7 @@ export class Diagram extends Shape {
           else {
             this.selection.move(this.dragX, this.dragY, deltaX, deltaY);
             // non-workflow selection may not be reselected after move
-            var hovObj = this.diagram.getHoverObj(x, y);
+            const hovObj = this.getHoverObj(x, y);
             if (hovObj) {
               hovObj.select();
             }
@@ -1580,28 +1612,29 @@ export class Diagram extends Shape {
     }
   }
 
-  onDrop(e, descriptor) {
-    var rect = this.canvas.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
-    if (descriptor.type === 'subflow') {
+  onDrop(e: MouseEvent, descriptorName: string): boolean {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const descriptor = this.getDescriptor(descriptorName);
+    if (descriptor?.type === 'subflow') {
       this.addSubflow(descriptor.name, x, y);
     }
-    else if (descriptor.type === 'note') {
+    else if (descriptor?.type === 'note') {
       this.addNote(x, y);
     }
     else {
-      this.addStep(descriptor.name, x, y);
+      this.addStep(descriptor?.name, x, y);
     }
     this.draw();
     return true;
   }
 
-  onDelete(e, onChange) {
-    var selection = this.selection;
-    var selObj = this.selection.getSelectObj();
-    if (selObj && !selObj.isLabel) {
-      var msg = this.selection.isMulti ? 'Delete selected items?' : 'Delete ' + selObj.flowElementType + '?';
+  onDelete(e: MouseEvent, onChange) {
+    const selection = this.selection;
+    const selObj = this.selection.getSelectObj();
+    if (selObj && selObj.type !== 'label') {
+      const msg = this.selection.isMulti ? 'Delete selected items?' : 'Delete ' + selObj.type + '?';
       this.dialog.confirm('Confirm Delete', msg, function (res) {
         if (res) {
           selection.doDelete();
@@ -1613,28 +1646,28 @@ export class Diagram extends Shape {
   }
 
   getLatestInstance() {
-    var instances = this.selection.getSelectObj().instances;
+    const instances = this.selection.getSelectObj().instances;
     if (instances && instances.length) {
-      return instances[0]; // They are sorted descending
+      return instances[0]; // they're sorted in descending order
     }
   }
 
-  getContextMenuItems(e) {
-    var selObj = this.selection.getSelectObj();
-    if (selObj && selObj.flowElementType === 'step') {
-      var actions = [];
+  getContextMenuItems(e: MouseEvent) {
+    const selObj = this.selection.getSelectObj();
+    if (selObj && selObj.type === 'step') {
+      const actions = [];
       if (this.instance && (this.instance.status === 'In Progress' || this.instance.status === 'Waiting')) {
-        var inst = this.getLatestInstance();
+        const inst = this.getLatestInstance();
         if (inst && inst.status) {
           if (inst.status === 'Failed') {
             actions.push('retry');
             actions.push('proceed');
           }
           else if (inst.status === 'Waiting' || inst.status === 'In Progress') {
-            var descriptor = selObj.descriptor;
+            const descriptor = (selObj as Step).descriptor;
             if (inst.status === 'Waiting') {
               actions.push('proceed');
-              if (descriptor && descriptor.name === this.pausedescriptor.name) {
+              if (descriptor && descriptor.name === this.pauseDescriptor.name) {
                 actions.push('resume');
               }
             }
@@ -1648,9 +1681,9 @@ export class Diagram extends Shape {
     }
   }
 
-  getHoverObj(x, y) {
+  getHoverObj(x: number, y: number): SelectObj | undefined {
     if (this.zoom !== 100) {
-      var scale = this.zoom / 100;
+      const scale = this.zoom / 100;
       x = x / scale;
       y = y / scale;
     }
@@ -1659,18 +1692,18 @@ export class Diagram extends Shape {
       return this.label;
     }
     // links checked before steps for better anchor selectability
-    for (i = 0; i < this.subflows.length; i++) {
-      var subflow = this.subflows[i];
-      if (subflow.title.isHover(x, y)) {
+    for (let i = 0; i < this.subflows.length; i++) {
+      const subflow = this.subflows[i];
+      if ((subflow.title as any).isHover(x, y)) {
         return subflow;
       }
       if (subflow.isHover(x, y)) {
-        for (j = 0; j < subflow.links.length; j++) {
+        for (let j = 0; j < subflow.links.length; j++) {
           if (subflow.links[j].isHover(x, y)) {
             return subflow.links[j];
           }
         }
-        for (var j = 0; j < subflow.steps.length; j++) {
+        for (let j = 0; j < subflow.steps.length; j++) {
           if (subflow.steps[j].isHover(x, y)) {
             return subflow.steps[j];
           }
@@ -1678,28 +1711,28 @@ export class Diagram extends Shape {
         return subflow;
       }
     }
-    for (i = 0; i < this.links.length; i++) {
+    for (let i = 0; i < this.links.length; i++) {
       if (this.links[i].isHover(x, y)) {
         return this.links[i];
       }
     }
-    for (var i = 0; i < this.steps.length; i++) {
+    for (let i = 0; i < this.steps.length; i++) {
       if (this.steps[i].isHover(x, y)) {
         return this.steps[i];
       }
     }
-    for (i = 0; i < this.notes.length; i++) {
+    for (let i = 0; i < this.notes.length; i++) {
       if (this.notes[i].isHover(x, y)) {
         return this.notes[i];
       }
     }
   }
 
-  getHoverStep(x, y) {
+  getHoverStep(x: number, y: number): Step | undefined {
     for (let i = 0; i < this.subflows.length; i++) {
-      var subflow = this.subflows[i];
+      const subflow = this.subflows[i];
       if (subflow.isHover(x, y)) {
-        for (var j = 0; j < subflow.steps.length; j++) {
+        for (let j = 0; j < subflow.steps.length; j++) {
           if (subflow.steps[j].isHover(x, y)) {
             return subflow.steps[j];
           }
@@ -1716,22 +1749,19 @@ export class Diagram extends Shape {
   /**
    * when nothing selectable is hovered
    */
-  getBackgroundObj(e) {
-    var rect = this.canvas.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
-    var bgObj = this;
-    for (var i = 0; i < this.subflows.length; i++) {
+  getBackgroundObj(e: MouseEvent): SelectObj {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    let bgObj: Diagram | Subflow = this;
+    for (let i = 0; i < this.subflows.length; i++) {
       if (this.subflows[i].isHover(x, y)) {
         bgObj = this.subflows[i];
         break;
       }
     }
 
-    if (bgObj === this) {
-      this.label.select();
-    }
-    else {
+    if (bgObj !== this) {
       bgObj.select();
     }
 
@@ -1745,8 +1775,21 @@ export class Diagram extends Shape {
     this.draw();
   }
 
-  getAnchor(_x, _y) {
+  select() {
+    // not applicable
+  }
+
+  getAnchor(_x: number, _y: number): number {
     return -1; // not applicable
   }
+
+  move(deltaX: number, deltaY: number) {
+    // not applicable
+  }
+
+  resize(_x: number, _y: number, deltaX: number, deltaY: number) {
+    // not applicable
+  }
+
 }
 

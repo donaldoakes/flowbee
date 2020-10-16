@@ -3,9 +3,10 @@ import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
 import { Flow } from './flow';
 import { Descriptor, start, stop, pause, task, StandardDescriptors } from './descriptor';
-import { Variable } from './var';
+import { Variable } from './variable';
 import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style';
+import { Label } from './draw/label';
 
 export class FlowDiagram {
 
@@ -16,7 +17,7 @@ export class FlowDiagram {
 
     private down = false;
     private dragging = false;
-    private dragIn?: string;
+    private dragIn?: string; // descriptor name
 
     /**
      * Create a flow diagram
@@ -89,10 +90,10 @@ export class FlowDiagram {
      * @param instance runtime instance (TODO: define class)
      * @param step step id or step instance id to highlight
      * @param animate
-     * @param instanceEdit
+     * @param editInstanceId
      * @param data hotspots
      */
-    render(theme: string, textOrFlow: string | Flow, file: string, instance?: any, step?: string, animate = false, instanceEdit = false, data?: any) {
+    render(theme: string, textOrFlow: string | Flow, file: string, instance?: any, step?: string, animate = false, editInstanceId?: string, data?: any) {
         this.flow = typeof textOrFlow === 'string' ? this.parse(textOrFlow, file) : textOrFlow;
         if (file) {
             this.flow.name = file;
@@ -104,7 +105,7 @@ export class FlowDiagram {
 
         this.diagram.options = merge(this.options, this.diagramStyle.getDrawingOptions(theme));
         this.canvas.style.backgroundColor = this.diagram.options.backgroundColor;
-        this.draw(this.flow, instance, step, animate, instanceEdit, data);
+        this.draw(this.flow, instance, step, animate, editInstanceId, data);
     }
 
     /**
@@ -113,16 +114,16 @@ export class FlowDiagram {
      * @param instance runtime instance (TODO: define class)
      * @param step step id or step instance id to highlight
      * @param animate
-     * @param instanceEdit
+     * @param editInstanceId
      * @param data hotspots
      */
-    private draw(flow: Flow, instance?: any, step?: string, animate = false, instanceEdit = false, data?: any) {
+    private draw(flow: Flow, instance?: any, step?: string, animate = false, editInstanceId?: string, data?: any) {
         this.diagram.draw(
             flow,
             instance,
             step,
             animate,
-            instanceEdit,
+            editInstanceId,
             data
         );
 
@@ -163,8 +164,8 @@ export class FlowDiagram {
         if (this.diagram) {
             this.diagram.onMouseDown(e);
             let selObj = this.diagram.selection.getSelectObj();
-            if (selObj && selObj.isLabel) {
-                selObj = selObj.owner;
+            if (selObj && selObj.type === 'label') {
+                selObj = (selObj as Label).owner;
             }
             if (selObj) {
                 // Inspector.setObj(selObj, this.options.readonly && e.button !== 2);
@@ -218,8 +219,8 @@ export class FlowDiagram {
     onDoubleClick(e: MouseEvent) {
         if (this.diagram && !this.options.readonly) {
             let selObj = this.diagram.selection.getSelectObj();
-            if (selObj && selObj.isLabel) {
-                selObj = selObj.owner;
+            if (selObj && selObj.type === 'label') {
+                selObj = (selObj as Label).owner;
             }
             if (selObj) {
                 // Inspector.setObj(selObj, true);

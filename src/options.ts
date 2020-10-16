@@ -1,3 +1,5 @@
+import { Font } from './draw/display';
+
 export class Theme {
     constructor(readonly name: string) {}
     get isDark() {
@@ -43,11 +45,6 @@ export const flowTreeDefault: FlowTreeOptions = { };
 export type Status = {
     name: string,
     color: string
-}
-
-export type Font = {
-    name: string,
-    size: number
 }
 
 export interface LabelOptions {

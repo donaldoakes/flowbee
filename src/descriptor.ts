@@ -1,4 +1,4 @@
-export type FlowItemType = 'step' | 'subflow' | 'note';
+import { FlowItemType } from './item';
 
 export interface Descriptor {
     /**

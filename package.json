@@ -10,7 +10,7 @@
   "files": [ "dist", "src" ],
   "scripts": {
     "build": "tsc && rollup -c && node-sass src/css/style.scss -o dist/css",
-    "watch": "tsc -watch"
+    "watch": "rollup --watch -c"
   },
   "repository": {
     "type": "git",

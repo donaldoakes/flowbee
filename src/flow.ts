@@ -1,11 +1,12 @@
+import { FlowItem } from './item';
 import { Step } from './step';
 import { Note } from './note';
-import { Variable } from './var';
+import { Variable } from './variable';
 
 /**
  * Model for a flow diagram
  **/
-export interface Flow {
+export interface Flow extends FlowItem {
     id?: string; // for subflows
     name: string;
     steps?: Step[];

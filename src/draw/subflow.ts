@@ -1,21 +1,26 @@
 import { Shape } from './shape';
 import { Step } from './step';
 import { Link } from './link';
+import { Diagram } from './diagram';
+import { Flow } from '../flow';
+import { Title } from './display';
 
 export class Subflow extends Shape {
 
-  constructor(diagram, subflow) {
+  title: Title;
+  steps: Step[];
+  links: Link[];
+  mainFlowInstanceId: string;
+  instances = null;
+
+  constructor(readonly diagram: Diagram, readonly subflow: Flow) {
     super(diagram.canvas.getContext("2d"), diagram.options, subflow);
-    this.diagram = diagram;
-    this.subflow = subflow;
-    this.flowElementType = 'subflow';
-    this.isSubflow = true;
+    this.flowItem = { ...subflow, type: 'subflow' };
   }
 
-  draw(animate) {
-
+  draw(animationTimeSlice?: number) {
     // runtime state first
-    if (this.instances && !animate) {
+    if (this.instances && !animationTimeSlice) {
       this.diagram.drawState(this.display, this.instances, true);
     }
 
@@ -33,7 +38,7 @@ export class Subflow extends Shape {
     this.diagram.context.fillText(this.title.text, this.title.x, this.title.y + this.diagram.options.defaultFont.size);
 
     // animation sequence controlled by diagram
-    if (!animate) {
+    if (!animationTimeSlice) {
       this.steps.forEach(function (step) {
         step.draw();
       });
@@ -49,23 +54,25 @@ export class Subflow extends Shape {
   }
 
   prepareDisplay() {
-    var maxDisplay = { w: 0, h: 0 };
+    const maxDisplay = { w: 0, h: 0 };
     this.display = this.getDisplay();
 
     // title
-    var title = {
+    const title = {
       subflow: this,
       text: this.subflow.name,
       x: this.display.x + 10,
       y: this.display.y + 4 - this.diagram.options.defaultFont.size,
-      isHover: function (x, y) {
-        var hov = x >= this.x && x <= this.x + this.w &&
+      w: 0,
+      h: 0,
+      isHover: function (x: number, y: number): boolean {
+        let hov = x >= this.x && x <= this.x + this.w &&
           y >= this.y && y <= this.y + this.h;
         if (!hov) {
-          var context = subflow.diagram.context;
+          const context = subflow.diagram.context;
           context.lineWidth = subflow.diagram.options.subflow.hitWidth;
-          var display = this.subflow.display;
-          var r = this.subflow.diagram.options.subflow.roundingRadius;
+          const display = this.subflow.display;
+          const r = this.subflow.diagram.options.subflow.roundingRadius;
           context.beginPath();
           context.moveTo(display.x + r, display.y);
           context.lineTo(display.x + display.w - r, display.y);
@@ -84,7 +91,7 @@ export class Subflow extends Shape {
       }
     };
 
-    var textMetrics = this.diagram.context.measureText(title.text);
+    const textMetrics = this.diagram.context.measureText(title.text);
     title.w = textMetrics.width;
     title.h = this.diagram.options.defaultFont.size;
     if (title.x + title.w > maxDisplay.w) {
@@ -103,12 +110,12 @@ export class Subflow extends Shape {
       maxDisplay.h = this.display.y + this.display.h;
     }
 
-    var subflow = this;
+    const subflow = this;
     // just prepare flow steps -- assume boundaries account for size
     subflow.steps = [];
     if (this.subflow.steps) {
       this.subflow.steps.forEach(function (flowStep) {
-        var step = new Step(subflow.diagram, flowStep);
+        const step = new Step(subflow.diagram, flowStep);
         step.descriptor = subflow.diagram.getDescriptor(flowStep.descriptor);
         step.prepareDisplay();
         subflow.steps.push(step);
@@ -118,8 +125,8 @@ export class Subflow extends Shape {
     subflow.steps.forEach(function (step) {
       if (step.step.links) {
         step.step.links.forEach(function (flowLink) {
-          var link = new Link(subflow.diagram, flowLink, step, subflow.getStep(flowLink.to));
-          var _display = link.prepareDisplay();
+          const link = new Link(subflow.diagram, flowLink, step, subflow.getStep(flowLink.to));
+          link.prepareDisplay();
           subflow.links.push(link);
         });
       }
@@ -128,31 +135,31 @@ export class Subflow extends Shape {
   }
 
   getStart() {
-    for (var i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.descriptor === this.diagram.startdescriptor.name) {
+    for (let i = 0; i < this.steps.length; i++) {
+      if (this.steps[i].step.descriptor === this.diagram.startDescriptor.name) {
         return this.steps[i];
       }
     }
   }
 
-  getStep(stepId) {
-    for (var i = 0; i < this.steps.length; i++) {
+  getStep(stepId: string): Step {
+    for (let i = 0; i < this.steps.length; i++) {
       if (this.steps[i].step.id === stepId) {
         return this.steps[i];
       }
     }
   }
 
-  getLink(linkId) {
-    for (var i = 0; i < this.links.length; i++) {
+  getLink(linkId: string): Link {
+    for (let i = 0; i < this.links.length; i++) {
       if (this.links[i].link.id === linkId) {
         return this.links[i];
       }
     }
   }
 
-  getOutLinks(step) {
-    var links = [];
+  getOutLinks(step: Step): Link[] {
+    const links = [];
     for (let i = 0; i < this.links.length; i++) {
       if (step.step.id === this.links[i].from.step.id) {
         links.push(this.links[i]);
@@ -161,9 +168,9 @@ export class Subflow extends Shape {
     return links;
   }
 
-  getLinks(step) {
-    var links = [];
-    for (var i = 0; i < this.links.length; i++) {
+  getLinks(step: Step): Link[] {
+    const links = [];
+    for (let i = 0; i < this.links.length; i++) {
       if (step === this.links[i].to || step === this.links[i].from) {
         links.push(this.links[i]);
       }
@@ -171,7 +178,7 @@ export class Subflow extends Shape {
     return links;
   }
 
-  get(id) {
+  get(id: string): Step | Link {
     if (id.startsWith('S')) {
       return this.getStep(id);
     }
@@ -180,10 +187,10 @@ export class Subflow extends Shape {
     }
   }
 
-  deleteStep(step) {
-    var idx = -1;
+  deleteStep(step: Step) {
+    let idx = -1;
     for (let i = 0; i < this.steps.length; i++) {
-      var s = this.steps[i];
+      const s = this.steps[i];
       if (step.step.id === s.step.id) {
         idx = i;
         break;
@@ -193,7 +200,7 @@ export class Subflow extends Shape {
       this.subflow.steps.splice(idx, 1);
       this.steps.splice(idx, 1);
       for (let i = 0; i < this.links.length; i++) {
-        var link = this.links[i];
+        const link = this.links[i];
         if (link.to.step.id === step.step.id) {
           this.deleteLink(link);
         }
@@ -201,10 +208,10 @@ export class Subflow extends Shape {
     }
   }
 
-  deleteLink(link) {
-    var idx = -1;
+  deleteLink(link: Link) {
+    let idx = -1;
     for (let i = 0; i < this.links.length; i++) {
-      var l = this.links[i];
+      const l = this.links[i];
       if (l.link.id === link.link.id) {
         idx = i;
         break;
@@ -212,7 +219,7 @@ export class Subflow extends Shape {
     }
     if (idx >= 0) {
       this.links.splice(idx, 1);
-      var tidx = -1;
+      let tidx = -1;
       for (let i = 0; i < link.from.step.links.length; i++) {
         if (link.from.step.links[i].id === link.link.id) {
           tidx = i;
@@ -225,13 +232,13 @@ export class Subflow extends Shape {
     }
   }
 
-  getStepInstances(id) {
+  getStepInstances(id: string) {
     if (this.instances) {
-      var stepInsts = [];
-      var mainFlowInstanceId = this.mainFlowInstanceId;
+      const stepInsts = [];
+      const mainFlowInstanceId = this.mainFlowInstanceId;
       this.instances.forEach(function (inst) {
         if (inst.steps) {
-          var flowInstId = mainFlowInstanceId;
+          const flowInstId = mainFlowInstanceId;
           inst.steps.forEach(function (stepInst) {
             if ('S' + stepInst.stepId === id) {
               stepInsts.push(stepInst);
@@ -249,9 +256,9 @@ export class Subflow extends Shape {
     }
   }
 
-  getLinkInstances(id) {
+  getLinkInstances(id: string) {
     if (this.instances) {
-      var transInsts = [];
+      const transInsts = [];
       this.instances.forEach(function (inst) {
         if (inst.links) {
           inst.links.forEach(function (transInst) {
@@ -268,9 +275,9 @@ export class Subflow extends Shape {
     }
   }
 
-  move(deltaX, deltaY) {
-    var x = this.display.x + deltaX;
-    var y = this.display.y + deltaY;
+  move(deltaX: number, deltaY: number) {
+    const x = this.display.x + deltaX;
+    const y = this.display.y + deltaY;
     this.setDisplayAttr(x, y, this.display.w, this.display.h);
 
     this.steps.forEach(function (step) {
@@ -281,32 +288,33 @@ export class Subflow extends Shape {
     });
   }
 
-  resize(x, y, deltaX, deltaY) {
-    var display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize);
+  resize(x: number, y: number, deltaX: number, deltaY: number) {
+    const display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize);
     this.setDisplayAttr(display.x, display.y, display.w, display.h);
   }
 
-  static create(diagram, idNum, startStepId, startLinkId, type, x, y) {
+  static create(diagram: Diagram, idNum: number, startStepId: number, startLinkId: number,
+        type: string, x: number, y: number): Subflow {
     // TODO template-driven
-    var flowSubflow = Subflow.flowSubflow(diagram, idNum, type, x, y);
-    var subflow = new Subflow(diagram, flowSubflow);
+    const subflowItem = Subflow.subflowItem(diagram, idNum, type, x, y);
+    const subflow = new Subflow(diagram, subflowItem);
     subflow.steps = [];
     subflow.links = [];
     subflow.display = { x: x, y: y };
 
-    var stepId = startStepId;
-    var stepX = x + 40;
-    var stepY = y + 40;
-    var linkId = startLinkId;
+    let stepId = startStepId;
+    let stepX = x + 40;
+    let stepY = y + 40;
+    const linkId = startLinkId;
 
-    var start = Step.create(diagram, stepId, diagram.startDescriptor, stepX, stepY);
-    flowSubflow.steps.push(start.step);
+    const start = Step.create(diagram, stepId, diagram.startDescriptor, stepX, stepY);
+    subflowItem.steps.push(start.step);
     subflow.steps.push(start);
 
     stepId++;
 
-    var task;
-    if (type === 'Exception Handler') {
+    let task;
+    if (type === 'Error Handler') {
       // TODO template
       stepX = x + 170;
       stepY = y + 30;
@@ -316,26 +324,26 @@ export class Subflow extends Shape {
       task.step.name = diagram.flow.name + ' Fallout';
       subflow.steps.push(task.step);
       subflow.steps.push(task);
-      let link = Link.create(diagram, linkId, start, task);
+      const link = Link.create(diagram, linkId, start, task);
       subflow.links.push(link);
     }
 
     stepId++;
     stepX = x + 340;
     stepY = y + 40;
-    var stop = Step.create(diagram, stepId, diagram.stopDescriptor, stepX, stepY);
-    flowSubflow.steps.push(stop.step);
+    const stop = Step.create(diagram, stepId, diagram.stopDescriptor, stepX, stepY);
+    subflowItem.steps.push(stop.step);
     subflow.steps.push(stop);
-    let link = Link.create(diagram, linkId, task ? task : start, stop);
+    const link = Link.create(diagram, linkId, task ? task : start, stop);
     subflow.links.push(link);
 
     return subflow;
   }
 
-  static flowSubflow(_diagram, idNum, type, x, y) {
-    var w = 440;
-    var h = 120;
-    var subflow = {
+  static subflowItem(_diagram: Diagram, idNum: number, type: string, x: number, y: number): Flow {
+    const w = 440;
+    const h = 120;
+    return {
       steps: [],
       attributes: {
         embeddedFlowType: type,
@@ -343,9 +351,9 @@ export class Subflow extends Shape {
         display: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h
       },
       id: 'F' + idNum,
-      name: type
+      name: type,
+      type: 'subflow'
     };
-    return subflow;
   }
 }
 

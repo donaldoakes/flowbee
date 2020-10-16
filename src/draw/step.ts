@@ -1,35 +1,45 @@
 import { Shape } from './shape';
+import { Diagram } from './diagram';
+import { Step as StepItem } from '../step';
+import { Descriptor } from '../descriptor';
+import { Milestone, MilestoneGroup } from '../milestone';
+import { Display, Title } from './display';
 
 export class Step extends Shape {
 
-  constructor(diagram, step) {
+  title: Title;
+  descriptor: Descriptor;
+  instances = null;
+  data = null;
+
+  constructor(readonly diagram: Diagram, readonly step: StepItem) {
     super(diagram.canvas.getContext("2d"), diagram.options, step);
+    this.flowItem = { ...step, type: 'step' };
     this.diagram = diagram;
     this.step = step;
-    this.flowElementType = 'step';
-    this.isStep = true;
   }
 
-  draw(animationTimeSlice) {
-    var step = this.workflowObj = this.step;
-    var shape;
+  draw(animationTimeSlice?: number) {
+    const step = this.step;
+    let shape;
     if (this.descriptor.icon && this.descriptor.icon.startsWith('shape:')) {
       shape = this.descriptor.icon.substring(6);
     }
 
-    var title, fill;
-    var opacity = null;
-    var milestoneGroups = sessionStorage.getItem('flowbee-milestoneGroups');
-    if (milestoneGroups) {
-      milestoneGroups = JSON.parse(milestoneGroups);
+    let title: string, fill: string;
+    let opacity = null;
+    let milestoneGroups: MilestoneGroup[] = [];
+    const milestoneGroupsItem = sessionStorage.getItem('flowbee-milestoneGroups');
+    if (milestoneGroupsItem) {
+      milestoneGroups = JSON.parse(milestoneGroupsItem);
     }
-    var milestone = this.getMilestone();
+    const milestone = this.getMilestone();
     if (milestone) {
       fill = this.diagram.options.milestone.color;
       opacity = 0.5;
       title = milestone.label; // TODO use this
       if (milestone.group) {
-        var foundGroup = !milestoneGroups ? null : milestoneGroups.find(function (mg) {
+        const foundGroup = !milestoneGroups ? null : milestoneGroups.find(function (mg) {
           return mg.name === milestone.group;
         });
         if (foundGroup && foundGroup.props && foundGroup.props.color) {
@@ -41,12 +51,12 @@ export class Step extends Shape {
 
     // runtime state first
     if (this.instances) {
-      var adj = 0;
+      let adj = 0;
       if (shape === 'start' || shape === 'stop' || shape === 'pause') {
         adj = 2;
       }
       // TODO why is this here? -- probably milestones?
-      var color = null;
+      let color = null;
       if (shape === 'pause') {
         color = '#ffea00';
       }
@@ -57,7 +67,7 @@ export class Step extends Shape {
       this.diagram.drawData(this.display, 10 * this.data.heat, this.data.color, 0.8);
     }
 
-    var yAdjust = -2;
+    let yAdjust = -2;
     if (this.descriptor.icon) {
       if (shape) {
         if ('start' === shape) {
@@ -126,9 +136,9 @@ export class Step extends Shape {
             opacity
           );
         }
-        var iconSrc = this.descriptor.icon;
-        var iconX = this.display.x + this.display.w / 2 - 12;
-        var iconY = this.display.y + 6;
+        const iconSrc = this.descriptor.icon;
+        const iconX = this.display.x + this.display.w / 2 - 12;
+        const iconY = this.display.y + 6;
         this.diagram.drawIcon(iconSrc, iconX, iconY);
         yAdjust = this.title.lines.length === 1 ? 10 : 6;
       }
@@ -147,7 +157,7 @@ export class Step extends Shape {
     }
 
     // title
-    var diagram = this.diagram;
+    const diagram = this.diagram;
     diagram.context.font = this.diagram.options.defaultFont.name;
     this.title.lines.forEach(function (line) {
       if (shape === 'start') {
@@ -163,7 +173,7 @@ export class Step extends Shape {
 
     // logical id
     this.diagram.context.fillStyle = this.diagram.options.meta.color;
-    var showText = step.id;
+    let showText = step.id;
     if (this.data && this.data.message) {
       showText += ' (' + this.data.message + ')';
     }
@@ -171,24 +181,23 @@ export class Step extends Shape {
     this.diagram.context.fillStyle = this.diagram.options.defaultColor;
   }
 
-  getMilestone() {
+  getMilestone(): Milestone {
     if (this.step.attributes && this.step.attributes.Monitors) {
-      var monitors = JSON.parse(this.step.attributes.Monitors);
+      const monitors = JSON.parse(this.step.attributes.Monitors);
       if (monitors.length > 0) {
-        var step = this;
-        for (var i = 0; i < monitors.length; i++) {
-          var mon = monitors[i];
+        for (let i = 0; i < monitors.length; i++) {
+          const mon = monitors[i];
           if (mon.length >= 3 && mon[0] === 'true' && mon[2] === 'milestones/ActivityMilestone.java') {
-            var milestone = { label: step.name };
+            const milestone: Milestone = { label: this.step.name };
             if (mon.length >= 4 && mon[3]) {
-              var text = mon[3];
-              var bracket = text.indexOf('[');
+              let text = mon[3];
+              let bracket = text.indexOf('[');
               if (bracket > 0) {
                 text = text.substring(0, bracket);
               }
               milestone.label = text.trim().replace(/\\n/g, '\n');
               if (bracket >= 0) {
-                var g = mon[3].substring(bracket + 1);
+                let g = mon[3].substring(bracket + 1);
                 bracket = g.indexOf(']');
                 if (bracket > 0) {
                   g = g.substring(0, bracket);
@@ -205,7 +214,7 @@ export class Step extends Shape {
 
   isWaiting() {
     if (this.instances && this.instances.length > 0) {
-      let instance = this.instances[this.instances.length - 1];
+      const instance = this.instances[this.instances.length - 1];
       return instance.statusCode === 7;
     }
   }
@@ -224,8 +233,8 @@ export class Step extends Shape {
 
   // sets display/title and returns an object with w and h for required size
   prepareDisplay() {
-    var maxDisplay = { w: 0, h: 0 };
-    var display = this.getDisplay();
+    const maxDisplay = { w: 0, h: 0 };
+    const display = this.getDisplay();
 
     if (display.x + display.w > maxDisplay.w) {
       maxDisplay.w = display.x + display.w;
@@ -235,14 +244,14 @@ export class Step extends Shape {
     }
 
     // step title
-    var titleLines = [];
+    const titleLines = [];
     this.step.name.replace(/\r/g, '').split(/\n/).forEach(function (line) {
       titleLines.push({ text: line });
     });
-    var title = { text: this.step.name, lines: titleLines, w: 0, h: 0 };
-    for (var i = 0; i < title.lines.length; i++) {
-      var line = title.lines[i];
-      var textMetrics = this.diagram.context.measureText(line.text);
+    const title = { text: this.step.name, lines: titleLines, w: 0, h: 0 };
+    for (let i = 0; i < title.lines.length; i++) {
+      const line = title.lines[i];
+      const textMetrics = this.diagram.context.measureText(line.text);
       if (textMetrics.width > title.w) {
         title.w = textMetrics.width;
       }
@@ -263,9 +272,9 @@ export class Step extends Shape {
     return maxDisplay;
   }
 
-  move(deltaX, deltaY, limDisplay) {
-    var x = this.display.x + deltaX;
-    var y = this.display.y + deltaY;
+  move(deltaX: number, deltaY: number, limDisplay?: Display) {
+    let x = this.display.x + deltaX;
+    let y = this.display.y + deltaY;
     if (limDisplay) {
       if (x < limDisplay.x) {
         x = limDisplay.x;
@@ -283,23 +292,23 @@ export class Step extends Shape {
     this.setDisplayAttr(x, y, this.display.w, this.display.h);
   }
 
-  resize(x, y, deltaX, deltaY, limDisplay) {
-    var display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize, limDisplay);
+  resize(x: number, y: number, deltaX: number, deltaY: number, limDisplay?: Display) {
+    const display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize, limDisplay);
     this.step.attributes.display = this.getAttr(display);
   }
 
-  static create(diagram, idNum, descriptor, x, y) {
-    var flowStep = Step.flowStep(diagram, idNum, descriptor, x, y);
-    var step = new Step(diagram, flowStep);
+  static create(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number) {
+    const stepItem = Step.stepItem(diagram, idNum, descriptor, x, y);
+    const step = new Step(diagram, stepItem);
     step.descriptor = descriptor;
-    var disp = step.getDisplay();
+    const disp = step.getDisplay();
     step.display = { x: disp.x, y: disp.y, w: disp.w, h: disp.h };
     return step;
   }
 
-  static flowStep(diagram, idNum, descriptor, x, y) {
-    var w = 24;
-    var h = 24;
+  static stepItem(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number): StepItem {
+    let w = 24;
+    let h = 24;
     if (diagram.drawBoxes) {
       if (descriptor.icon && descriptor.icon.startsWith('shape:')) {
         w = 60;
@@ -310,27 +319,27 @@ export class Step extends Shape {
         h = 60;
       }
     }
-    var name = descriptor.label;
-    if (descriptor.name === diagram.startdescriptor.name) {
+    let name = descriptor.label;
+    if (descriptor.name === diagram.startDescriptor.name) {
       name = 'Start';
     }
-    else if (descriptor.name === diagram.stopdescriptor.name) {
+    else if (descriptor.name === diagram.stopDescriptor.name) {
       name = 'Stop';
     }
-    else if (descriptor.name === diagram.pausedescriptor.name) {
+    else if (descriptor.name === diagram.pauseDescriptor.name) {
       name = 'Pause';
     }
     else {
       name = 'New ' + name;
     }
-    var step = {
+    return {
       id: 'S' + idNum,
       name: name,
       descriptor: descriptor.name,
       attributes: { display: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h },
-      links: []
+      links: [],
+      type: 'step'
     };
-    return step;
   }
 }
 
