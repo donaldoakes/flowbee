@@ -1,8 +1,8 @@
 import { Diagram } from './diagram';
 import { Label } from './label';
-import { Link as LinkItem } from '../link';
+import { Link as LinkItem } from '../model/link';
 import { Step } from './step';
-import { FlowItem } from '../item';
+import { FlowItem } from '../model/item';
 import { Display, LinkDisplay } from './display';
 
 export class Link {

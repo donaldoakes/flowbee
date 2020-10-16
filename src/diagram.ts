@@ -1,11 +1,11 @@
 import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
-import { Flow } from './flow';
-import { Descriptor, start, stop, pause, task, StandardDescriptors } from './descriptor';
-import { Variable } from './variable';
+import { Flow } from './model/flow';
+import { Descriptor, start, stop, pause, task, StandardDescriptors } from './model/descriptor';
+import { Variable } from './model/variable';
 import { DiagramOptions, diagramDefault } from './options';
-import { DiagramStyle } from './style';
+import { DiagramStyle } from './draw/style';
 import { Label } from './draw/label';
 
 export class FlowDiagram {

@@ -6,11 +6,12 @@ import { Link, LineSegment } from './link';
 import { Subflow } from './subflow';
 import { Note } from './note';
 import { Marquee } from './marquee';
-import { Descriptor } from '../descriptor';
-import { DiagramOptions, DrawingOptions } from '../options';
-import { Flow } from '../flow';
+import { Descriptor } from '../model/descriptor';
+import { DiagramOptions } from '../options';
+import { Flow } from '../model/flow';
 import { Display } from './display';
-import { FlowItemType } from '../item';
+import { FlowItemType } from '../model/item';
+import { DrawingOptions } from './options';
 
 const Toolbox = null; // TODO
 

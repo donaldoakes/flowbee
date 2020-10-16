@@ -1,8 +1,8 @@
 import { Shape } from './shape';
 import { Diagram } from './diagram';
-import { Step as StepItem } from '../step';
-import { Descriptor } from '../descriptor';
-import { Milestone, MilestoneGroup } from '../milestone';
+import { Step as StepItem } from '../model/step';
+import { Descriptor } from '../model/descriptor';
+import { Milestone, MilestoneGroup } from '../model/milestone';
 import { Display, Title } from './display';
 
 export class Step extends Shape {

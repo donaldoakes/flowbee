@@ -1,6 +1,6 @@
-import { FlowItem } from '../item';
+import { FlowItem } from '../model/item';
 import { Display } from './display';
-import { DrawingOptions } from '../options';
+import { DrawingOptions } from './options';
 
 /**
  * Base class for rectangular diagram elements

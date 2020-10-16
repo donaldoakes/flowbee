@@ -1,6 +1,6 @@
 import { merge } from 'merge-anything';
 import { DrawingOptions } from './options';
-import { Font } from './draw/display';
+import { Font } from './display';
 
 export class DiagramStyle {
 

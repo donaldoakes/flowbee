@@ -1,4 +1,4 @@
-import { FlowItem } from '../item';
+import { FlowItem } from '../model/item';
 import { Diagram } from './diagram';
 import { SelectObj } from './selection';
 import { Shape } from './shape';

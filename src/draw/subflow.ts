@@ -2,7 +2,7 @@ import { Shape } from './shape';
 import { Step } from './step';
 import { Link } from './link';
 import { Diagram } from './diagram';
-import { Flow } from '../flow';
+import { Flow } from '../model/flow';
 import { Title } from './display';
 
 export class Subflow extends Shape {

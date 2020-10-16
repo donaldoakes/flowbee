@@ -1,6 +1,6 @@
 import { Shape } from './shape';
 import { Diagram } from './diagram';
-import { Note as NoteItem } from '../note';
+import { Note as NoteItem } from '../model/note';
 import { Display } from './display';
 
 export class Note extends Shape {

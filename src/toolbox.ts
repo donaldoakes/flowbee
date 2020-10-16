@@ -1,6 +1,6 @@
 import { merge } from 'merge-anything';
 import { ToolboxOptions, toolboxDefault } from './options';
-import { StandardDescriptors } from './descriptor';
+import { StandardDescriptors } from './model/descriptor';
 
 export class Toolbox {
 
