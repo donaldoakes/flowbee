@@ -1557,7 +1557,6 @@ export class Diagram extends Shape {
             }
           }
           else {
-            console.log("ELSE");
             this.selection.move(this.dragX, this.dragY, deltaX, deltaY);
             // non-workflow selection may not be reselected after move
             var hovObj = this.diagram.getHoverObj(x, y);
