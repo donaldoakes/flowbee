@@ -75,7 +75,7 @@ export class DiagramStyle {
                 select: {
                     color: label.select.color,
                     padding: this.getSize(label.select.padding),
-                    roundingRadius: label.select['border-radius']
+                    roundingRadius: this.getSize(label.select['border-radius'])
                 }
             },
             step: {

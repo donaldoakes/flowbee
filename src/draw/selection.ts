@@ -198,17 +198,23 @@ export class Selection {
   /**
    * re-find the selected object after it's been moved
    */
-  find(obj) {
-    if (obj.workflowItem && obj.workflowItem.id) {
-      let found = this.diagram.get(obj.workflowItem.id);
+  find(obj: SelectObj) {
+    if (obj.flowItem && obj.flowItem.id) {
+      let found = this.diagram.get(obj.flowItem.id);
       if (found) return found;
 
       // try subflows
       for (let i = 0; i < this.diagram.subflows.length; i++) {
         const subflow = this.diagram.subflows[i];
-        found = subflow.get(obj.workflowItem.id);
+        found = subflow.get(obj.flowItem.id);
         if (found) return found;
       }
     }
+  }
+
+  toString(): string {
+    return JSON.stringify(this.selectObjs.map(obj => {
+      return { [obj.type]: obj.id };
+    }));
   }
 }

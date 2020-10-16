@@ -1147,7 +1147,7 @@ export class Diagram extends Shape {
     }
   }
 
-  rect(x: number, y: number, w: number, h: number, border: string, r: number, fill?: string, opacity?: number) {
+  rect(x: number, y: number, w: number, h: number, border?: string, r?: number, fill?: string, opacity?: number) {
     if (opacity) {
       this.context.globalAlpha = opacity;
     }
@@ -1501,7 +1501,7 @@ export class Diagram extends Shape {
     }
   }
 
-  onMouseDrag(e) {
+  onMouseDrag(e: MouseEvent) {
     if (!this.readonly && this.dragX && this.dragY && !e.ctrlKey) {
       const rect = this.canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;

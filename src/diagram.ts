@@ -163,9 +163,9 @@ export class FlowDiagram {
         // $scope.closeContextMenu();
         if (this.diagram) {
             this.diagram.onMouseDown(e);
-            let selObj = this.diagram.selection.getSelectObj();
+            const selObj = this.diagram.selection.getSelectObj();
             if (selObj && selObj.type === 'label') {
-                selObj = (selObj as Label).owner;
+                // selObj = (selObj as Label).owner;
             }
             if (selObj) {
                 // Inspector.setObj(selObj, this.options.readonly && e.button !== 2);
