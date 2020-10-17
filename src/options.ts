@@ -1,10 +1,3 @@
-export class Theme {
-    constructor(readonly name: string) {}
-    get isDark() {
-        return this.name === 'dark' || this.name.endsWith('-dark');
-    }
-}
-
 export interface DiagramOptions {
     iconBase?: string;
     websocketUrl?: string;

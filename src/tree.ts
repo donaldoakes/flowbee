@@ -1,5 +1,6 @@
 import { merge } from 'merge-anything';
-import { FlowTreeOptions, flowTreeDefault, Theme } from './options';
+import { FlowTreeOptions, flowTreeDefault} from './options';
+import { Theme } from './theme';
 import { TypedEvent, Listener } from './event';
 
 export type FileItemType = 'file' | 'directory';

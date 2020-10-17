@@ -7,10 +7,36 @@ npm install --save flowbee
 ## Themes
 Themeable styles are here:  
 node_modules/flowbee/dist/style.css  
-Name your custom theme style classes according to your theme name:
+
+Built-in themes are 'light' and 'dark'.
+
+Custom diagram theme styles should follow this pattern:  
+`flowbee-diagram-&lt;themename>`
+By default your theme will extend flowbee-diagram-light styles.
+To extend flowbee-diagram-dark styles, your theme name should end
+with '-dark'.
+
+Here's an ugly example:
 ```css
-.toolbox-killertheme {
-    color: red;
+.flowbee-diagram-garish {
+  color: darkblue;
+  background-color: pink;
+}
+
+.flowbee-diagram-garish .grid {
+  color: yellow;
+  width: 44px;
+}
+
+.flowbee-diagram-garish.line {
+  width: 5px;
+}
+
+.flowbee-diagram-garish .step .start {
+  background-color: purple;
 }
 ```
-Built-in themes are 'light' and 'dark'.
+
+To utilize your theme pass its name to [FlowbeeDiagram.render()]():
+
+

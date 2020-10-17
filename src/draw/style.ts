@@ -1,6 +1,7 @@
 import { merge } from 'merge-anything';
 import { DrawingOptions } from './options';
 import { Font } from './display';
+import { Theme } from '../theme';
 
 export class DiagramStyle {
 
@@ -12,11 +13,19 @@ export class DiagramStyle {
 
     /**
      * Translates styles into drawing options for the specified theme
-     * @param theme theme for looking up css diagram styles
+     * @param themeName theme for looking up css diagram styles
      */
-    getDrawingOptions(theme: string): DrawingOptions {
+    getDrawingOptions(themeName: string): DrawingOptions {
 
-        const styles = this.getStyles(theme);
+        const theme = new Theme(themeName);
+        let styles = this.getStyles(themeName);
+
+        // TODO: ability to extend custom styles (instead of just built-in)
+        if (!theme.isBuiltin) {
+            const base = theme.isDark ? 'dark' : 'light';
+            const baseStyles = this.getStyles(base);
+            styles = merge(baseStyles, styles);
+        }
 
         const diagram = styles['flowbee-diagram'];
         const grid = styles['flowbee-diagram .grid'];
