@@ -53,12 +53,15 @@ export class DiagramStyle {
             defaultColor: diagram.color,
             defaultLineWidth: this.getSize(styles['flowbee-diagram .line'].width),
             defaultFont: this.getFont(diagram),
+            minWidth: this.getSize(diagram['min-width']),
             padding: this.getSize(diagram.padding),
             drag: {
                 min: this.getSize(styles['flowbee-diagram .drag']['min-width'])
             },
             grid: {
-                color: grid.color
+                visibility: grid.visibility,
+                color: grid.color,
+                width: this.getSize(grid.width)
             },
             title: {
                 color: title.color,

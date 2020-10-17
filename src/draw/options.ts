@@ -72,6 +72,7 @@ export interface DrawingOptions {
     defaultFont?: Font;
     defaultLineWidth?: number;
     defaultColor?: string;
+    minWidth?: number;
     padding?: number;
     meta?: { color: string };
     drag?: { min: number };
@@ -83,7 +84,7 @@ export interface DrawingOptions {
     link?: LinkOptions;
     subflow?: SubflowOptions;
     note?: NoteOptions;
-    grid?: { color?: string };
+    grid?: { visibility?: 'visible' | 'hidden', color?: string, width?: number };
     marquee?: MarqueeOptions;
     anchor?: AnchorOptions;
     highlight?: HighlightOptions;

@@ -12,6 +12,7 @@ import { Flow } from '../model/flow';
 import { Display } from './display';
 import { FlowItemType } from '../model/item';
 import { DrawingOptions } from './options';
+import { Grid } from './grid';
 
 const Toolbox = null; // TODO
 
@@ -19,6 +20,7 @@ export class Diagram extends Shape {
 
   context: CanvasRenderingContext2D
   flow: Flow;
+  grid: Grid;
   label: Label;
   steps: Step[];
   links: Link[];
@@ -200,12 +202,18 @@ export class Diagram extends Shape {
 
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.prepareDisplay();
-    const diagram = this;
+    const display = this.prepareDisplay();
 
-    if (this.options.title.visibility === 'visible') {
+    if (this.options.grid.visibility === 'visible') {
+      this.grid = new Grid(this.context, display, this.options);
+      this.grid.draw();
+    }
+
+    if (!instance && this.options.title.visibility === 'visible') {
       this.label.draw(this.options.title.color);
     }
+
+    const diagram = this;
     let highlighted = null;
     if (animate && !this.instance) {
       const sequence = this.getSequence();
@@ -346,8 +354,11 @@ export class Diagram extends Shape {
    * sets display fields and returns a display with w and h for canvas size
    * (for performance reasons, also initializes steps/links arrays and step descriptors)
    */
-  prepareDisplay() {
-    const canvasDisplay = { w: 640, h: 480 };
+  prepareDisplay(): Display {
+    const canvasDisplay = {
+      w: Math.max(this.canvas.clientWidth, this.options.minWidth) - this.options.padding,
+      h: Math.max(this.canvas.clientHeight, this.options.minWidth) - this.options.padding
+    };
 
     const diagram = this; // forEach inner access
 
@@ -452,6 +463,8 @@ export class Diagram extends Shape {
       const ctx = this.canvas.getContext('2d');
       ctx.scale(dpRatio, dpRatio);
     }
+
+    return canvasDisplay;
   }
 
   /**

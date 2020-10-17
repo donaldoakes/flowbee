@@ -4,9 +4,12 @@
   background-color: #ffffff;
   font-family: sans-serif;
   font-size: 12px;
+  min-width: 400px;
   padding: 25px; /* boundary size (make extra room) */
   .grid {
-    color: #d3d3d3;
+    visibility: visible;
+    color: #f0f0f0;
+    width: 10px;
   }
   .title {
     color: #360303;
@@ -131,6 +134,9 @@
   @include diagram;
   color: #d4d4d4;
   background-color: #1e1e1e;
+  .grid {
+    color: #303030;
+  }
   .title {
     color: #d4d4d4;
   }
@@ -150,9 +156,6 @@
   }
   .note {
     border-color: #d3d3d3;
-  }
-  .grid {
-    color: #787878;
   }
 }
 

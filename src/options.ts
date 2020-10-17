@@ -6,7 +6,6 @@ export class Theme {
 }
 
 export interface DiagramOptions {
-    readonly?: boolean;
     iconBase?: string;
     websocketUrl?: string;
     animationSpeed?: number; // segments/s;
@@ -15,7 +14,6 @@ export interface DiagramOptions {
 }
 
 export const diagramDefault: DiagramOptions = {
-    readonly: false,
     iconBase: null,
     websocketUrl: null,
     animationSpeed: 8,
