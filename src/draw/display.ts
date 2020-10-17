@@ -20,3 +20,8 @@ export type Font = {
     name: string,
     size: number
 }
+
+export type Icon = {
+    light: string,
+    dark: string
+}

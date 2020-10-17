@@ -9,8 +9,15 @@ Themeable styles are here:
 node_modules/flowbee/dist/style.css  
 
 Built-in themes are 'light' and 'dark'.
+You can override specific settings in these in your own css:
+```
+.flowbee-diagram-light .title {
+  visibility: visible; /* show title in diagram */
+}
+```
 
-Custom diagram theme styles should follow this pattern:  
+Or you can create custom themes.
+For example, custom diagram theme styles should follow this pattern:  
 `flowbee-diagram-&lt;themename>`
 By default your theme will extend flowbee-diagram-light styles.
 To extend flowbee-diagram-dark styles, your theme name should end

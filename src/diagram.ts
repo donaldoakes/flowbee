@@ -98,7 +98,7 @@ export class FlowDiagram {
      * @param userOptions dynamic drawing options
      * @param animate
      */
-    render(theme: string, textOrFlow: string | Flow, file: string, userOptions: DrawingOptions, animate = false) {
+    render(theme: string, textOrFlow: string | Flow, file: string, userOptions: DiagramOptions & DrawingOptions = {}, animate = false) {
 
         this.flow = typeof textOrFlow === 'string' ? this.parse(textOrFlow, file) : textOrFlow;
         if (file) {

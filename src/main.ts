@@ -5,4 +5,5 @@ export { FlowItem, FlowItemType } from './model/item';
 export { Toolbox } from './toolbox';
 export { FlowTree, FileTree, FileItemType, FlowTreeSelectEvent } from './tree';
 export { TypedEvent, Listener } from './event';
-export * from './options';
+export { DiagramOptions, ToolboxOptions, FlowTreeOptions } from './options';
+export { DrawingOptions } from './draw/options';

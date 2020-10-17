@@ -1,3 +1,5 @@
+import { Icon } from './draw/display';
+
 export interface DiagramOptions {
     iconBase?: string;
     websocketUrl?: string;
@@ -20,11 +22,6 @@ export interface ToolboxOptions {
 export const toolboxDefault: ToolboxOptions = {
     iconBase: null
 };
-
-export type Icon = {
-    light: string,
-    dark: string
-}
 
 export interface FlowTreeOptions {
     fileIcon?: string | Icon;
