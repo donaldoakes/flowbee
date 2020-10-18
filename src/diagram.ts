@@ -5,7 +5,7 @@ import { Flow } from './model/flow';
 import { Descriptor, start, stop, pause, task, StandardDescriptors } from './model/descriptor';
 import { Variable } from './model/variable';
 import { DiagramOptions, diagramDefault } from './options';
-import { DiagramStyle } from './draw/style';
+import { DiagramStyle } from './style/style';
 import { Label } from './draw/label';
 import { DrawingOptions } from './draw/options';
 
@@ -25,7 +25,6 @@ export class FlowDiagram {
 
     private down = false;
     private dragging = false;
-    private dragIn?: string; // descriptor name
 
     /**
      * Create a flow diagram
@@ -135,29 +134,30 @@ export class FlowDiagram {
         this.canvas.onmousedown = e => this.onMouseDown(e);
         this.canvas.onmouseup = e => this.onMouseUp(e);
         this.canvas.onmousemove = e => this.onMouseMove(e);
-        this.canvas.onmouseenter = e => this.onMouseEnter(e);
-        this.canvas.onmouseover = e => this.onMouseOver(e);
         this.canvas.onmouseout = e => this.onMouseOut(e);
         this.canvas.ondblclick = e => this.onDoubleClick(e);
+
+        this.canvas.ondragover = e => {
+            if (!this.readonly) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            }
+        };
+        this.canvas.ondrop = e => this.onDrop(e);
     }
 
     onMouseMove(e: MouseEvent) {
-        if (this.dragIn && !this.readonly) {
-            document.body.style.cursor = 'copy';
+        if (this.down && !this.readonly) {
+            this.dragging = true;
         }
-        else {
-            if (this.down && !this.readonly) {
-                this.dragging = true;
+        if (this.diagram) {
+            if (this.dragging) {
+                if (this.diagram.onMouseDrag(e)) {
+                    this.handleChange();
+                }
             }
-            if (this.diagram) {
-                if (this.dragging) {
-                    if (this.diagram.onMouseDrag(e)) {
-                        this.handleChange();
-                    }
-                }
-                else {
-                    this.diagram.onMouseMove(e);
-                }
+            else {
+                this.diagram.onMouseMove(e);
             }
         }
     }
@@ -187,34 +187,22 @@ export class FlowDiagram {
         this.down = false;
         this.dragging = false;
         if (this.diagram) {
-            if (this.dragIn) {
-                if (this.diagram.onDrop(e, this.dragIn)) {
-                    this.handleChange();
-                }
-            }
-            else {
-                this.diagram.onMouseUp(e);
-            }
-        }
-        this.dragIn = null;
-    }
-
-    onMouseOver(e: MouseEvent) {
-        if (e.buttons === 1 /* && this.toolbox && this.toolbox.getSelected() */) {
-            // this.dragIn = 'workflow.activity.process.InvokeSubProcessActivity'; // this.toolbox.getSelected();
+            this.diagram.onMouseUp(e);
         }
     }
 
-    onMouseEnter(e: MouseEvent) {
-        if (e.buttons === 1 /* && this.toolbox && this.toolbox.getSelected() */) {
-            //
+    onDrop(e: DragEvent) {
+        e.preventDefault();
+        if (!this.readonly && this.diagram) {
+            if (this.diagram.onDrop(e, e.dataTransfer.getData('text/plain'))) {
+                this.handleChange();
+            }
         }
     }
 
     onMouseOut(e: MouseEvent) {
         this.down = false;
         this.dragging = false;
-        this.dragIn = null;
         if (this.diagram) {
             this.diagram.onMouseOut(e);
         }

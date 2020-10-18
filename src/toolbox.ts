@@ -1,10 +1,12 @@
 import { merge } from 'merge-anything';
 import { ToolboxOptions, toolboxDefault } from './options';
 import { StandardDescriptors } from './model/descriptor';
+import { Styles } from './style/style';
+import { Theme } from './theme';
 
 export class Toolbox {
 
-    options: ToolboxOptions;
+    readonly options: ToolboxOptions;
     private div: HTMLDivElement;
 
     constructor(
@@ -15,6 +17,10 @@ export class Toolbox {
     }
 
     async render(theme: string, descriptors = StandardDescriptors) {
+        const styles = new Styles('flowbee-toolbox', new Theme(theme), this.container);
+        const stylesObj = styles.getObject();
+        const iconWidth = styles.getSize(stylesObj['flowbee-toolbox ul li img'].width);
+
         if (this.div) {
             this.container.removeChild(this.div);
         }
@@ -25,6 +31,7 @@ export class Toolbox {
         for (const descriptor of descriptors) {
             const li = document.createElement('li') as HTMLLIElement;
             li.setAttribute('id', descriptor.name);
+            li.setAttribute('draggable', "true");
             li.tabIndex = tabIndex++;
             if (descriptor.icon) {
                 const iconDiv = document.createElement('div') as HTMLDivElement;
@@ -48,6 +55,11 @@ export class Toolbox {
                 iconImg.src = `${iconBase}/${icon}`;
                 iconDiv.appendChild(iconImg);
                 li.appendChild(iconDiv);
+                li.ondragstart = (e: DragEvent) => {
+                    e.dataTransfer.setData('text/plain', descriptor.name);
+                    e.dataTransfer.setDragImage(iconImg, iconWidth, iconWidth);
+                    e.dataTransfer.dropEffect = 'copy';
+                };
             }
             const label = document.createElement('label') as HTMLLabelElement;
             label.appendChild(document.createTextNode(descriptor.label));

@@ -1,4 +1,4 @@
-import { Font } from './display';
+import { Font } from '../style/font';
 
 export type Status = {
     name: string,

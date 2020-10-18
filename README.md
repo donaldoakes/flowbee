@@ -45,5 +45,8 @@ Here's an ugly example:
 ```
 
 To utilize your theme pass its name to [FlowbeeDiagram.render()]():
+```javascript
+flowDiagram.render('garish', contents, filename);
+```
 
 

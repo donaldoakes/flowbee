@@ -332,11 +332,13 @@ export class Step extends Shape {
     else {
       name = 'New ' + name;
     }
+    const stepX = Math.max(1, x - w / 2);
+    const stepY = Math.max(1, y - h / 2);
     return {
       id: 'S' + idNum,
       name: name,
       descriptor: descriptor.name,
-      attributes: { display: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h },
+      attributes: { display: 'x=' + stepX + ',y=' + stepY + ',w=' + w + ',h=' + h },
       links: [],
       type: 'step'
     };

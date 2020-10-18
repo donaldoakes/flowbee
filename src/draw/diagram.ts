@@ -1626,7 +1626,7 @@ export class Diagram extends Shape {
     }
   }
 
-  onDrop(e: MouseEvent, descriptorName: string): boolean {
+  onDrop(e: DragEvent, descriptorName: string): boolean {
     const rect = this.canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;

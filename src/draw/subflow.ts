@@ -343,12 +343,14 @@ export class Subflow extends Shape {
   static subflowItem(_diagram: Diagram, idNum: number, type: string, x: number, y: number): Flow {
     const w = 440;
     const h = 120;
+    const subflowX = Math.max(1, x - w / 2);
+    const subflowY = Math.max(1, y - h / 2);
     return {
       steps: [],
       attributes: {
         embeddedFlowType: type,
         visibility: 'EMBEDDED',
-        display: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h
+        display: 'x=' + subflowX + ',y=' + subflowY + ',w=' + w + ',h=' + h
       },
       id: 'F' + idNum,
       name: type,

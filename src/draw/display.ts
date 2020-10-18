@@ -15,13 +15,3 @@ export type Title = Display & {
     text: string,
     lines?: { text: string, x: number, y: number }[]
 }
-
-export type Font = {
-    name: string,
-    size: number
-}
-
-export type Icon = {
-    light: string,
-    dark: string
-}

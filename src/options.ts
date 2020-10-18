@@ -1,4 +1,4 @@
-import { Icon } from './draw/display';
+import { Icon } from './style/icon';
 
 export interface DiagramOptions {
     iconBase?: string;

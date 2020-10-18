@@ -71,10 +71,12 @@ export class Note extends Shape {
   static noteItem(_diagram: Diagram, idNum: number, x: number, y: number): NoteItem {
     const w = 200;
     const h = 60;
+    const noteX = Math.max(1, x - w / 2);
+    const noteY = Math.max(1, y - h / 2);
     return {
       id: 'N' + idNum,
       text: '',
-      attributes: { display: 'x=' + x + ',y=' + y + ',w=' + w + ',h=' + h },
+      attributes: { display: 'x=' + noteX + ',y=' + noteY + ',w=' + w + ',h=' + h },
       type: 'note'
     };
   }

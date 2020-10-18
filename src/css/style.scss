@@ -181,7 +181,7 @@
         width: 16px;
         min-width: 16px;
         vertical-align: middle;
-        padding-bottom: 2px;
+        margin-bottom: 2px;
         user-select: none;
         cursor: pointer;
       }
@@ -192,29 +192,21 @@
       }
     }
     li:focus {
-      background-color: #0dcaff;
+      color: #ffffff;
+      background-color: #146dee;
       outline-width: 0;
     }
   }
 }
-.flowbee-toolbox {
+.flowbee-toolbox-light {
   @include toolbox;
 }
-.flowbee-toolbox-light {
-  color: #303030;
-  background-color: #f3f3f3;
-  ul {
-    li:focus {
-      background-color: #0dcaff;
-    }
-  }
-}
 .flowbee-toolbox-dark {
+  @include toolbox;
   color: #cccccc;
   background-color: #252526;
   ul {
     li:focus {
-      color: #ffffff;
       background-color: #0a4574;
     }
   }
@@ -225,6 +217,8 @@
   overflow: auto;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
   font-size: 13px;
+  color: #303030;
+  background-color: '#ffffff';
   ul {
     margin: 0;
     padding: 0 0 0 12px;
@@ -237,11 +231,13 @@
     }
     li:focus {
       outline-width: 0;
-      background-color: #1fccfd;
+      color: #ffffff;
+      background-color: #146dee;
     }
     .flowbee-caret {
       cursor: pointer;
       user-select: none;
+      color: #505050;
     }
     .flowbee-caret::before {
       content: "\25BC";
@@ -263,28 +259,19 @@
     }
   }
 }
-.flowbee-tree {
+.flowbee-tree-light {
   @include tree;
 }
-.flowbee-tree-light {
-  color: #303030;
-  background-color: '#ffffff';
-  ul {
-    li:focus {
-      background-color: #0dcaff;
-    }
-    .flowbee-caret {
-      color: #505050;
-    }
-  }
-}
 .flowbee-tree-dark {
+  @include tree;
   color: #cccccc;
   background-color: #252526;
   ul {
     li:focus {
-      color: #ffffff;
       background-color: #0a4574;
+    }
+    .flowbee-caret {
+      color: #cccccc;
     }
   }
 }

@@ -1,6 +1,7 @@
-import { Display, Font } from './display';
+import { Display } from './display';
 import { Diagram } from './diagram';
 import { Shape } from './shape';
+import { Font } from '../style/font';
 
 export class Label extends Shape {
 
