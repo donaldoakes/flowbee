@@ -6,29 +6,35 @@ import { Theme } from './theme';
 
 export class Toolbox {
 
-    readonly options: ToolboxOptions;
     private div: HTMLDivElement;
+    private styles: Styles;
+    private stylesObj: object;
 
     constructor(
-        readonly container: HTMLElement,
-        options?: ToolboxOptions
-    ) {
-        this.options = merge(toolboxDefault, options || {});
-    }
+        readonly descriptors = StandardDescriptors,
+        readonly container: HTMLElement
+    ) { }
 
-    async render(theme: string, descriptors = StandardDescriptors) {
-        const styles = new Styles('flowbee-toolbox', new Theme(theme), this.container);
-        const stylesObj = styles.getObject();
-        const iconWidth = styles.getSize(stylesObj['flowbee-toolbox ul li img'].width);
+    async render(options: ToolboxOptions = {}) {
+
+        // loading styles is expensive, so only load if theme has changed
+        if (!this.styles || !this.stylesObj || (options.theme && options.theme !== this.styles.theme.name)) {
+            this.styles = new Styles('flowbee-toolbox', new Theme(options.theme), this.container);
+            this.stylesObj = this.styles.getObject();
+        }
+        const iconWidth = this.styles.getSize(this.stylesObj['flowbee-toolbox ul li img'].width);
+
+        const toolboxOptions = merge(toolboxDefault, options);
 
         if (this.div) {
             this.container.removeChild(this.div);
         }
+
         this.div = document.createElement('div') as HTMLDivElement;
-        this.div.className = `flowbee-toolbox flowbee-toolbox-${theme || ''}`;
+        this.div.className = `flowbee-toolbox flowbee-toolbox-${toolboxOptions.theme || ''}`;
         const ul = document.createElement('ul') as HTMLUListElement;
         let tabIndex = 1;
-        for (const descriptor of descriptors) {
+        for (const descriptor of this.descriptors) {
             const li = document.createElement('li') as HTMLLIElement;
             li.setAttribute('id', descriptor.name);
             li.setAttribute('draggable', "true");
@@ -36,7 +42,7 @@ export class Toolbox {
             if (descriptor.icon) {
                 const iconDiv = document.createElement('div') as HTMLDivElement;
                 const iconImg = document.createElement('img') as HTMLImageElement;
-                const iconBase = this.options.iconBase ? this.options.iconBase : '';
+                const iconBase = toolboxOptions.iconBase ? toolboxOptions.iconBase : '';
                 let icon = descriptor.icon;
                 switch (icon) {
                     case 'shape:start':

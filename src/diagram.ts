@@ -11,9 +11,9 @@ import { DrawingOptions } from './draw/options';
 
 export class FlowDiagram {
 
-    options: DiagramOptions;
     private diagram: Diagram;
-    private diagramStyle: DiagramStyle;
+    private theme: string;
+    private drawingOptions: DrawingOptions;
     flow: Flow;
 
     readonly = false;
@@ -22,28 +22,31 @@ export class FlowDiagram {
     editInstanceId?: string;
     data?: any;
 
-
-    private down = false;
-    private dragging = false;
-
     /**
      * Create a flow diagram
+     * @param flow Flow model or text to parse for flow
      * @param canvas html canvas
-     * @param options drawing options
+     * @param filepath file path of flow (for error messages)
      * @param descriptors flow item descriptors
      */
     constructor(
+        flow: string | Flow,
         readonly canvas: HTMLCanvasElement,
-        options?: DiagramOptions,
+        readonly filepath: string,
         readonly descriptors: Descriptor[] = StandardDescriptors
     ) {
-        this.options = merge(diagramDefault, options || {});
-
-        this.diagramStyle = new DiagramStyle(canvas);
+        this.flow = typeof flow === 'string' ? FlowDiagram.parse(flow, filepath) : flow;
+        if (filepath) {
+            this.flow.name = filepath;
+            const lastDot = this.flow.name.lastIndexOf('.');
+            if (lastDot > 0) {
+                this.flow.name = this.flow.name.substring(0, lastDot);
+            }
+        }
 
         this.diagram = new Diagram(
             this.canvas,
-            this.options,
+            diagramDefault,
             this.descriptors
         );
 
@@ -58,7 +61,7 @@ export class FlowDiagram {
      * @param text json or yaml
      * @param file file name
      */
-    parse(text: string, file: string): Flow {
+    static parse(text: string, file: string): Flow {
         let flow: Flow;
         if (text.startsWith('{')) {
             try {
@@ -91,28 +94,33 @@ export class FlowDiagram {
 
     /**
      * Parse and render from text
-     * @param theme theme name
-     * @param flow text (json or yaml), or Flow
-     * @param file file name
-     * @param userOptions dynamic drawing options
-     * @param animate
+     * @param options rendering options
      */
-    render(theme: string, textOrFlow: string | Flow, file: string, userOptions: DiagramOptions & DrawingOptions = {}, animate = false) {
-
-        this.flow = typeof textOrFlow === 'string' ? this.parse(textOrFlow, file) : textOrFlow;
-        if (file) {
-            this.flow.name = file;
-            const lastDot = this.flow.name.lastIndexOf('.');
-            if (lastDot > 0) {
-                this.flow.name = this.flow.name.substring(0, lastDot);
-            }
+    render(options: DiagramOptions & DrawingOptions = {}) {
+        // loading styles is expensive, so perform only if theme has changed
+        if (!this.drawingOptions || (options.theme && options.theme !== this.theme)) {
+            this.theme = options.theme;
+            const diagramStyle = new DiagramStyle(this.canvas);
+            this.drawingOptions = diagramStyle.getDrawingOptions(options.theme);
         }
-
-        this.diagram.options = merge(this.options, this.diagramStyle.getDrawingOptions(theme), userOptions);
+        this.diagram.options = merge(diagramDefault, this.drawingOptions, options);
         console.debug(`merged options: ${JSON.stringify(this.diagram.options, null, 2)}`);
         this.diagram.readonly = this.readonly;
         this.canvas.style.backgroundColor = this.diagram.options.backgroundColor;
-        this.draw(this.flow, animate);
+        this.draw(this.flow, this.diagram.options.animate);
+    }
+
+    /**
+     * Serialize to JSON string
+     * @param flow
+     * @param indent
+     */
+    toJson(indent = 2): string {
+        return JSON.stringify(this.flow, null, indent);
+    }
+
+    toYaml(indent = 2): string {
+        return jsYaml.safeDump(this.flow, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
     }
 
     /**
@@ -146,7 +154,12 @@ export class FlowDiagram {
         this.canvas.ondrop = e => this.onDrop(e);
     }
 
-    onMouseMove(e: MouseEvent) {
+
+
+    private down = false;
+    private dragging = false;
+
+    private onMouseMove(e: MouseEvent) {
         if (this.down && !this.readonly) {
             this.dragging = true;
         }
@@ -162,7 +175,7 @@ export class FlowDiagram {
         }
     }
 
-    onMouseDown(e: MouseEvent) {
+    private onMouseDown(e: MouseEvent) {
         this.down = true;
         // $scope.closeContextMenu();
         if (this.diagram) {
@@ -183,7 +196,7 @@ export class FlowDiagram {
         }
     }
 
-    onMouseUp(e: MouseEvent) {
+    private onMouseUp(e: MouseEvent) {
         this.down = false;
         this.dragging = false;
         if (this.diagram) {
@@ -191,7 +204,7 @@ export class FlowDiagram {
         }
     }
 
-    onDrop(e: DragEvent) {
+    private onDrop(e: DragEvent) {
         e.preventDefault();
         if (!this.readonly && this.diagram) {
             if (this.diagram.onDrop(e, e.dataTransfer.getData('text/plain'))) {
@@ -200,7 +213,7 @@ export class FlowDiagram {
         }
     }
 
-    onMouseOut(e: MouseEvent) {
+    private onMouseOut(e: MouseEvent) {
         this.down = false;
         this.dragging = false;
         if (this.diagram) {
@@ -208,7 +221,7 @@ export class FlowDiagram {
         }
     }
 
-    onDoubleClick(e: MouseEvent) {
+    private onDoubleClick(e: MouseEvent) {
         if (this.diagram && !this.readonly) {
             let selObj = this.diagram.selection.getSelectObj();
             if (selObj && selObj.type === 'label') {
@@ -220,7 +233,7 @@ export class FlowDiagram {
         }
     }
 
-    handleChange() {
+    private handleChange() {
         // if (this.onChange) {
         //     this.onChange(this.diagram.flow);
         // }

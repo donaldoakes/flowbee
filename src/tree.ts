@@ -26,8 +26,10 @@ export interface FlowTreeSelectEvent {
 
 export class FlowTree {
 
-    options: FlowTreeOptions;
     private div: HTMLDivElement;
+//    private styles: Styles;
+    private stylesObj: object;
+
     private tabIndex = 1;
 
     private _onFlowSelect = new TypedEvent<FlowTreeSelectEvent>();
@@ -36,37 +38,43 @@ export class FlowTree {
     }
 
     constructor(
-        readonly container: HTMLElement,
-        options?: FlowTreeOptions
-    ) {
-        this.options = merge(flowTreeDefault, options || {});
-    }
+        readonly fileTree: FileTree,
+        readonly container: HTMLElement
+    ) { }
 
-    render(theme: string, fileTree: FileTree) {
+    render(options: FlowTreeOptions = {}) {
+
+        // loading styles is expensive, so only load if theme has changed
+        // if (!this.styles || !this.stylesObj || (options.theme && options.theme !== this.styles.theme.name)) {
+        //     this.styles = new Styles('flowbee-toolbox', new Theme(options.theme), this.container);
+        //     this.stylesObj = this.styles.getObject();
+        // }
+
+        const flowTreeOptions = merge(flowTreeDefault, options || {});
+
         if (this.div) {
             this.container.removeChild(this.div);
         }
         this.div = document.createElement('div') as HTMLDivElement;
-        this.div.className = `flowbee-tree flowbee-tree-${theme || ''}`;
+        this.div.className = `flowbee-tree flowbee-tree-${flowTreeOptions.theme || ''}`;
         const ul = document.createElement('ul') as HTMLUListElement;
         ul.style.paddingLeft = '0px';
-        this.renderItem(ul, fileTree, theme);
+        this.renderItem(ul, this.fileTree, flowTreeOptions);
         this.div.appendChild(ul);
         this.container.appendChild(this.div);
     }
 
-    private renderItem(ul: HTMLUListElement, item: FileTree, theme: string) {
-        // TODO honor dark
+    private renderItem(ul: HTMLUListElement, item: FileTree, options: FlowTreeOptions) {
         if (!item.name.startsWith('.')) {
             if (item.type === 'file') {
                 const li = document.createElement('li') as HTMLLIElement;
                 li.setAttribute('id', item.path);
                 li.className = 'flowbee-tree-flow-item';
                 li.tabIndex = this.tabIndex++;
-                if (this.options.fileIcon) {
-                    let icon = this.options.fileIcon;
+                if (options.fileIcon) {
+                    let icon = options.fileIcon;
                     if (typeof icon !== 'string') {
-                        icon = new Theme(theme).isDark ? icon.dark : icon.light;
+                        icon = new Theme(options.theme).isDark ? icon.dark : icon.light;
                     }
                     const img = document.createElement('img') as HTMLImageElement;
                     img.src = icon;
@@ -98,7 +106,7 @@ export class FlowTree {
                 span.appendChild(document.createTextNode(item.name));
                 if (item.children) {
                     for (const child of item.children) {
-                        this.renderItem(dirUl, child, theme);
+                        this.renderItem(dirUl, child, options);
                     }
                 }
                 li.appendChild(dirUl);
