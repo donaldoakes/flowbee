@@ -10,7 +10,7 @@ import { Descriptor } from '../model/descriptor';
 import { DiagramOptions } from '../options';
 import { Flow } from '../model/flow';
 import { Display } from './display';
-import { FlowItemType } from '../model/item';
+import { FlowElementType } from '../model/element';
 import { DrawingOptions } from './options';
 import { Grid } from './grid';
 
@@ -140,6 +140,19 @@ export class Diagram extends Shape {
 
   get diagram(): Diagram { return this; }
 
+  get name(): string {
+    let name = this.flow.path;
+    const lastSlash = name.lastIndexOf('/');
+    if (lastSlash > 0 && lastSlash < name.length - 1) {
+      name = name.substring(lastSlash + 1);
+    }
+    const lastDot = name.lastIndexOf('.');
+    if (lastDot > 1) {
+      name = name.substring(0, lastDot);
+    }
+    return name;
+  }
+
   zoomCanvas(zoom: number) {
     this.zoom = zoom;
     const scale = zoom / 100;
@@ -185,7 +198,7 @@ export class Diagram extends Shape {
   draw(flow?: Flow, instance?: any, step?: string, animate = false, editInstanceId?: string, data?: any) {
     if (flow) {
       this.flow = flow;
-      this.flowItem = { ...flow, type: 'flow' };
+      this.flowElement = { ...flow, type: 'flow' };
       this.drawBoxes = flow.attributes.NodeStyle === 'BoxIcon';
     }
     if (step) {
@@ -235,7 +248,7 @@ export class Diagram extends Shape {
       const s = function () {
         const it = sequence[i];
         it.draw(timeSlice);
-        if (it instanceof Step && it.flowItem.id === diagram.stepId) {
+        if (it instanceof Step && it.flowElement.id === diagram.stepId) {
           it.highlight();
           highlighted = it;
         }
@@ -256,7 +269,7 @@ export class Diagram extends Shape {
       // draw quickly
       this.steps.forEach(function (step) {
         step.draw();
-        if (step.flowItem.id === diagram.stepId) {
+        if (step.flowElement.id === diagram.stepId) {
           step.highlight();
           highlighted = step;
         }
@@ -363,7 +376,7 @@ export class Diagram extends Shape {
     const diagram = this; // forEach inner access
 
     // label
-    let label = this.flow.name;
+    let label = this.name;
     const lastSlash = label.lastIndexOf('/');
     if (lastSlash >= 0 && lastSlash < label.length - 1) {
       label = label.substring(lastSlash + 1);
@@ -383,7 +396,7 @@ export class Diagram extends Shape {
     if (this.flow.steps) {
       this.flow.steps.forEach(function (flowStep) {
         const step = new Step(diagram, flowStep);
-        step.descriptor = diagram.getDescriptor(flowStep.descriptor);
+        step.descriptor = diagram.getDescriptor(flowStep.path);
         diagram.makeRoom(canvasDisplay, step.prepareDisplay());
         diagram.steps.push(step);
       });
@@ -676,7 +689,7 @@ export class Diagram extends Shape {
       if (links) {
         links.forEach(function (link) {
           const l = sequence.find(function (it) {
-            return it.flowItem.id === link.link.id;
+            return it.flowElement.id === link.link.id;
           });
           if (!l) {
             sequence.push(link);
@@ -684,7 +697,7 @@ export class Diagram extends Shape {
         });
       }
       const s = sequence.find(function (it) {
-        return it.flowItem.id === step.step.id;
+        return it.flowElement.id === step.step.id;
       });
       if (!s) {
         sequence.push(step);
@@ -698,7 +711,7 @@ export class Diagram extends Shape {
 
   getStart(): Step | undefined {
     for (let i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.descriptor === this.startDescriptor.name) {
+      if (this.steps[i].step.path === this.startDescriptor.path) {
         return this.steps[i];
       }
     }
@@ -811,16 +824,17 @@ export class Diagram extends Shape {
     if (this.descriptors) {
       for (let i = 0; i < this.descriptors.length; i++) {
         const descriptor = this.descriptors[i];
-        if (descriptor.name === name) {
+        if (descriptor.path === name) {
           return descriptor;
         }
       }
     }
     // not found -- return placeholder
     return {
-      name: 'Step',
+      path: 'Step',
+      type: 'step',
       icon: 'shape:step',
-      label: 'Unknown Descriptor'
+      name: 'Unknown Descriptor'
     };
   }
 
@@ -903,7 +917,7 @@ export class Diagram extends Shape {
     this.notes.push(note);
   }
 
-  genId(items: (Step | Link | Subflow | Note)[], type: FlowItemType): number {
+  genId(items: (Step | Link | Subflow | Note)[], type: FlowElementType): number {
     let maxId = 0;
     if (items) {
       items.forEach(function (item) {
@@ -1534,7 +1548,7 @@ export class Diagram extends Shape {
 
         const selObj = this.selection.getSelectObj();
         if (selObj) {
-          if (this.allowInstanceEdit && (!selObj.flowItem || !this.isInstanceEditable(selObj.flowItem.id))) {
+          if (this.allowInstanceEdit && (!selObj.flowElement || !this.isInstanceEditable(selObj.flowElement.id))) {
             return;
           }
 
@@ -1632,13 +1646,13 @@ export class Diagram extends Shape {
     const y = e.clientY - rect.top;
     const descriptor = this.getDescriptor(descriptorName);
     if (descriptor?.type === 'subflow') {
-      this.addSubflow(descriptor.name, x, y);
+      this.addSubflow(descriptor.path, x, y);
     }
     else if (descriptor?.type === 'note') {
       this.addNote(x, y);
     }
     else {
-      this.addStep(descriptor?.name, x, y);
+      this.addStep(descriptor?.path, x, y);
     }
     this.draw();
     return true;
@@ -1648,7 +1662,7 @@ export class Diagram extends Shape {
     const selection = this.selection;
     const selObj = this.selection.getSelectObj();
     if (selObj && selObj.type !== 'label') {
-      const msg = this.selection.isMulti ? 'Delete selected items?' : 'Delete ' + selObj.type + '?';
+      const msg = this.selection.isMulti ? 'Delete selected elements?' : 'Delete ' + selObj.type + '?';
       this.dialog.confirm('Confirm Delete', msg, function (res) {
         if (res) {
           selection.doDelete();
@@ -1681,7 +1695,7 @@ export class Diagram extends Shape {
             const descriptor = (selObj as Step).descriptor;
             if (inst.status === 'Waiting') {
               actions.push('proceed');
-              if (descriptor && descriptor.name === this.pauseDescriptor.name) {
+              if (descriptor && descriptor.path === this.pauseDescriptor.path) {
                 actions.push('resume');
               }
             }

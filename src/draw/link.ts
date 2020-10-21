@@ -1,8 +1,8 @@
 import { Diagram } from './diagram';
 import { Label } from './label';
-import { Link as LinkItem } from '../model/link';
+import { Link as LinkElement } from '../model/link';
 import { Step } from './step';
-import { FlowItem } from '../model/item';
+import { FlowElement } from '../model/element';
 import { Display, LinkDisplay } from './display';
 
 export class Link {
@@ -13,14 +13,11 @@ export class Link {
   static LABEL_CORR = 3;
 
   static EVENTS = {
-    START: {color: 'green'},
-    RESUME: {color: 'green'},
-    DELAY: {color: 'orange'},
-    HOLD: {color: 'orange'},
-    ERROR: {color: '#f44336'},
-    ABORT: {color: '#f44336'},
-    CORRECT: {color: 'purple'},
-    FINISH: {color: 'gray'}
+    Finish: {color: 'gray'},
+    Error: {color: '#f44336'},
+    Cancel: {color: '#f44336'},
+    Delay: {color: 'orange'},
+    Resume: {color: 'green'}
   };
 
   static LINK_TYPES = {
@@ -42,21 +39,21 @@ export class Link {
   static ELBOW_THRESHOLD = 0.8;
   static ELBOW_VH_THRESHOLD = 60;
 
-  flowItem: FlowItem;
+  flowElement: FlowElement;
   label?: Label;
   display: LinkDisplay;
   dpRatio = 1;
   instances = null;
 
-  constructor(readonly diagram: Diagram, readonly link: LinkItem, public from: Step, public to: Step) {
-    this.flowItem = { ...link, type: 'link' };
+  constructor(readonly diagram: Diagram, readonly link: LinkElement, public from: Step, public to: Step) {
+    this.flowElement = { ...link, type: 'link' };
     if (window.devicePixelRatio) {
       this.dpRatio = window.devicePixelRatio;
     }
   }
 
-  get type(): string { return this.flowItem.type; }
-  get id(): string { return this.flowItem.id; }
+  get type(): string { return this.flowElement.type; }
+  get id(): string { return this.flowElement.id; }
 
   draw(animationTimeSlice?: number) {
     const color = this.getColor();
@@ -86,7 +83,7 @@ export class Link {
     const maxDisplay = { w: 0, h: 0 };
     this.display = this.getDisplay();
     // label TODO determine effect on maxDisplay
-    let labelText = this.link.event === 'FINISH' ? '' : this.link.event + ':';
+    let labelText = this.link.event === 'Finish' || !this.link.event ? '' : this.link.event + ':';
     labelText += this.link.result ? this.link.result : '';
     if (labelText.length > 0) {
       this.label = new Label(this, labelText, { x: this.display.x, y: this.display.y + Link.LABEL_CORR }, this.diagram.options.defaultFont);
@@ -161,7 +158,8 @@ export class Link {
   }
 
   getColor(): string {
-    let color = Link.EVENTS[this.link.event].color;
+    const event = this.link.event || 'Finish';
+    let color = Link.EVENTS[event].color;
     if (this.diagram.instance) {
       if (this.instances && this.instances.length > 0) {
         const latest = this.instances[0];
@@ -1125,21 +1123,20 @@ export class Link {
   }
 
   static create(diagram: Diagram, idNum: number, from: Step, to: Step) {
-    const linkItem = Link.linkItem(idNum, to.step.id);
-    const link = new Link(diagram, linkItem, from, to);
+    const linkElement = Link.LinkElement(idNum, to.step.id);
+    const link = new Link(diagram, linkElement, from, to);
     if (!from.step.links) {
       from.step.links = [];
     }
-    from.step.links.push(linkItem);
+    from.step.links.push(linkElement);
     link.display = { type: Link.LINK_TYPES.ELBOW, x: 0, y: 0, xs: [0, 0], ys: [0, 0] };
     link.calc();
     return link;
   }
 
-  static linkItem(idNum: number, toId: string): LinkItem {
+  static LinkElement(idNum: number, toId: string): LinkElement {
     return {
       id: 'L' + idNum,
-      event: 'FINISH',
       to: toId,
       type: 'link'
     };

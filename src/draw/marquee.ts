@@ -1,15 +1,15 @@
-import { FlowItem } from '../model/item';
+import { FlowElement } from '../model/element';
 import { Diagram } from './diagram';
 import { SelectObj } from './selection';
 import { Shape } from './shape';
 
 export class Marquee extends Shape {
 
-  flowItem: FlowItem;
+  flowElement: FlowElement;
 
   constructor(readonly diagram: Diagram) {
     super(diagram.canvas.getContext("2d"), diagram.options);
-    this.flowItem = {
+    this.flowElement = {
       attributes: { display: '{ x: 0, y: 0, w: 0, h: 0 }' }
     }; // dummy to hold attrs
   }

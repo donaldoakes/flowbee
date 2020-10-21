@@ -1,15 +1,15 @@
 import { Shape } from './shape';
 import { Diagram } from './diagram';
-import { Note as NoteItem } from '../model/note';
+import { Note as NoteElement } from '../model/note';
 import { Display } from './display';
 
 export class Note extends Shape {
 
   instances = null; // TODO not applicable (needed by Diagram.isInstanceEditable())
 
-  constructor(readonly diagram: Diagram, readonly note: NoteItem) {
+  constructor(readonly diagram: Diagram, readonly note: NoteElement) {
     super(diagram.canvas.getContext("2d"), diagram.options, note);
-    this.flowItem = { ...note, type: 'note' };
+    this.flowElement = { ...note, type: 'note' };
   }
 
   draw() {
@@ -61,14 +61,14 @@ export class Note extends Shape {
   }
 
   static create(diagram: Diagram, idNum: number, x: number, y: number): Note {
-    const noteItem = Note.noteItem(diagram, idNum, x, y);
-    const note = new Note(diagram, noteItem);
+    const noteElement = Note.noteElement(diagram, idNum, x, y);
+    const note = new Note(diagram, noteElement);
     const disp = note.getDisplay();
     note.display = { x: disp.x, y: disp.y, w: disp.w, h: disp.h };
     return note;
   }
 
-  static noteItem(_diagram: Diagram, idNum: number, x: number, y: number): NoteItem {
+  static noteElement(_diagram: Diagram, idNum: number, x: number, y: number): NoteElement {
     const w = 200;
     const h = 60;
     const noteX = Math.max(1, x - w / 2);

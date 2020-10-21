@@ -1,7 +1,7 @@
 import './css/style.scss';
 export { FlowDiagram } from './diagram';
 export { Descriptor, FlowItemDescriptor } from './model/descriptor';
-export { FlowItem, FlowItemType } from './model/item';
+export { FlowElement as FlowItem, FlowElementType as FlowItemType } from './model/element';
 export { Toolbox } from './toolbox';
 export { FlowTree, FileTree, FileItemType, FlowTreeSelectEvent } from './tree';
 export { TypedEvent, Listener } from './event';

@@ -1,4 +1,4 @@
-import { FlowItem } from '../model/item';
+import { FlowElement } from '../model/element';
 import { Display } from './display';
 import { DrawingOptions } from './options';
 
@@ -8,21 +8,21 @@ import { DrawingOptions } from './options';
 export class Shape {
 
   display: Display;
-  flowItem?: FlowItem;
+  flowElement?: FlowElement;
 
   constructor(
     readonly context: CanvasRenderingContext2D,
     readonly options: DrawingOptions,
-    flowItem?: FlowItem) {
-      this.flowItem = flowItem;
+    flowElement?: FlowElement) {
+      this.flowElement = flowElement;
   }
 
-  get type(): string { return this.flowItem.type; }
-  get id(): string { return this.flowItem.id; }
+  get type(): string { return this.flowElement.type; }
+  get id(): string { return this.flowElement.id; }
 
   // get a display object from attribute value
   getDisplay(): Display {
-    const displayAttr = this.flowItem.attributes.display;
+    const displayAttr = this.flowElement.attributes.display;
     const display: Display = {};
     if (displayAttr) {
       const vals = displayAttr.split(',');
@@ -49,7 +49,7 @@ export class Shape {
     if (w) {
       attr += ',w=' + w + ',h=' + h;
     }
-    this.flowItem.attributes.display = attr;
+    this.flowElement.attributes.display = attr;
   }
 
   getAttr(display: Display): string {

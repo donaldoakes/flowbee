@@ -116,7 +116,7 @@ export class Selection {
   reselect() {
     if (this.getSelectObj() && !this.isMulti()) {
       const selObj = this.getSelectObj();
-      const id = selObj.flowItem ? selObj.flowItem.id : null;
+      const id = selObj.flowElement ? selObj.flowElement.id : null;
       if (typeof id === 'string') {
         this.setSelectObj(this.diagram.get(id));
         if (!this.getSelectObj()) {
@@ -199,14 +199,14 @@ export class Selection {
    * re-find the selected object after it's been moved
    */
   find(obj: SelectObj) {
-    if (obj.flowItem && obj.flowItem.id) {
-      let found = this.diagram.get(obj.flowItem.id);
+    if (obj.flowElement && obj.flowElement.id) {
+      let found = this.diagram.get(obj.flowElement.id);
       if (found) return found;
 
       // try subflows
       for (let i = 0; i < this.diagram.subflows.length; i++) {
         const subflow = this.diagram.subflows[i];
-        found = subflow.get(obj.flowItem.id);
+        found = subflow.get(obj.flowElement.id);
         if (found) return found;
       }
     }

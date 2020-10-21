@@ -1,6 +1,6 @@
 import { Shape } from './shape';
 import { Diagram } from './diagram';
-import { Step as StepItem } from '../model/step';
+import { Step as StepElement } from '../model/step';
 import { Descriptor } from '../model/descriptor';
 import { Milestone, MilestoneGroup } from '../model/milestone';
 import { Display, Title } from './display';
@@ -12,9 +12,9 @@ export class Step extends Shape {
   instances = null;
   data = null;
 
-  constructor(readonly diagram: Diagram, readonly step: StepItem) {
+  constructor(readonly diagram: Diagram, readonly step: StepElement) {
     super(diagram.canvas.getContext("2d"), diagram.options, step);
-    this.flowItem = { ...step, type: 'step' };
+    this.flowElement = { ...step, type: 'step' };
     this.diagram = diagram;
     this.step = step;
   }
@@ -298,15 +298,15 @@ export class Step extends Shape {
   }
 
   static create(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number) {
-    const stepItem = Step.stepItem(diagram, idNum, descriptor, x, y);
-    const step = new Step(diagram, stepItem);
+    const stepElement = Step.stepElement(diagram, idNum, descriptor, x, y);
+    const step = new Step(diagram, stepElement);
     step.descriptor = descriptor;
     const disp = step.getDisplay();
     step.display = { x: disp.x, y: disp.y, w: disp.w, h: disp.h };
     return step;
   }
 
-  static stepItem(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number): StepItem {
+  static stepElement(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number): StepElement {
     let w = 24;
     let h = 24;
     if (diagram.drawBoxes) {
@@ -319,14 +319,14 @@ export class Step extends Shape {
         h = 60;
       }
     }
-    let name = descriptor.label;
-    if (descriptor.name === diagram.startDescriptor.name) {
+    let name = descriptor.name;
+    if (descriptor.path === diagram.startDescriptor.path) {
       name = 'Start';
     }
-    else if (descriptor.name === diagram.stopDescriptor.name) {
+    else if (descriptor.path === diagram.stopDescriptor.path) {
       name = 'Stop';
     }
-    else if (descriptor.name === diagram.pauseDescriptor.name) {
+    else if (descriptor.path === diagram.pauseDescriptor.path) {
       name = 'Pause';
     }
     else {
@@ -337,7 +337,7 @@ export class Step extends Shape {
     return {
       id: 'S' + idNum,
       name: name,
-      descriptor: descriptor.name,
+      path: descriptor.path,
       attributes: { display: 'x=' + stepX + ',y=' + stepY + ',w=' + w + ',h=' + h },
       links: [],
       type: 'step'

@@ -3,7 +3,6 @@ import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
 import { Flow } from './model/flow';
 import { Descriptor, start, stop, pause, task, StandardDescriptors } from './model/descriptor';
-import { Variable } from './model/variable';
 import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style/style';
 import { Label } from './draw/label';
@@ -36,13 +35,6 @@ export class FlowDiagram {
         readonly descriptors: Descriptor[] = StandardDescriptors
     ) {
         this.flow = typeof flow === 'string' ? FlowDiagram.parse(flow, filepath) : flow;
-        if (filepath) {
-            this.flow.name = filepath;
-            const lastDot = this.flow.name.lastIndexOf('.');
-            if (lastDot > 0) {
-                this.flow.name = this.flow.name.substring(0, lastDot);
-            }
-        }
 
         this.diagram = new Diagram(
             this.canvas,
@@ -72,23 +64,7 @@ export class FlowDiagram {
         } else {
             flow = jsYaml.safeLoad(text, { filename: file });
         }
-        // fix up
-        // flow.steps?.forEach(step => {
-        //     step.links?.forEach(link => {
-        //         link.from = step.id;
-        //     });
-        // });
-        // if (flow.variables) {
-        //     const variables: Variable[] = [];
-        //     Object.keys(flow.variables).forEach(name => {
-        //         const variable = flow.variables[name];
-        //         variables.push({
-        //             name,
-        //             type: variable.type
-        //         });
-        //     });
-        //     flow.variables = variables;
-        // }
+        flow.path = file; // TODO relative to asset path
         return flow;
     }
 

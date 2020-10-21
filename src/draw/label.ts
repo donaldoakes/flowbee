@@ -2,6 +2,7 @@ import { Display } from './display';
 import { Diagram } from './diagram';
 import { Shape } from './shape';
 import { Font } from '../style/font';
+import { Link } from './link';
 
 export class Label extends Shape {
 
@@ -11,8 +12,8 @@ export class Label extends Shape {
 
   get type() { return 'label'; }
 
-  constructor(readonly owner: any, readonly text: string, readonly display: Display, readonly font: Font) {
-    super(owner.diagram.canvas.getContext("2d"), owner.diagram.options, owner.flowItem);
+  constructor(readonly owner: Diagram | Link, readonly text: string, readonly display: Display, readonly font: Font) {
+    super(owner.diagram.canvas.getContext("2d"), owner.diagram.options, owner.flowElement);
     this.diagram = owner.diagram;
     this.text = text;
     this.display = display; // just x, y except for flow owner

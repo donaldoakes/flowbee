@@ -2,7 +2,7 @@ import { Shape } from './shape';
 import { Step } from './step';
 import { Link } from './link';
 import { Diagram } from './diagram';
-import { Flow } from '../model/flow';
+import { Subflow as SubflowElement } from '../model/flow';
 import { Title } from './display';
 
 export class Subflow extends Shape {
@@ -13,9 +13,9 @@ export class Subflow extends Shape {
   mainFlowInstanceId: string;
   instances = null;
 
-  constructor(readonly diagram: Diagram, readonly subflow: Flow) {
+  constructor(readonly diagram: Diagram, readonly subflow: SubflowElement) {
     super(diagram.canvas.getContext("2d"), diagram.options, subflow);
-    this.flowItem = { ...subflow, type: 'subflow' };
+    this.flowElement = { ...subflow, type: 'subflow' };
   }
 
   draw(animationTimeSlice?: number) {
@@ -116,7 +116,7 @@ export class Subflow extends Shape {
     if (this.subflow.steps) {
       this.subflow.steps.forEach(function (flowStep) {
         const step = new Step(subflow.diagram, flowStep);
-        step.descriptor = subflow.diagram.getDescriptor(flowStep.descriptor);
+        step.descriptor = subflow.diagram.getDescriptor(flowStep.path);
         step.prepareDisplay();
         subflow.steps.push(step);
       });
@@ -136,7 +136,7 @@ export class Subflow extends Shape {
 
   getStart() {
     for (let i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.descriptor === this.diagram.startDescriptor.name) {
+      if (this.steps[i].step.path === this.diagram.startDescriptor.path) {
         return this.steps[i];
       }
     }
@@ -296,8 +296,8 @@ export class Subflow extends Shape {
   static create(diagram: Diagram, idNum: number, startStepId: number, startLinkId: number,
         type: string, x: number, y: number): Subflow {
     // TODO template-driven
-    const subflowItem = Subflow.subflowItem(diagram, idNum, type, x, y);
-    const subflow = new Subflow(diagram, subflowItem);
+    const subflowElement = Subflow.subflowElement(diagram, idNum, type, x, y);
+    const subflow = new Subflow(diagram, subflowElement);
     subflow.steps = [];
     subflow.links = [];
     subflow.display = { x: x, y: y };
@@ -308,7 +308,7 @@ export class Subflow extends Shape {
     const linkId = startLinkId;
 
     const start = Step.create(diagram, stepId, diagram.startDescriptor, stepX, stepY);
-    subflowItem.steps.push(start.step);
+    subflowElement.steps.push(start.step);
     subflow.steps.push(start);
 
     stepId++;
@@ -321,7 +321,7 @@ export class Subflow extends Shape {
       task = Step.create(diagram, stepId, diagram.taskDescriptor, stepX, stepY);
       task.step.attributes.TASK_PAGELET = 'task.pagelet';
       task.step.attributes.STATUS_AFTER_EVENT = 'Cancelled';
-      task.step.name = diagram.flow.name + ' Fallout';
+      task.step.name = diagram.name + ' Fallout';
       subflow.steps.push(task.step);
       subflow.steps.push(task);
       const link = Link.create(diagram, linkId, start, task);
@@ -332,7 +332,7 @@ export class Subflow extends Shape {
     stepX = x + 340;
     stepY = y + 40;
     const stop = Step.create(diagram, stepId, diagram.stopDescriptor, stepX, stepY);
-    subflowItem.steps.push(stop.step);
+    subflowElement.steps.push(stop.step);
     subflow.steps.push(stop);
     const link = Link.create(diagram, linkId, task ? task : start, stop);
     subflow.links.push(link);
@@ -340,7 +340,7 @@ export class Subflow extends Shape {
     return subflow;
   }
 
-  static subflowItem(_diagram: Diagram, idNum: number, type: string, x: number, y: number): Flow {
+  static subflowElement(_diagram: Diagram, idNum: number, type: string, x: number, y: number): SubflowElement {
     const w = 440;
     const h = 120;
     const subflowX = Math.max(1, x - w / 2);

@@ -36,7 +36,7 @@ export class Toolbox {
         let tabIndex = 1;
         for (const descriptor of this.descriptors) {
             const li = document.createElement('li') as HTMLLIElement;
-            li.setAttribute('id', descriptor.name);
+            li.setAttribute('id', descriptor.path);
             li.setAttribute('draggable', "true");
             li.tabIndex = tabIndex++;
             if (descriptor.icon) {
@@ -62,13 +62,13 @@ export class Toolbox {
                 iconDiv.appendChild(iconImg);
                 li.appendChild(iconDiv);
                 li.ondragstart = (e: DragEvent) => {
-                    e.dataTransfer.setData('text/plain', descriptor.name);
+                    e.dataTransfer.setData('text/plain', descriptor.path);
                     e.dataTransfer.setDragImage(iconImg, iconWidth, iconWidth);
                     e.dataTransfer.dropEffect = 'copy';
                 };
             }
             const label = document.createElement('label') as HTMLLabelElement;
-            label.appendChild(document.createTextNode(descriptor.label));
+            label.appendChild(document.createTextNode(descriptor.name));
             li.appendChild(label);
             ul.appendChild(li);
         }
