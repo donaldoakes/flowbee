@@ -64,7 +64,7 @@ export class FlowDiagram {
         } else {
             flow = jsYaml.safeLoad(text, { filename: file });
         }
-        flow.path = file; // TODO relative to asset path
+        flow.path = file.replace(/\\/g, '/'); // TODO relative to asset path
         return flow;
     }
 

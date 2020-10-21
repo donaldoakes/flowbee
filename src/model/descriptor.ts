@@ -2,7 +2,7 @@ export type FlowItemDescriptorType = 'step' | 'subflow' | 'note';
 
 export interface Descriptor {
     /**
-     * Unique name
+     * Relative to assetRoot. Always forward slashes.
      */
     path: string;
     /**
@@ -24,6 +24,9 @@ export interface Descriptor {
     template?: object; // design time -- translates to attributes
 }
 
+/**
+ * TODO: below here to be removed
+ */
 export class FlowItemDescriptor implements Descriptor {
 
     path: string;
