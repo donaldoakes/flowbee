@@ -1136,7 +1136,7 @@ export class Link {
 
   static LinkElement(idNum: number, toId: string): LinkElement {
     return {
-      id: 'L' + idNum,
+      id: 'l' + idNum,
       to: toId,
       type: 'link'
     };

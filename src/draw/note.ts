@@ -74,7 +74,7 @@ export class Note extends Shape {
     const noteX = Math.max(1, x - w / 2);
     const noteY = Math.max(1, y - h / 2);
     return {
-      id: 'N' + idNum,
+      id: 'n' + idNum,
       text: '',
       attributes: { display: 'x=' + noteX + ',y=' + noteY + ',w=' + w + ',h=' + h },
       type: 'note'

@@ -298,7 +298,7 @@ export class Diagram extends Shape {
           socket.addEventListener('message', function (event) {
             const message = JSON.parse(event.data);
             if (message.subtype === 's') {
-              const step = diagram.getStep('S' + message.id);
+              const step = diagram.getStep('s' + message.id);
               if (step) {
                 if (!step.instances) {
                   step.instances = [];
@@ -323,7 +323,7 @@ export class Diagram extends Shape {
               }
             }
             else if (message.subtype === 'l') {
-              const link = diagram.getLink('L' + message.id);
+              const link = diagram.getLink('l' + message.id);
               if (link) {
                 if (!link.instances) {
                   link.instances = [];
@@ -592,7 +592,7 @@ export class Diagram extends Shape {
     if (this.data.hotspots && this.data.hotspots.length) {
       const hottest = this.data.hotspots.reduce((max, cur) => cur.ms > max.ms ? cur : max);
       diagram.steps.forEach(function (step) {
-        const hotspot = diagram.data.hotspots.find(hs => ('S' + hs.id) === step.step.id);
+        const hotspot = diagram.data.hotspots.find(hs => ('s' + hs.id) === step.step.id);
         if (hotspot && hotspot.ms) {
           step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
           step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
@@ -602,7 +602,7 @@ export class Diagram extends Shape {
       if (diagram.subflows) {
         diagram.subflows.forEach(function (subflow) {
           subflow.steps.forEach(function (step) {
-            const hotspot = diagram.data.hotspots.find(hs => ('S' + hs.id) === step.step.id);
+            const hotspot = diagram.data.hotspots.find(hs => ('s' + hs.id) === step.step.id);
             if (hotspot && hotspot.ms) {
               step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
               step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
@@ -782,16 +782,16 @@ export class Diagram extends Shape {
   }
 
   get(id: string): Step | Link | Subflow | Note {
-    if (id.startsWith('S')) {
+    if (id.startsWith('s')) {
       return this.getStep(id);
     }
-    else if (id.startsWith('L')) {
+    else if (id.startsWith('l')) {
       return this.getLink(id);
     }
-    else if (id.startsWith('F')) {
+    else if (id.startsWith('f')) {
       return this.getSubflow(id);
     }
-    else if (id.startsWith('N')) {
+    else if (id.startsWith('n')) {
       return this.getNote(id);
     }
   }
@@ -1021,7 +1021,7 @@ export class Diagram extends Shape {
       if (this.instance.steps) {
         const flowInstId = this.instance.id;
         this.instance.steps.forEach(function (stepInst) {
-          if ('S' + stepInst.stepId === stepId) {
+          if ('s' + stepInst.stepId === stepId) {
             stepInst.flowInstanceId = flowInstId; // needed for subflow & task instance retrieval
             insts.push(stepInst);
           }
@@ -1039,7 +1039,7 @@ export class Diagram extends Shape {
       const insts = []; // should always return something, even if empty
       if (this.instance.links) {
         this.instance.links.forEach(function (linkInst) {
-          if ('L' + linkInst.linkId === linkId) {
+          if ('l' + linkInst.linkId === linkId) {
             insts.push(linkInst);
           }
         });
@@ -1056,7 +1056,7 @@ export class Diagram extends Shape {
       const insts = []; // should always return something, even if empty
       if (this.instance.subflows) {
         this.instance.subflows.forEach(function (subInst) {
-          if ('F' + subInst.flowId === linkId) {
+          if ('f' + subInst.flowId === linkId) {
             insts.push(subInst);
           }
         });

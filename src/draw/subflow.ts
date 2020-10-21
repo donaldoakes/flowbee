@@ -179,10 +179,10 @@ export class Subflow extends Shape {
   }
 
   get(id: string): Step | Link {
-    if (id.startsWith('S')) {
+    if (id.startsWith('s')) {
       return this.getStep(id);
     }
-    else if (id.startsWith('L')) {
+    else if (id.startsWith('l')) {
       return this.getLink(id);
     }
   }
@@ -240,7 +240,7 @@ export class Subflow extends Shape {
         if (inst.steps) {
           const flowInstId = mainFlowInstanceId;
           inst.steps.forEach(function (stepInst) {
-            if ('S' + stepInst.stepId === id) {
+            if ('s' + stepInst.stepId === id) {
               stepInsts.push(stepInst);
               // needed for subflow & task instance retrieval
               stepInst.flowInstanceId = flowInstId;
@@ -262,7 +262,7 @@ export class Subflow extends Shape {
       this.instances.forEach(function (inst) {
         if (inst.links) {
           inst.links.forEach(function (transInst) {
-            if ('L' + transInst.linkId === id) {
+            if ('l' + transInst.linkId === id) {
               transInsts.push(transInst);
             }
           });
@@ -352,7 +352,7 @@ export class Subflow extends Shape {
         visibility: 'EMBEDDED',
         display: 'x=' + subflowX + ',y=' + subflowY + ',w=' + w + ',h=' + h
       },
-      id: 'F' + idNum,
+      id: 'f' + idNum,
       name: type,
       type: 'subflow'
     };

@@ -335,7 +335,7 @@ export class Step extends Shape {
     const stepX = Math.max(1, x - w / 2);
     const stepY = Math.max(1, y - h / 2);
     return {
-      id: 'S' + idNum,
+      id: 's' + idNum,
       name: name,
       path: descriptor.path,
       attributes: { display: 'x=' + stepX + ',y=' + stepY + ',w=' + w + ',h=' + h },
