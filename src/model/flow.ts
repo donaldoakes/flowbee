@@ -1,6 +1,6 @@
 import { FlowItem } from './item';
 import { Step } from './step';
-import { Note } from '../model/note';
+import { Note } from './note';
 import { Variable } from './variable';
 
 /**

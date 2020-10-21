@@ -10,18 +10,18 @@ export interface Descriptor {
      */
     label: string;
     /**
-     * Icon for the toolbox
+     * Icon for the toolbox -- design time
      */
     icon?: string;
     /**
-     * Item type ('step', 'subflow', 'note')
+     * Item type ('step', 'subflow', 'note') -- design time
      */
     type?: FlowItemType;
     /**
      * Arbitrary categorization.
      */
-    category?: string;
-    template?: object; // TODO like pagelet
+    category?: string; // design and run time
+    template?: object; // design time -- translates to attributes
 }
 
 export class FlowItemDescriptor implements Descriptor {

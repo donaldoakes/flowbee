@@ -6,7 +6,6 @@ import { FlowItem } from './item';
 export interface Link extends FlowItem {
     id: string;
     event?: string;
-    from?: string; // not in persisted
     to: string;
     result?: string;
     attributes?: {[key: string]: string};

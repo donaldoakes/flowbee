@@ -73,22 +73,22 @@ export class FlowDiagram {
             flow = jsYaml.safeLoad(text, { filename: file });
         }
         // fix up
-        flow.steps?.forEach(step => {
-            step.links?.forEach(link => {
-                link.from = step.id;
-            });
-        });
-        if (flow.variables) {
-            const variables: Variable[] = [];
-            Object.keys(flow.variables).forEach(name => {
-                const variable = flow.variables[name];
-                variables.push({
-                    name,
-                    type: variable.type
-                });
-            });
-            flow.variables = variables;
-        }
+        // flow.steps?.forEach(step => {
+        //     step.links?.forEach(link => {
+        //         link.from = step.id;
+        //     });
+        // });
+        // if (flow.variables) {
+        //     const variables: Variable[] = [];
+        //     Object.keys(flow.variables).forEach(name => {
+        //         const variable = flow.variables[name];
+        //         variables.push({
+        //             name,
+        //             type: variable.type
+        //         });
+        //     });
+        //     flow.variables = variables;
+        // }
         return flow;
     }
 
