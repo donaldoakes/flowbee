@@ -8,11 +8,13 @@ import { Note } from './note';
 import { Marquee } from './marquee';
 import { Descriptor } from '../model/descriptor';
 import { DiagramOptions } from '../options';
-import { Flow } from '../model/flow';
+import { Flow, FlowInstance, SubflowInstance } from '../model/flow';
+import { StepInstance } from '../model/step';
 import { Display } from './display';
 import { FlowElementType } from '../model/element';
 import { DrawingOptions } from './options';
 import { Grid } from './grid';
+import { LinkInstance } from '../model/link';
 
 const Toolbox = null; // TODO
 
@@ -33,7 +35,7 @@ export class Diagram extends Shape {
   selection: Selection;
   containerId?: string;
   stepId?: string;
-  instance = null;
+  instance?: FlowInstance;
   instances = null;
   stepInstanceId?: string;
   drawBoxes = true;
@@ -142,13 +144,15 @@ export class Diagram extends Shape {
 
   get name(): string {
     let name = this.flow.path;
-    const lastSlash = name.lastIndexOf('/');
-    if (lastSlash > 0 && lastSlash < name.length - 1) {
-      name = name.substring(lastSlash + 1);
-    }
-    const lastDot = name.lastIndexOf('.');
-    if (lastDot > 1) {
-      name = name.substring(0, lastDot);
+    if (!this.instance?.template) {
+      const lastSlash = name.lastIndexOf('/');
+      if (lastSlash > 0 && lastSlash < name.length - 1) {
+        name = name.substring(lastSlash + 1);
+      }
+      const lastDot = name.lastIndexOf('.');
+      if (lastDot > 1) {
+        name = name.substring(0, lastDot);
+      }
     }
     return name;
   }
@@ -316,7 +320,7 @@ export class Diagram extends Shape {
                     statusCode: message.status
                   };
                   step.instances.push(ai);
-                  diagram.instance.steps.push(ai);
+                  // diagram.instance.stepInstances.push(ai);
                 }
                 step.draw();
                 diagram.scrollIntoView(step);
@@ -376,16 +380,8 @@ export class Diagram extends Shape {
     const diagram = this; // forEach inner access
 
     // label
-    let label = this.name;
-    const lastSlash = label.lastIndexOf('/');
-    if (lastSlash >= 0 && lastSlash < label.length - 1) {
-      label = label.substring(lastSlash + 1);
-    }
-    if (this.instance && this.instance.template) {
-      this.instance.packageName + '/' + this.instance.flowName;
-    }
-    const font = this.instance && this.instance.template ? this.options.template.font : this.options.title.font;
-    diagram.label = new Label(this, label, this.getDisplay(), font);
+    const font = this.instance?.template ? this.options.template.font : this.options.title.font;
+    diagram.label = new Label(this, this.name, this.getDisplay(), font);
     if (this.instance?.id) {
       diagram.label.subtext = this.instance.id;
     }
@@ -1015,12 +1011,12 @@ export class Diagram extends Shape {
     }
   }
 
-  getStepInstances(stepId: string) {
+  getStepInstances(stepId: string): StepInstance[] {
     if (this.instance) {
       const insts = []; // should always return something, even if empty
-      if (this.instance.steps) {
+      if (this.instance.stepInstances) {
         const flowInstId = this.instance.id;
-        this.instance.steps.forEach(function (stepInst) {
+        this.instance.stepInstances.forEach(function (stepInst) {
           if ('s' + stepInst.stepId === stepId) {
             stepInst.flowInstanceId = flowInstId; // needed for subflow & task instance retrieval
             insts.push(stepInst);
@@ -1034,11 +1030,11 @@ export class Diagram extends Shape {
     }
   }
 
-  getLinkInstances(linkId: string) {
+  getLinkInstances(linkId: string): LinkInstance[] {
     if (this.instance) {
       const insts = []; // should always return something, even if empty
-      if (this.instance.links) {
-        this.instance.links.forEach(function (linkInst) {
+      if (this.instance.linkInstances) {
+        this.instance.linkInstances.forEach(function (linkInst) {
           if ('l' + linkInst.linkId === linkId) {
             insts.push(linkInst);
           }
@@ -1051,12 +1047,12 @@ export class Diagram extends Shape {
     }
   }
 
-  getSubflowInstances(linkId: string) {
+  getSubflowInstances(subflowId: string): SubflowInstance[] {
     if (this.instance) {
       const insts = []; // should always return something, even if empty
-      if (this.instance.subflows) {
-        this.instance.subflows.forEach(function (subInst) {
-          if ('f' + subInst.flowId === linkId) {
+      if (this.instance.subflowInstances) {
+        this.instance.subflowInstances.forEach(function (subInst) {
+          if ('f' + subInst.subflowId === subflowId) {
             insts.push(subInst);
           }
         });

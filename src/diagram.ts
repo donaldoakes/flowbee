@@ -1,7 +1,7 @@
 import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
-import { Flow } from './model/flow';
+import { Flow, FlowInstance } from './model/flow';
 import { Descriptor, start, stop, pause, task, StandardDescriptors } from './model/descriptor';
 import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style/style';
@@ -16,7 +16,6 @@ export class FlowDiagram {
     flow: Flow;
 
     readonly = false;
-    instance?: any;
     step?: string;
     editInstanceId?: string;
     data?: any;
@@ -97,6 +96,13 @@ export class FlowDiagram {
 
     toYaml(indent = 2): string {
         return jsYaml.safeDump(this.flow, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+    }
+
+    get instance(): FlowInstance {
+        return this.diagram.instance;
+    }
+    set instance(instance: FlowInstance) {
+        this.diagram.instance = instance;
     }
 
     /**
