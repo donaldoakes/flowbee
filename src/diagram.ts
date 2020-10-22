@@ -130,6 +130,20 @@ export class FlowDiagram {
         this.canvas.ondrop = e => this.onDrop(e);
     }
 
+    /**
+     * Without path or extension
+     */
+    get flowName(): string {
+        const lastSlash = this.flow.path.lastIndexOf('/');
+        if (lastSlash > 0 && lastSlash < this.flow.path.length - 1) {
+          return this.flow.path.substring(lastSlash + 1);
+        }
+        const lastDot = this.flow.path.lastIndexOf('.');
+        if (lastDot > 1) {
+          return this.flow.path.substring(0, lastDot);
+        }
+    }
+
 
 
     private down = false;
