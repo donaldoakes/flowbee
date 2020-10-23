@@ -1,12 +1,17 @@
 import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
-import { Flow, FlowInstance } from './model/flow';
+import { FlowElement } from './model/element';
+import { Flow, FlowInstance, SubflowInstance } from './model/flow';
+import { StepInstance } from './model/step';
+import { LinkInstance } from './model/link';
 import { Descriptor, start, stop, pause, task, StandardDescriptors } from './model/descriptor';
 import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style/style';
-import { Label } from './draw/label';
 import { DrawingOptions } from './draw/options';
+import { Label } from './draw/label';
+import { SelectObj } from './draw/selection';
+import { TypedEvent, Listener } from './event';
 
 export class FlowDiagram {
 
@@ -171,17 +176,26 @@ export class FlowDiagram {
         }
     }
 
+    private _onFlowElementSelect = new TypedEvent<FlowElementSelectEvent>();
+    onFlowElementSelect(listener: Listener<FlowElementSelectEvent>) {
+        this._onFlowElementSelect.on(listener);
+    }
+
     private onMouseDown(e: MouseEvent) {
         this.down = true;
         // $scope.closeContextMenu();
         if (this.diagram) {
             this.diagram.onMouseDown(e);
-            const selObj = this.diagram.selection.getSelectObj();
+            let selObj = this.diagram.selection.getSelectObj();
             if (selObj && selObj.type === 'label') {
-                // selObj = (selObj as Label).owner;
+                selObj = (selObj as Label).owner;
             }
-            if (selObj) {
-                // Inspector.setObj(selObj, this.options.readonly && e.button !== 2);
+            if (!selObj) selObj = this.diagram;
+            if (this.instance) {
+                this._onFlowElementSelect.emit({
+                    element: selObj.flowElement,
+                    instances: selObj.instances
+                });
             }
             else {
                 const bgObj = this.diagram.getBackgroundObj(e);
@@ -223,9 +237,11 @@ export class FlowDiagram {
             if (selObj && selObj.type === 'label') {
                 selObj = (selObj as Label).owner;
             }
-            if (selObj) {
-                // Inspector.setObj(selObj, true);
-            }
+            if (!selObj) selObj = this.diagram;
+            this._onFlowElementSelect.emit({
+                element: selObj.flowElement,
+                instances: selObj.instances
+            });
         }
     }
 
@@ -236,3 +252,9 @@ export class FlowDiagram {
     }
 
 }
+
+export interface FlowElementSelectEvent {
+    element: FlowElement;
+    instances: FlowInstance[] | StepInstance[] | LinkInstance[] | SubflowInstance[];
+}
+

@@ -240,7 +240,7 @@ export class Subflow extends Shape {
         if (inst.steps) {
           const flowInstId = mainFlowInstanceId;
           inst.steps.forEach(function (stepInst) {
-            if ('s' + stepInst.stepId === id) {
+            if (stepInst.stepId === id) {
               stepInsts.push(stepInst);
               // needed for subflow & task instance retrieval
               stepInst.flowInstanceId = flowInstId;
@@ -258,20 +258,20 @@ export class Subflow extends Shape {
 
   getLinkInstances(id: string) {
     if (this.instances) {
-      const transInsts = [];
+      const linkInsts = [];
       this.instances.forEach(function (inst) {
         if (inst.links) {
-          inst.links.forEach(function (transInst) {
-            if ('l' + transInst.linkId === id) {
-              transInsts.push(transInst);
+          inst.links.forEach(function (linkInst) {
+            if (linkInst.linkId === id) {
+              linkInsts.push(linkInst);
             }
           });
         }
       });
-      transInsts.sort(function (t1, t2) {
+      linkInsts.sort(function (t1, t2) {
         return t2.id - t1.id;
       });
-      return transInsts;
+      return linkInsts;
     }
   }
 

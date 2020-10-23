@@ -21,7 +21,7 @@ export class Step extends Shape {
 
   draw(animationTimeSlice?: number) {
     const step = this.step;
-    let shape;
+    let shape: string;
     if (this.descriptor.icon && this.descriptor.icon.startsWith('shape:')) {
       shape = this.descriptor.icon.substring(6);
     }
@@ -52,15 +52,24 @@ export class Step extends Shape {
     // runtime state first
     if (this.instances) {
       let adj = 0;
+      const color = null;
       if (shape === 'start' || shape === 'stop' || shape === 'pause') {
         adj = 2;
       }
-      // TODO why is this here? -- probably milestones?
-      let color = null;
-      if (shape === 'pause') {
-        color = '#ffea00';
-      }
       this.diagram.drawState(this.display, this.instances, !this.diagram.drawBoxes, adj, animationTimeSlice, color, fill, opacity);
+      if (shape === 'start' || shape === 'stop' || shape === 'pause') {
+        // clear background so opacity doesn't cause issues
+        this.diagram.oval(
+          this.display.x,
+          this.display.y,
+          this.display.w,
+          this.display.h,
+          this.diagram.options.step.outlineColor,
+          this.diagram.options.backgroundColor,
+          1.0,
+          1
+        );
+      }
       fill = null; // otherwise runtime info lost below
     }
     else if (this.data) {

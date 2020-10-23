@@ -163,7 +163,7 @@ export class Link {
     if (this.diagram.instance) {
       if (this.instances && this.instances.length > 0) {
         const latest = this.instances[0];
-        if (latest.statusCode === 1) {
+        if (latest.status === 'Initiated') {
           color = this.diagram.options.link.colors.initiated;
         }
         else {

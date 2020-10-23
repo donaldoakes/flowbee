@@ -29,6 +29,7 @@ export type FlowStatus = 'Pending' | 'In Progress' | 'Waiting' | 'Failed' | 'Com
 
 export interface FlowInstance {
     id: string;
+    runId: string;
     flowPath: string;
     status: FlowStatus;
     stepInstances?: StepInstance[];

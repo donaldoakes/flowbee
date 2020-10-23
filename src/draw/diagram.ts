@@ -213,20 +213,22 @@ export class Diagram extends Shape {
         this.stepId = step;
       }
     }
-    this.instance = instance;
-    this.editInstanceId = editInstanceId;
+    if (instance) {
+      this.instance = instance;
+      // this.editInstanceId = editInstanceId;
+    }
     this.data = data;
 
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     const display = this.prepareDisplay();
 
-    if (this.options.grid.visibility === 'visible') {
+    if (!this.instance && this.options.grid.visibility === 'visible') {
       this.grid = new Grid(this.context, display, this.options);
       this.grid.draw();
     }
 
-    if (!instance && this.options.title.visibility === 'visible') {
+    if (this.instance || this.options.title.visibility === 'visible') {
       this.label.draw(this.options.title.color);
     }
 
@@ -302,7 +304,7 @@ export class Diagram extends Shape {
           socket.addEventListener('message', function (event) {
             const message = JSON.parse(event.data);
             if (message.type === 'step') {
-              const step = diagram.getStep('s' + message.instance.stepId);
+              const step = diagram.getStep(message.instance.stepId);
               if (step) {
                 if (!step.instances) {
                   step.instances = [];
@@ -329,13 +331,13 @@ export class Diagram extends Shape {
                   return inst.id === message.instId;
                 });
                 if (linkInst) {
-                  linkInst.statusCode = message.status;
+                  linkInst.status = message.status;
                 }
                 else {
                   link.instances.push({
                     linkId: message.id,
                     id: message.instId,
-                    statusCode: message.status
+                    status: message.status
                   });
                 }
                 link.draw();
@@ -512,10 +514,11 @@ export class Diagram extends Shape {
 
     let highlighted = null;
     const sequence = this.getSequence(true);
+
     if (sequence) {
-      const update = function (it, slice) {
+      const update = function (it: (Step | Link | Subflow), slice: number) {
         let highlight = false;
-        if (it instanceof Step) {
+        if (it.flowElement.type === 'step') {
           if (animate) {
             // TODO: more sensible live scrolling based on ultimate endpoint (esp highlight)
             diagram.scrollIntoView(it, slice);
@@ -530,7 +533,7 @@ export class Diagram extends Shape {
         }
         it.draw(animate ? slice : null);
         if (highlight) {
-          it.highlight();
+          (it as Step).highlight();
           highlighted = it;
         }
       };
@@ -583,7 +586,7 @@ export class Diagram extends Shape {
     if (this.data.hotspots && this.data.hotspots.length) {
       const hottest = this.data.hotspots.reduce((max, cur) => cur.ms > max.ms ? cur : max);
       diagram.steps.forEach(function (step) {
-        const hotspot = diagram.data.hotspots.find(hs => ('s' + hs.id) === step.step.id);
+        const hotspot = diagram.data.hotspots.find(hs => hs.id === step.step.id);
         if (hotspot && hotspot.ms) {
           step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
           step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
@@ -593,7 +596,7 @@ export class Diagram extends Shape {
       if (diagram.subflows) {
         diagram.subflows.forEach(function (subflow) {
           subflow.steps.forEach(function (step) {
-            const hotspot = diagram.data.hotspots.find(hs => ('s' + hs.id) === step.step.id);
+            const hotspot = diagram.data.hotspots.find(hs => hs.id === step.step.id);
             if (hotspot && hotspot.ms) {
               step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
               step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
@@ -702,7 +705,7 @@ export class Diagram extends Shape {
 
   getStart(): Step | undefined {
     for (let i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.path === this.startDescriptor.path) {
+      if (this.steps[i].step.path === 'flowbee-demo.start') { // TODO TODO TODO
         return this.steps[i];
       }
     }
@@ -1012,14 +1015,14 @@ export class Diagram extends Shape {
       if (this.instance.stepInstances) {
         const flowInstId = this.instance.id;
         this.instance.stepInstances.forEach(function (stepInst) {
-          if ('s' + stepInst.stepId === stepId) {
+          if (stepInst.stepId === stepId) {
             stepInst.flowInstanceId = flowInstId; // needed for subflow & task instance retrieval
             insts.push(stepInst);
           }
         });
       }
-      insts.sort(function (a1, a2) {
-        return a2.id - a1.id;
+      insts.sort(function (s1, s2) {
+        return s2.id - s1.id;
       });
       return insts;
     }
@@ -1030,13 +1033,13 @@ export class Diagram extends Shape {
       const insts = []; // should always return something, even if empty
       if (this.instance.linkInstances) {
         this.instance.linkInstances.forEach(function (linkInst) {
-          if ('l' + linkInst.linkId === linkId) {
+          if (linkInst.linkId === linkId) {
             insts.push(linkInst);
           }
         });
       }
-      insts.sort(function (t1, t2) {
-        return t2.id - t1.id;
+      insts.sort(function (l1, l2) {
+        return l2.id - l1.id;
       });
       return insts;
     }
@@ -1047,13 +1050,13 @@ export class Diagram extends Shape {
       const insts = []; // should always return something, even if empty
       if (this.instance.subflowInstances) {
         this.instance.subflowInstances.forEach(function (subInst) {
-          if ('f' + subInst.subflowId === subflowId) {
+          if (subInst.subflowId === subflowId) {
             insts.push(subInst);
           }
         });
       }
-      insts.sort(function (s1, s2) {
-        return s2.id - s1.id;
+      insts.sort(function (f1, f2) {
+        return f2.id - f1.id;
       });
       return insts;
     }
@@ -1066,9 +1069,8 @@ export class Diagram extends Shape {
       for (let i = 0; i < count; i++) {
         const instance = instances[i];
         const rounding = this.options.step.roundingRadius;
-        if (instance.statusCode) {
-          const status = this.options.statuses[instance.statusCode];
-          instance.status = status.name;
+        if (instance.status) {
+          const status = this.options.statuses.find(s => s.name === instance.status);
           const statusColor = color ? color : status.color;
           const prevWidth = this.options.step.state.previous.width;
           const del = this.options.step.state.width - prevWidth;
@@ -1281,6 +1283,7 @@ export class Diagram extends Shape {
     let j = 0; // subsegment
     const context = this.context;
     const perSeg = Math.ceil(slice / (1000 / 60) / segments.length);
+    const diagram = this;
     const d = function () {
       const segment = segments[i];
       if (j >= perSeg) {
@@ -1312,8 +1315,8 @@ export class Diagram extends Shape {
           }
         }
         context.stroke();
-        context.lineWidth = this.options.defaultLineWidth;
-        context.strokeStyle = this.options.defaultColor;
+        context.lineWidth = diagram.options.defaultLineWidth;
+        context.strokeStyle = diagram.options.defaultColor;
         j++;
       }
       if (i < segments.length) {

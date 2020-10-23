@@ -38,7 +38,7 @@ export class FlowTree {
     }
 
     constructor(
-        readonly fileTree: FileTree,
+        public fileTree: FileTree,
         readonly container: HTMLElement
     ) { }
 

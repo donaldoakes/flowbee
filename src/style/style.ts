@@ -128,7 +128,7 @@ export class DiagramStyle {
         label.select = stylesObj[`${this.prefix} .label .select`];
         const step = stylesObj[`${this.prefix} .step`];
         step.start = stylesObj[`${this.prefix} .step .start`];
-        step.stop = stylesObj[`${this.prefix} .step .start`];
+        step.stop = stylesObj[`${this.prefix} .step .stop`];
         step.pause = stylesObj[`${this.prefix} .step .pause`];
         step.state = stylesObj[`${this.prefix} .step .state`];
         step.state.previous = stylesObj[`${this.prefix} .step .state .previous`];
