@@ -294,33 +294,26 @@ export class Diagram extends Shape {
         diagram.notes.forEach(function (note) {
           note.draw();
         });
-        if (this.options.webSocketUrl) {
-          const socket = new WebSocket(this.options.webSocketUrl);
+        if (diagram.options.webSocketUrl) {
+          const socket = new WebSocket(diagram.options.webSocketUrl);
           socket.addEventListener('open', function (event) {
-            socket.send(diagram.instance.id);
+            socket.send(`{ "topic": "flowInstance-${diagram.instance.id}" }`);
           });
           socket.addEventListener('message', function (event) {
             const message = JSON.parse(event.data);
-            if (message.subtype === 's') {
-              const step = diagram.getStep('s' + message.id);
+            if (message.type === 'step') {
+              const step = diagram.getStep('s' + message.instance.stepId);
               if (step) {
                 if (!step.instances) {
                   step.instances = [];
                 }
-                const actInst = step.instances.find(function (inst) {
-                  return inst.id === message.instId;
-                });
-                if (actInst) {
-                  actInst.statusCode = message.status;
+                const stepIdx = step.instances.findIndex(inst => inst.id === message.instance.id);
+                if (stepIdx) {
+                  step.instances[stepIdx] = message.instance;
                 }
                 else {
-                  const ai = {
-                    stepId: message.id,
-                    id: message.instId,
-                    statusCode: message.status
-                  };
-                  step.instances.push(ai);
-                  // diagram.instance.stepInstances.push(ai);
+                  step.instances.push(message.instance);
+                  diagram.instance.stepInstances.push(message.instance);
                 }
                 step.draw();
                 diagram.scrollIntoView(step);
@@ -570,7 +563,9 @@ export class Diagram extends Shape {
             callback();
           }
         };
-        s();
+        if (sequence.length > 0) {
+          s();
+        }
       }
       else {
         sequence.forEach(update);

@@ -3,8 +3,7 @@ import { Icon } from './style/icon';
 export interface DiagramOptions {
     theme?: string;
     iconBase?: string;
-    websocketUrl?: string;
-    animate?: boolean;
+    webSocketUrl?: string;
     animationSpeed?: number; // segments/s;
     animationLinkFactor?: number; // relative link slice
     maxInstances?: number
@@ -13,8 +12,7 @@ export interface DiagramOptions {
 export const diagramDefault: DiagramOptions = {
     theme: 'light',
     iconBase: null,
-    websocketUrl: null,
-    animate: false,
+    webSocketUrl: null,
     animationSpeed: 8,
     animationLinkFactor: 3,
     maxInstances: 10

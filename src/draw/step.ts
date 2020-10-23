@@ -1,6 +1,6 @@
 import { Shape } from './shape';
 import { Diagram } from './diagram';
-import { Step as StepElement } from '../model/step';
+import { Step as StepElement, StepInstance } from '../model/step';
 import { Descriptor } from '../model/descriptor';
 import { Milestone, MilestoneGroup } from '../model/milestone';
 import { Display, Title } from './display';
@@ -9,7 +9,7 @@ export class Step extends Shape {
 
   title: Title;
   descriptor: Descriptor;
-  instances = null;
+  instances?: StepInstance[];
   data = null;
 
   constructor(readonly diagram: Diagram, readonly step: StepElement) {
@@ -215,7 +215,7 @@ export class Step extends Shape {
   isWaiting() {
     if (this.instances && this.instances.length > 0) {
       const instance = this.instances[this.instances.length - 1];
-      return instance.statusCode === 7;
+      return instance.status === 'Waiting';
     }
   }
 

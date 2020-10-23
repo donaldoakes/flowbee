@@ -71,7 +71,7 @@ export class FlowDiagram {
      * Parse and render from text
      * @param options rendering options
      */
-    render(options: DiagramOptions & DrawingOptions = {}) {
+    render(options: DiagramOptions & DrawingOptions = {}, animate = false) {
         // loading styles is expensive, so perform only if theme has changed
         if (!this.drawingOptions || (options.theme && options.theme !== this.theme)) {
             this.theme = options.theme;
@@ -82,7 +82,7 @@ export class FlowDiagram {
         console.debug(`merged options: ${JSON.stringify(this.diagram.options, null, 2)}`);
         this.diagram.readonly = this.readonly;
         this.canvas.style.backgroundColor = this.diagram.options.backgroundColor;
-        this.draw(this.flow, this.diagram.options.animate);
+        this.draw(this.flow, animate);
     }
 
     /**
@@ -110,7 +110,7 @@ export class FlowDiagram {
      * @param flow to render
      * @param animate
      */
-    private draw(flow: Flow, animate = false) {
+    private draw(flow: Flow, animate: boolean) {
         this.diagram.draw(
             flow,
             this.instance,
