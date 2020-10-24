@@ -136,7 +136,8 @@ export class Subflow extends Shape {
 
   getStart() {
     for (let i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.path === this.diagram.startDescriptor.path) {
+      const descriptor = this.diagram.getDescriptor(this.steps[i].step.path);
+      if (descriptor.category === 'start') {
         return this.steps[i];
       }
     }
@@ -302,40 +303,42 @@ export class Subflow extends Shape {
     subflow.links = [];
     subflow.display = { x: x, y: y };
 
-    let stepId = startStepId;
-    let stepX = x + 40;
-    let stepY = y + 40;
-    const linkId = startLinkId;
+    // TODO template-driven
 
-    const start = Step.create(diagram, stepId, diagram.startDescriptor, stepX, stepY);
-    subflowElement.steps.push(start.step);
-    subflow.steps.push(start);
+    // let stepId = startStepId;
+    // let stepX = x + 40;
+    // let stepY = y + 40;
+    // const linkId = startLinkId;
 
-    stepId++;
+    // const start = Step.create(diagram, stepId, diagram.startDescriptor, stepX, stepY);
+    // subflowElement.steps.push(start.step);
+    // subflow.steps.push(start);
 
-    let task;
-    if (type === 'Error Handler') {
-      // TODO template
-      stepX = x + 170;
-      stepY = y + 30;
-      task = Step.create(diagram, stepId, diagram.taskDescriptor, stepX, stepY);
-      task.step.attributes.TASK_PAGELET = 'task.pagelet';
-      task.step.attributes.STATUS_AFTER_EVENT = 'Cancelled';
-      task.step.name = diagram.name + ' Fallout';
-      subflow.steps.push(task.step);
-      subflow.steps.push(task);
-      const link = Link.create(diagram, linkId, start, task);
-      subflow.links.push(link);
-    }
+    // stepId++;
 
-    stepId++;
-    stepX = x + 340;
-    stepY = y + 40;
-    const stop = Step.create(diagram, stepId, diagram.stopDescriptor, stepX, stepY);
-    subflowElement.steps.push(stop.step);
-    subflow.steps.push(stop);
-    const link = Link.create(diagram, linkId, task ? task : start, stop);
-    subflow.links.push(link);
+    // let task;
+    // if (type === 'Error Handler') {
+    //   // TODO template
+    //   stepX = x + 170;
+    //   stepY = y + 30;
+    //   task = Step.create(diagram, stepId, diagram.taskDescriptor, stepX, stepY);
+    //   task.step.attributes.TASK_PAGELET = 'task.pagelet';
+    //   task.step.attributes.STATUS_AFTER_EVENT = 'Cancelled';
+    //   task.step.name = diagram.name + ' Fallout';
+    //   subflow.steps.push(task.step);
+    //   subflow.steps.push(task);
+    //   const link = Link.create(diagram, linkId, start, task);
+    //   subflow.links.push(link);
+    // }
+
+    // stepId++;
+    // stepX = x + 340;
+    // stepY = y + 40;
+    // const stop = Step.create(diagram, stepId, diagram.stopDescriptor, stepX, stepY);
+    // subflowElement.steps.push(stop.step);
+    // subflow.steps.push(stop);
+    // const link = Link.create(diagram, linkId, task ? task : start, stop);
+    // subflow.links.push(link);
 
     return subflow;
   }

@@ -58,7 +58,7 @@ export const start = new FlowItemDescriptor({
     name: 'Start',
     type: 'step',
     icon: 'shape:start',
-    category: 'Flow'
+    category: 'start'
 });
 
 export const stop = new FlowItemDescriptor({
@@ -66,7 +66,7 @@ export const stop = new FlowItemDescriptor({
     name: 'Stop',
     type: 'step',
     icon: 'shape:stop',
-    category: 'Flow'
+    category: 'stop'
 });
 
 export const pause = new FlowItemDescriptor({
@@ -74,39 +74,39 @@ export const pause = new FlowItemDescriptor({
     name: 'Pause',
     type: 'step',
     icon: 'shape:pause',
-    category: 'Flow'
+    category: 'pause'
+});
+
+export const decide = new FlowItemDescriptor({
+    path: 'decide',
+    name: 'Decide',
+    type: 'step',
+    icon: 'shape:decision',
+    category: 'decision'
 });
 
 export const errorSubflow = new FlowItemDescriptor({
     path: 'subflow',
-    name: 'Embedded Subflow',
+    name: 'Error Subflow',
     type: 'subflow',
-    icon: 'subflow.svg',
-    category: 'Flow'
+    icon: 'embedded.png',
+    category: 'embedded'
 });
 
 export const note = new FlowItemDescriptor({
     path: 'note',
     name: 'Note',
     type: 'note',
-    icon: 'note.svg',
-    category: 'Flow'
-});
-
-export const task = new FlowItemDescriptor({
-    path: 'task',
-    name: 'Manual Task',
-    type: 'step',
-    icon: 'task.svg',
-    category: 'Task'
+    icon: 'note.png',
+    category: 'note'
 });
 
 export const StandardDescriptors: Descriptor[] = [
     start,
     stop,
     pause,
+    decide,
     errorSubflow,
-    note,
-    task
+    note
 ];
 

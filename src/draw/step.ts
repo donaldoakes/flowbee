@@ -329,13 +329,13 @@ export class Step extends Shape {
       }
     }
     let name = descriptor.name;
-    if (descriptor.path === diagram.startDescriptor.path) {
+    if (descriptor.category === 'start') {
       name = 'Start';
     }
-    else if (descriptor.path === diagram.stopDescriptor.path) {
+    else if (descriptor.category === 'stop') {
       name = 'Stop';
     }
-    else if (descriptor.path === diagram.pauseDescriptor.path) {
+    else if (descriptor.category === 'pause') {
       name = 'Pause';
     }
     else {

@@ -50,11 +50,6 @@ export class Diagram extends Shape {
   zoomControl?: HTMLElement;
   origPanelWidth?: number;
 
-  startDescriptor: Descriptor;
-  stopDescriptor: Descriptor;
-  pauseDescriptor: Descriptor;
-  taskDescriptor: Descriptor;
-
   constructor(
     readonly canvas: HTMLCanvasElement,
     public options: DiagramOptions & DrawingOptions,
@@ -907,6 +902,9 @@ export class Diagram extends Shape {
 
   addNote(x: number, y: number) {
     const note = Note.create(this, this.genId(this.notes, 'note'), x, y);
+    if (!this.flow.notes) {
+      this.flow.notes = [];
+    }
     this.flow.notes.push(note.note);
     this.notes.push(note);
   }
@@ -1689,7 +1687,7 @@ export class Diagram extends Shape {
             const descriptor = (selObj as Step).descriptor;
             if (inst.status === 'Waiting') {
               actions.push('proceed');
-              if (descriptor && descriptor.path === this.pauseDescriptor.path) {
+              if (descriptor && descriptor.category === 'pause') {
                 actions.push('resume');
               }
             }

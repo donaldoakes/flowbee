@@ -5,7 +5,7 @@ import { FlowElement } from './model/element';
 import { Flow, FlowInstance, SubflowInstance } from './model/flow';
 import { StepInstance } from './model/step';
 import { LinkInstance } from './model/link';
-import { Descriptor, start, stop, pause, task, StandardDescriptors } from './model/descriptor';
+import { Descriptor, StandardDescriptors } from './model/descriptor';
 import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style/style';
 import { DrawingOptions } from './draw/options';
@@ -45,11 +45,6 @@ export class FlowDiagram {
             diagramDefault,
             this.descriptors
         );
-
-        this.diagram.startDescriptor = start;
-        this.diagram.stopDescriptor = stop;
-        this.diagram.pauseDescriptor = pause;
-        this.diagram.taskDescriptor = task;
     }
 
     /**

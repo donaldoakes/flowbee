@@ -31,7 +31,6 @@ export class Styles {
                 const cssRule = styleSheet.cssRules[j];
                 const selectorText = (cssRule as any).selectorText;
                 if (selectorText) {
-
                     if (selectorText === `.${this.prefix}` || selectorText.startsWith(`.${this.prefix} `)
                       || selectorText === `.${this.prefix}-${this.theme.name}` || selectorText.startsWith(`.${this.prefix}-${this.theme.name} `)) {
                         //

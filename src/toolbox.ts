@@ -1,6 +1,6 @@
 import { merge } from 'merge-anything';
 import { ToolboxOptions, toolboxDefault } from './options';
-import { StandardDescriptors } from './model/descriptor';
+import { Descriptor, StandardDescriptors } from './model/descriptor';
 import { Styles } from './style/style';
 import { Theme } from './theme';
 
@@ -11,9 +11,11 @@ export class Toolbox {
     private stylesObj: object;
 
     constructor(
-        readonly descriptors = StandardDescriptors,
+        readonly descriptors: Descriptor[] | undefined,
         readonly container: HTMLElement
-    ) { }
+    ) {
+        this.descriptors = descriptors || StandardDescriptors;
+    }
 
     async render(options: ToolboxOptions = {}) {
 
