@@ -223,7 +223,7 @@ export class Diagram extends Shape {
       this.grid.draw();
     }
 
-    if (this.instance || this.options.title.visibility === 'visible') {
+    if (this.label) {
       this.label.draw(this.options.title.color);
     }
 
@@ -370,12 +370,14 @@ export class Diagram extends Shape {
     const diagram = this; // forEach inner access
 
     // label
-    const font = this.instance?.template ? this.options.template.font : this.options.title.font;
-    diagram.label = new Label(this, this.name, this.getDisplay(), font);
-    if (this.instance?.id) {
-      diagram.label.subtext = this.instance.id;
+    if (!this.instance && this.options.title.visibility === 'visible') {
+      const font = this.instance?.template ? this.options.template.font : this.options.title.font;
+      diagram.label = new Label(this, this.name, this.getDisplay(), font);
+      if (this.instance?.id) {
+        diagram.label.subtext = this.instance.id;
+      }
+      diagram.makeRoom(canvasDisplay, diagram.label.prepareDisplay());
     }
-    diagram.makeRoom(canvasDisplay, diagram.label.prepareDisplay());
 
     // steps
     diagram.steps = [];
@@ -1708,7 +1710,7 @@ export class Diagram extends Shape {
       y = y / scale;
     }
 
-    if (this.label.isHover(x, y)) {
+    if (this.label?.isHover(x, y)) {
       return this.label;
     }
     // links checked before steps for better anchor selectability
