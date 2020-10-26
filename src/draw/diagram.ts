@@ -1512,7 +1512,11 @@ export class Diagram extends Shape {
     }
   }
 
-  onMouseOut(e: MouseEvent) {
+  onMouseEnter(_e: MouseEvent) {
+    document.body.style.cursor = 'default';
+  }
+
+  onMouseOut(_e: MouseEvent) {
     document.body.style.cursor = 'default';
   }
 
