@@ -33,7 +33,9 @@ export class Diagram extends Shape {
   dialog = null; // TODO: see this.onDelete()
   anchor = -1;
   selection: Selection;
-  containerId?: string;
+  container?: HTMLElement;
+  containerResizeObserver?: ResizeObserver;
+  scrollContainerId?: string;
   stepId?: string;
   instance?: FlowInstance;
   instances = null;
@@ -56,6 +58,7 @@ export class Diagram extends Shape {
     public descriptors: Descriptor[]
   ) {
     super(canvas.getContext("2d"), options);
+    this.container = canvas.parentElement;
     this.dialog = null;
     this.descriptors = descriptors;
     this.context = this.canvas.getContext("2d");
@@ -152,6 +155,30 @@ export class Diagram extends Shape {
     return name;
   }
 
+  get dpRatio(): number {
+    if (window.devicePixelRatio) {
+      return window.devicePixelRatio;
+    } else {
+      return 1;
+    }
+  }
+
+  resizeCanvas(canvasDisplay: Display) {
+    if (this.dpRatio === 1) {
+      this.canvas.width = canvasDisplay.w;
+      this.canvas.height = canvasDisplay.h;
+    }
+    else {
+      // fix blurriness on retina displays
+      this.canvas.width = canvasDisplay.w * this.dpRatio;
+      this.canvas.height = canvasDisplay.h * this.dpRatio;
+      this.canvas.style.width = canvasDisplay.w + 'px';
+      this.canvas.style.height = canvasDisplay.h + 'px';
+      const ctx = this.canvas.getContext('2d');
+      ctx.scale(this.dpRatio, this.dpRatio);
+    }
+  }
+
   zoomCanvas(zoom: number) {
     this.zoom = zoom;
     const scale = zoom / 100;
@@ -200,6 +227,23 @@ export class Diagram extends Shape {
       this.flowElement = { ...flow, type: 'flow' };
       this.drawBoxes = flow.attributes.NodeStyle === 'BoxIcon';
     }
+
+    if (this.container && this.options.resizeWithContainer && !this.containerResizeObserver) {
+      const min = (this.options.grid?.width || 10) / 2;
+      this.containerResizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          if (entry.contentRect) {
+            if (entry.contentRect.width > parseInt(this.canvas.style.width) + min
+                || entry.contentRect.height > parseInt(this.canvas.style.height) + min) {
+                  this.resizeCanvas({ w: entry.contentRect.width, h: entry.contentRect.height });
+                  this.draw();
+            }
+          }
+        }
+      });
+      this.containerResizeObserver.observe(this.container);
+    }
+
     if (step) {
       if (instance) {
         this.stepInstanceId = step;
@@ -427,10 +471,6 @@ export class Diagram extends Shape {
       diagram.makeRoom(canvasDisplay, this.marquee.prepareDisplay());
     }
 
-    // allow extra room
-    canvasDisplay.w += diagram.options.padding;
-    canvasDisplay.h += diagram.options.padding;
-
     // TODO embedded toolbox (like Hub)
     // if (!this.readonly && Toolbox) {
     //   var toolbox = Toolbox.getToolbox();
@@ -447,23 +487,11 @@ export class Diagram extends Shape {
     //   }
     // }
 
-    let dpRatio = 1;
-    if (window.devicePixelRatio) {
-      dpRatio = window.devicePixelRatio;
-    }
-    if (dpRatio === 1) {
-      this.canvas.width = canvasDisplay.w;
-      this.canvas.height = canvasDisplay.h;
-    }
-    else {
-      // fix blurriness on retina displays
-      this.canvas.width = canvasDisplay.w * dpRatio;
-      this.canvas.height = canvasDisplay.h * dpRatio;
-      this.canvas.style.width = canvasDisplay.w + 'px';
-      this.canvas.style.height = canvasDisplay.h + 'px';
-      const ctx = this.canvas.getContext('2d');
-      ctx.scale(dpRatio, dpRatio);
-    }
+    // allow extra room
+    canvasDisplay.w += this.options.padding;
+    canvasDisplay.h += this.options.padding;
+
+    this.resizeCanvas(canvasDisplay);
 
     return canvasDisplay;
   }
@@ -1370,8 +1398,8 @@ export class Diagram extends Shape {
     const centerY = item.display.y + item.display.h / 2;
 
     let container = document.body;
-    if (this.containerId) {
-      container = document.getElementById(this.containerId);
+    if (this.scrollContainerId) {
+      container = document.getElementById(this.scrollContainerId);
     }
 
     const clientRect = this.canvas.getBoundingClientRect();

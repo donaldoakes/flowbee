@@ -4,6 +4,7 @@ export interface DiagramOptions {
     theme?: string;
     iconBase?: string;
     webSocketUrl?: string;
+    resizeWithContainer?: boolean;
     animationSpeed?: number; // segments/s;
     animationLinkFactor?: number; // relative link slice
     maxInstances?: number
@@ -13,6 +14,7 @@ export const diagramDefault: DiagramOptions = {
     theme: 'light',
     iconBase: null,
     webSocketUrl: null,
+    resizeWithContainer: false,
     animationSpeed: 8,
     animationLinkFactor: 3,
     maxInstances: 10
