@@ -1513,11 +1513,11 @@ export class Diagram extends Shape {
   }
 
   onMouseEnter(_e: MouseEvent) {
-    document.body.style.cursor = 'default';
+    document.body.style.cursor = this.canvas.style.cursor = 'default';
   }
 
   onMouseOut(_e: MouseEvent) {
-    document.body.style.cursor = 'default';
+    document.body.style.cursor = this.canvas.style.cursor = 'default';
   }
 
   onMouseMove(e: MouseEvent) {
@@ -1531,27 +1531,27 @@ export class Diagram extends Shape {
         this.anchor = this.hoverObj.getAnchor(x, y);
         if (this.anchor >= 0) {
           if (this.hoverObj.type === 'link') {
-            document.body.style.cursor = 'crosshair';
+            document.body.style.cursor = this.canvas.style.cursor = 'crosshair';
           }
           else {
             if (this.anchor === 0 || this.anchor === 2) {
-              document.body.style.cursor = 'nw-resize';
+              document.body.style.cursor = this.canvas.style.cursor = 'nwse-resize';
             }
             else if (this.anchor === 1 || this.anchor === 3) {
-              document.body.style.cursor = 'ne-resize';
+              document.body.style.cursor = this.canvas.style.cursor = 'nesw-resize';
             }
           }
         }
         else {
-          document.body.style.cursor = 'pointer';
+          document.body.style.cursor = this.canvas.style.cursor = 'pointer';
         }
       }
       else {
-        document.body.style.cursor = 'pointer';
+        document.body.style.cursor = this.canvas.style.cursor = 'pointer';
       }
     }
     else {
-      document.body.style.cursor = '';
+      document.body.style.cursor = this.canvas.style.cursor = 'default';
     }
   }
 
