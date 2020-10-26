@@ -49,4 +49,15 @@ To utilize your theme pass its name to [FlowbeeDiagram.render()]():
 flowDiagram.render('garish', contents, filename);
 ```
 
+## No Inline Styles
+By default Flowbee uses inline styles via stylesheet injection. If you have a Content Security Policy 
+and wish to avoid inline styles, you can point to the no-styles version of Flowbee:
+```typescript
+import * as flowbee from '../node_modules/flowbee/dist/nostyles.js';
+```
+Then you'd want to separately include Flowbee's css in your HTML:
+```html
+  <link href="${flowbeeCssUri}" rel="../node_modules/flowbee/dist/style.css" />
+```
+
 

@@ -37,5 +37,20 @@ export default [
                 inject: { insertAt: 'top' }
             })
         ]
+    },
+	{
+		input: 'src/main.ts',
+		output: {
+            file: 'dist/nostyles.js',
+            format: 'es'
+        },
+        plugins: [
+            resolve(),
+            commonjs(),
+            typescript(),
+            postcss({
+                extract: true
+            })
+        ]
 	}
 ];
