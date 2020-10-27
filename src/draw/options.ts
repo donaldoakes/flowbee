@@ -73,6 +73,7 @@ export interface DrawingOptions {
     defaultLineWidth?: number;
     defaultColor?: string;
     minWidth?: number;
+    minHeight?: number;
     padding?: number;
     meta?: { color: string };
     drag?: { min: number };

@@ -154,6 +154,7 @@ export class DiagramStyle {
             defaultLineWidth: styles.getSize(stylesObj[`${this.prefix} .line`].width),
             defaultFont: styles.getFont(diagram),
             minWidth: styles.getSize(diagram['min-width']),
+            minHeight: styles.getSize(diagram['min-height']),
             padding: styles.getSize(diagram.padding),
             drag: {
                 min: styles.getSize(stylesObj[`${this.prefix} .drag`]['min-width'])

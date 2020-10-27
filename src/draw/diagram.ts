@@ -16,6 +16,7 @@ import { DrawingOptions } from './options';
 import { Grid } from './grid';
 import { LinkInstance } from '../model/link';
 
+
 const Toolbox = null; // TODO
 
 export class Diagram extends Shape {
@@ -34,7 +35,6 @@ export class Diagram extends Shape {
   anchor = -1;
   selection: Selection;
   container?: HTMLElement;
-  containerResizeObserver?: ResizeObserver;
   scrollContainerId?: string;
   stepId?: string;
   instance?: FlowInstance;
@@ -46,6 +46,8 @@ export class Diagram extends Shape {
   data?: any;
 
   images?: {[key: string]: HTMLImageElement};
+
+  static containerResizeObserver: ResizeObserver;
 
   // TODO extract zoom
   zoom = 100;
@@ -226,22 +228,38 @@ export class Diagram extends Shape {
       this.flow = flow;
       this.flowElement = { ...flow, type: 'flow' };
       this.drawBoxes = flow.attributes.NodeStyle === 'BoxIcon';
+
+      if (this.container && this.options.resizeWithContainer) {
+        // may be redrawing on same canvas with a different flow: re-initialize canvas size (new flow may be smaller)
+        this.resizeCanvas({
+          w: Math.max(this.container.clientWidth, this.options.minWidth) - this.options.padding,
+          h: Math.max(this.container.clientHeight, this.options.minHeight) - this.options.padding
+        });
+        this.draw();
+      }
     }
 
-    if (this.container && this.options.resizeWithContainer && !this.containerResizeObserver) {
-      const min = (this.options.grid?.width || 10) / 2;
-      this.containerResizeObserver = new ResizeObserver(entries => {
-        for (const entry of entries) {
-          if (entry.contentRect) {
-            if (entry.contentRect.width > parseInt(this.canvas.style.width) + min
-                || entry.contentRect.height > parseInt(this.canvas.style.height) + min) {
-                  this.resizeCanvas({ w: entry.contentRect.width, h: entry.contentRect.height });
-                  this.draw();
+    if (this.container && this.options.resizeWithContainer) {
+      if (Diagram.containerResizeObserver) {
+        Diagram.containerResizeObserver.unobserve(this.container);
+        Diagram.containerResizeObserver.disconnect();
+        Diagram.containerResizeObserver = undefined;
+      }
+      if (!Diagram.containerResizeObserver) {
+        Diagram.containerResizeObserver = new ResizeObserver(entries => {
+          const min = (this.options.grid?.width || 10) / 2;
+          for (const entry of entries) {
+            if (entry.contentRect) {
+              if (entry.contentRect.width > parseInt(this.canvas.style.width) + min
+                  || entry.contentRect.height > parseInt(this.canvas.style.height) + min) {
+                    this.resizeCanvas({ w: entry.contentRect.width, h: entry.contentRect.height });
+                    this.draw();
+              }
             }
           }
-        }
-      });
-      this.containerResizeObserver.observe(this.container);
+        });
+      }
+      Diagram.containerResizeObserver.observe(this.container);
     }
 
     if (step) {
@@ -408,7 +426,7 @@ export class Diagram extends Shape {
   prepareDisplay(): Display {
     const canvasDisplay = {
       w: Math.max(this.canvas.clientWidth, this.options.minWidth) - this.options.padding,
-      h: Math.max(this.canvas.clientHeight, this.options.minWidth) - this.options.padding
+      h: Math.max(this.canvas.clientHeight, this.options.minHeight) - this.options.padding
     };
 
     const diagram = this; // forEach inner access
