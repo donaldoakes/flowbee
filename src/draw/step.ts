@@ -168,7 +168,7 @@ export class Step extends Shape {
     // title
     const diagram = this.diagram;
     diagram.context.font = this.diagram.options.defaultFont.name;
-    this.title.lines.forEach(function (line) {
+  this.title.lines.forEach(function (line) {
       if (shape === 'start') {
         diagram.context.fillStyle = diagram.options.step.start.color;
       } else if (shape === 'stop') {
@@ -258,6 +258,7 @@ export class Step extends Shape {
       titleLines.push({ text: line });
     });
     const title = { text: this.step.name, lines: titleLines, w: 0, h: 0 };
+    this.diagram.context.font = this.diagram.options.defaultFont.name;
     for (let i = 0; i < title.lines.length; i++) {
       const line = title.lines[i];
       const textMetrics = this.diagram.context.measureText(line.text);
