@@ -10,7 +10,6 @@ import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style/style';
 import { DrawingOptions } from './draw/options';
 import { Label } from './draw/label';
-import { SelectObj } from './draw/selection';
 import { TypedEvent, Listener } from './event';
 
 export class FlowDiagram {
@@ -171,6 +170,11 @@ export class FlowDiagram {
         }
     }
 
+    private _onFlowChange = new TypedEvent<FlowChangeEvent>();
+    onFlowChange(listener: Listener<FlowChangeEvent>) {
+        this._onFlowChange.on(listener);
+    }
+
     private _onFlowElementSelect = new TypedEvent<FlowElementSelectEvent>();
     onFlowElementSelect(listener: Listener<FlowElementSelectEvent>) {
         this._onFlowElementSelect.on(listener);
@@ -241,13 +245,15 @@ export class FlowDiagram {
     }
 
     private handleChange() {
-        // if (this.onChange) {
-        //     this.onChange(this.diagram.flow);
-        // }
+        this._onFlowChange.emit({
+            flow: this.flow
+        });
     }
-
 }
 
+export interface FlowChangeEvent {
+    flow: Flow
+}
 export interface FlowElementSelectEvent {
     element: FlowElement;
     instances: FlowInstance[] | StepInstance[] | LinkInstance[] | SubflowInstance[];
