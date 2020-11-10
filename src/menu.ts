@@ -85,7 +85,7 @@ export class ContextMenu {
 
 export interface ContextMenuProvider {
     getItems(flowElementEvent: FlowElementEvent): MenuItem[] | undefined;
-    onSelectItem(selectEvent: ContextMenuSelectEvent);
+    onSelectItem(selectEvent: ContextMenuSelectEvent): boolean;
 }
 
 export interface ContextMenuSelectEvent extends FlowElementEvent {
@@ -94,7 +94,7 @@ export interface ContextMenuSelectEvent extends FlowElementEvent {
 }
 
 export class DefaultMenuProvider implements ContextMenuProvider {
-    constructor(private flowDiagram: FlowDiagram) { }
+    constructor(readonly flowDiagram: FlowDiagram) { }
     getItems(flowElementEvent: FlowElementEvent): MenuItem[] | undefined {
         if (!this.flowDiagram.readonly && flowElementEvent.element) {
             return [
@@ -102,9 +102,10 @@ export class DefaultMenuProvider implements ContextMenuProvider {
             ];
         }
     }
-    onSelectItem(selectEvent: ContextMenuSelectEvent) {
+    onSelectItem(selectEvent: ContextMenuSelectEvent): boolean {
         if (selectEvent.item.id === 'delete') {
             this.flowDiagram.handleDelete();
+            return true;
         }
     }
 }

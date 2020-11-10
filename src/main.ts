@@ -5,6 +5,7 @@ export { Descriptor, FlowItemDescriptor, StandardDescriptors,
 export { FlowElement as FlowItem, FlowElementType as FlowItemType } from './model/element';
 export { Toolbox } from './toolbox';
 export { FlowTree, FileTree, FileItemType, FlowTreeSelectEvent } from './tree';
-export { TypedEvent, Listener } from './event';
+export { TypedEvent, Listener, FlowElementEvent, FlowElementSelectEvent } from './event';
 export { DiagramOptions, ToolboxOptions, FlowTreeOptions } from './options';
 export { DrawingOptions } from './draw/options';
+export { MenuItem, ContextMenuProvider, DefaultMenuProvider, ContextMenuSelectEvent } from './menu';

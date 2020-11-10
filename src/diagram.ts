@@ -15,8 +15,8 @@ import { DefaultDialog, DialogProvider } from './dialog';
 export class FlowDiagram {
 
     private diagram: Diagram;
-    private theme: string;
-    private drawingOptions: DrawingOptions;
+    theme: string;
+    drawingOptions: DrawingOptions;
     flow: Flow;
     contextMenuProvider: ContextMenuProvider;
     dialogProvider: DialogProvider;

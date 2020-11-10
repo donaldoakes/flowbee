@@ -28,7 +28,6 @@ export class Diagram extends Shape {
   notes: Note[];
   readonly = false;
   marquee?: Marquee;
-  dialog = null; // TODO: see this.onDelete()
   anchor = -1;
   selection: Selection;
   container?: HTMLElement;
@@ -58,7 +57,6 @@ export class Diagram extends Shape {
   ) {
     super(canvas.getContext("2d"), options);
     this.container = canvas.parentElement;
-    this.dialog = null;
     this.descriptors = descriptors;
     this.context = this.canvas.getContext("2d");
     this.anchor = -1;
