@@ -4,6 +4,7 @@ import { Link } from './link';
 import { Diagram } from './diagram';
 import { Subflow as SubflowElement } from '../model/flow';
 import { Title } from './display';
+import { Edit } from './edit';
 
 export class Subflow extends Shape {
 
@@ -292,6 +293,14 @@ export class Subflow extends Shape {
   resize(x: number, y: number, deltaX: number, deltaY: number) {
     const display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize);
     this.setDisplayAttr(display.x, display.y, display.w, display.h);
+  }
+
+  edit() {
+    const edit = new Edit(this.diagram);
+    const display = { ...this.title, y: this.title.y + 2 };
+    edit.render(this.title.text, display, this.diagram.options.defaultFont, text => {
+      this.subflow.name = text;
+    });
   }
 
   static create(diagram: Diagram, idNum: number, startStepId: number, startLinkId: number,

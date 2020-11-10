@@ -4,6 +4,7 @@ import { Link as LinkElement } from '../model/link';
 import { Step } from './step';
 import { FlowElement } from '../model/element';
 import { Display, LinkDisplay } from './display';
+import { Edit } from './edit';
 
 export class Link {
 
@@ -1120,6 +1121,16 @@ export class Link {
 
   resize(_x: number, _y: number, deltaX: number, deltaY: number) {
     // not applicable
+  }
+
+  edit() {
+    const edit = new Edit(this.diagram);
+    const text = this.label?.text || '';
+    const display = this.label?.display || { x: this.display.x + 2, y: this.display.y + Link.LABEL_CORR };
+    display.y -= 1;
+    edit.render(text, display, this.diagram.options.defaultFont, text => {
+      this.link.result = text;
+    });
   }
 
   static create(diagram: Diagram, idNum: number, from: Step, to: Step) {

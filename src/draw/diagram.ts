@@ -15,10 +15,6 @@ import { FlowElementType } from '../model/element';
 import { DrawingOptions } from './options';
 import { Grid } from './grid';
 import { LinkInstance } from '../model/link';
-import { Edit } from './edit';
-
-
-const Toolbox = null; // TODO
 
 export class Diagram extends Shape {
 
@@ -73,10 +69,6 @@ export class Diagram extends Shape {
     if (zoomControls.length === 1) {
       const diagram = this;
       this.zoomControl = zoomControls[0] as HTMLElement;
-      if (!this.readonly && Toolbox) {
-        this.zoomControl.style.top = "90px";
-        this.zoomControl.style.right = '270px';
-      }
       const rangeInput = diagram.zoomControl.getElementsByTagName('input')[0] as HTMLInputElement;
       this.zoomControl.oninput = function (e) {
         diagram.zoomCanvas(parseInt((e.target as HTMLInputElement).value));
@@ -1705,8 +1697,9 @@ export class Diagram extends Shape {
 
   onDoubleClick(e: MouseEvent) {
     const selObj = this.selection.getSelectObj();
-    if (selObj?.type === 'step') {
-      new Edit(this).render(selObj as Step);
+    if (selObj && selObj.type === 'step' || selObj.type === 'link'
+          || selObj.type === 'subflow' || selObj.type === 'note') {
+        (selObj as any).edit();
     }
   }
 

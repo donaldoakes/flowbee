@@ -4,6 +4,7 @@ import { Step as StepElement, StepInstance } from '../model/step';
 import { Descriptor } from '../model/descriptor';
 import { Milestone, MilestoneGroup } from '../model/milestone';
 import { Display, Title } from './display';
+import { Edit } from './edit';
 
 export class Step extends Shape {
 
@@ -315,6 +316,13 @@ export class Step extends Shape {
   resize(x: number, y: number, deltaX: number, deltaY: number, limDisplay?: Display) {
     const display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize, limDisplay);
     this.step.attributes.display = this.getAttr(display);
+  }
+
+  edit() {
+    const edit = new Edit(this.diagram, true);
+    edit.render(this.title.text, this.title, this.diagram.options.defaultFont, text => {
+      this.step.name = text;
+    });
   }
 
   static create(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number) {

@@ -60,6 +60,9 @@ export class Note extends Shape {
     this.setDisplayAttr(display.x, display.y, display.w, display.h);
   }
 
+  edit() {
+  }
+
   static create(diagram: Diagram, idNum: number, x: number, y: number): Note {
     const noteElement = Note.noteElement(diagram, idNum, x, y);
     const note = new Note(diagram, noteElement);

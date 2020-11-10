@@ -64,5 +64,6 @@ export class Label extends Shape {
   resize(_x: number, _y: number, deltaX: number, deltaY: number) {
     // not applicable
   }
+
 }
 
