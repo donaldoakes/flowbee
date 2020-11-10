@@ -320,7 +320,7 @@ export class Step extends Shape {
 
   edit() {
     const edit = new Edit(this.diagram, true);
-    edit.render(this.title.text, this.title, this.diagram.options.defaultFont, text => {
+    edit.render(this.title.text, this.title, text => {
       this.step.name = text;
     });
   }

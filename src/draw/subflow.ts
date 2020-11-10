@@ -298,7 +298,7 @@ export class Subflow extends Shape {
   edit() {
     const edit = new Edit(this.diagram);
     const display = { ...this.title, y: this.title.y + 2 };
-    edit.render(this.title.text, display, this.diagram.options.defaultFont, text => {
+    edit.render(this.title.text, display, text => {
       this.subflow.name = text;
     });
   }

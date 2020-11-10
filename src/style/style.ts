@@ -226,7 +226,8 @@ export class DiagramStyle {
                 outlineColor: note['border-color'],
                 fillColor: note['background-color'],
                 roundingRadius: styles.getSize(note['border-radius']),
-                minSize: styles.getSize(note['min-width'])
+                minSize: styles.getSize(note['min-width']),
+                padding: styles.getSize(note.padding)
             },
             anchor: {
                 width: styles.getSize(anchor.width),

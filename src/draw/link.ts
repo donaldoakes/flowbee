@@ -1128,7 +1128,7 @@ export class Link {
     const text = this.label?.text || '';
     const display = this.label?.display || { x: this.display.x + 2, y: this.display.y + Link.LABEL_CORR };
     display.y -= 1;
-    edit.render(text, display, this.diagram.options.defaultFont, text => {
+    edit.render(text, display, text => {
       this.link.result = text;
     });
   }

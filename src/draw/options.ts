@@ -48,6 +48,7 @@ export interface NoteOptions {
     roundingRadius?: number;
     fillColor?: string;
     minSize?: number;
+    padding?: number;
 }
 
 export interface MarqueeOptions {
