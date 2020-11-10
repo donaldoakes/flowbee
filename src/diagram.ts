@@ -1,10 +1,7 @@
 import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
-import { FlowElement } from './model/element';
 import { Flow, FlowInstance, SubflowInstance } from './model/flow';
-import { StepInstance } from './model/step';
-import { LinkInstance } from './model/link';
 import { Descriptor, StandardDescriptors } from './model/descriptor';
 import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style/style';
@@ -13,6 +10,7 @@ import { Label } from './draw/label';
 import { TypedEvent, Listener, FlowElementSelectEvent } from './event';
 import { SelectObj } from './draw/selection';
 import { ContextMenu, ContextMenuProvider, DefaultMenuProvider } from './menu';
+import { DefaultDialog, DialogProvider } from './dialog';
 
 export class FlowDiagram {
 
@@ -21,6 +19,7 @@ export class FlowDiagram {
     private drawingOptions: DrawingOptions;
     flow: Flow;
     contextMenuProvider: ContextMenuProvider;
+    dialogProvider: DialogProvider;
 
     readonly = false;
     step?: string;
@@ -41,6 +40,8 @@ export class FlowDiagram {
         readonly descriptors: Descriptor[] = StandardDescriptors
     ) {
         this.flow = typeof flow === 'string' ? FlowDiagram.parse(flow, filepath) : flow;
+        canvas.tabIndex = 100000; // allow key events
+        canvas.style.outline = 'none';
 
         this.diagram = new Diagram(
             this.canvas,
@@ -138,6 +139,24 @@ export class FlowDiagram {
         this.canvas.ondrop = e => this.onDrop(e);
 
         this.canvas.oncontextmenu = e => this.onContextMenu(e);
+        this.canvas.onblur = e => {
+            if (e.relatedTarget) {
+                const rt = e.relatedTarget as any;
+                if (rt.getAttribute && rt.getAttribute('data-flowbee-menu-item')) {
+                    return; // avoid premature menu close
+                }
+            }
+            if (this.menu) {
+                this.menu.close();
+                this.menu = null;
+            }
+        };
+        this.canvas.onkeydown = e => {
+            if (!this.readonly && e.key === 'Delete') {
+                e.preventDefault();
+                this.handleDelete();
+            }
+        };
     }
 
     /**
@@ -170,6 +189,7 @@ export class FlowDiagram {
     private down = false;
     private dragging = false;
     private selectObj: SelectObj | null = null;
+    private menu: ContextMenu | null = null;
 
     private onMouseMove(e: MouseEvent) {
         if (this.down && !this.readonly) {
@@ -187,7 +207,10 @@ export class FlowDiagram {
 
     private onMouseDown(e: MouseEvent) {
         this.down = true;
-        // $scope.closeContextMenu();
+        if (this.menu) {
+            this.menu.close();
+            this.menu = null;
+        }
         this.diagram.onMouseDown(e);
         let selObj = this.diagram.selection.getSelectObj();
         if (selObj && selObj.type === 'label') {
@@ -233,13 +256,18 @@ export class FlowDiagram {
 
     private onContextMenu(e: MouseEvent) {
         e.preventDefault();
-        const provider = this.contextMenuProvider || new DefaultMenuProvider(this.readonly);
-        const items = provider.getItems({
+        const provider = this.contextMenuProvider || new DefaultMenuProvider(this);
+        const evt = {
             element: this.selectObj?.flowElement,
             instances: this.selectObj?.instances
-        });
+        };
+        const items = provider.getItems(evt);
         if (items) {
-            new ContextMenu(items).render({ theme: this.diagram.options.theme }, e.pageX + 3, e.pageY);
+            this.menu = new ContextMenu(items);
+            this.menu.render({ theme: this.diagram.options.theme }, e.pageX + 3, e.pageY, item => {
+                provider.onSelectItem({ item, ...evt });
+                this.menu = null;
+            });
         }
     }
 
@@ -247,6 +275,20 @@ export class FlowDiagram {
         this._onFlowChange.emit({
             flow: this.flow
         });
+    }
+
+    handleDelete() {
+        const selection = this.diagram.selection;
+        const selObj = selection?.getSelectObj();
+        if (selObj) {
+            const text = selection.isMulti() ? 'Delete selected elements?' : 'Delete ' + selObj.type + '?';
+            const dialog = this.dialogProvider || new DefaultDialog();
+            if (dialog.confirm({ title: 'Confirm Delete', text, level: 'warn' })) {
+                selection.doDelete();
+                this.diagram.draw();
+                this.handleChange();
+            }
+        }
     }
 }
 

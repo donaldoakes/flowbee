@@ -1,4 +1,5 @@
 import { merge } from 'merge-anything';
+import { FlowDiagram } from './diagram';
 import { FlowElementEvent } from './event';
 import { FlowElement } from './model/element';
 import { menuDefault, MenuOptions } from './options';
@@ -6,6 +7,7 @@ import { Styles } from './style/style';
 import { Theme } from './theme';
 
 export interface MenuItem {
+    id?: string;
     label: string;
     key?: string;
     icon?: string;
@@ -13,33 +15,38 @@ export interface MenuItem {
 
 export class ContextMenu {
 
-    private styles: Styles;
-    private stylesObj: object;
+    private div: HTMLDivElement;
+    private static styles: Styles;
+    private static stylesObj: object;
 
     constructor(
         private items: MenuItem[]
     ) { }
 
-    render(options: MenuOptions = {}, x: number, y: number) {
+    render(options: MenuOptions = {}, x: number, y: number, select: (item: MenuItem) => void ) {
 
-        const div = document.createElement('div') as HTMLDivElement;
+        this.div = document.createElement('div') as HTMLDivElement;
 
         // loading styles is expensive, so only load if theme has changed
-        if (!this.styles || !this.stylesObj || (options.theme && options.theme !== this.styles.theme.name)) {
-            this.styles = new Styles('flowbee-menu', new Theme(options.theme), div);
-            this.stylesObj = this.styles.getObject();
+        if (!ContextMenu.styles || !ContextMenu.stylesObj || (options.theme && options.theme !== ContextMenu.styles.theme.name)) {
+            ContextMenu.styles = new Styles('flowbee-menu', new Theme(options.theme), this.div);
+            ContextMenu.stylesObj = ContextMenu.styles.getObject();
         }
 
         const menuOptions = merge(menuDefault, options);
-        div.className = `flowbee-menu flowbee-menu-${menuOptions.theme || ''}`;
-        div.style.position = 'absolute';
-        div.style.left = x + 'px';
-        div.style.top = y + 'px';
+        this.div.className = `flowbee-menu flowbee-menu-${menuOptions.theme || ''}`;
+        this.div.style.position = 'absolute';
+        this.div.style.left = x + 'px';
+        this.div.style.top = y + 'px';
 
-        const iconWidth = this.styles.getSize(this.stylesObj['flowbee-menu ul li img'].width);
+        const iconWidth = ContextMenu.styles.getSize(ContextMenu.stylesObj['flowbee-menu ul li img'].width);
         const ul = document.createElement('ul') as HTMLUListElement;
+        let tabIndex = 1;
         for (const item of this.items) {
             const li = document.createElement('li') as HTMLLIElement;
+            li.setAttribute('id', item.id);
+            li.setAttribute('data-flowbee-menu-item', item.id);
+            li.tabIndex = tabIndex++;
             const iconDiv = document.createElement('div') as HTMLDivElement;
             if (item.icon) {
                 const iconImg = document.createElement('img') as HTMLImageElement;
@@ -58,10 +65,21 @@ export class ContextMenu {
                 span.appendChild(document.createTextNode(item.key));
                 li.appendChild(span);
             }
+            li.onclick = e => {
+                this.close();
+                select(item);
+            };
             ul.appendChild(li);
         }
-        div.appendChild(ul);
-        document.body.appendChild(div);
+        this.div.appendChild(ul);
+        document.body.appendChild(this.div);
+    }
+
+    close() {
+        if (this.div) {
+            document.body.removeChild(this.div);
+            this.div = null;
+        }
     }
 }
 
@@ -76,17 +94,17 @@ export interface ContextMenuSelectEvent extends FlowElementEvent {
 }
 
 export class DefaultMenuProvider implements ContextMenuProvider {
-    constructor(readonly readonly: boolean) { }
+    constructor(private flowDiagram: FlowDiagram) { }
     getItems(flowElementEvent: FlowElementEvent): MenuItem[] | undefined {
-        if (!this.readonly && flowElementEvent.element) {
+        if (!this.flowDiagram.readonly && flowElementEvent.element) {
             return [
-                { label: 'Delete', key: 'Del' }
+                { id: 'delete', label: 'Delete', key: 'Del' }
             ];
         }
     }
     onSelectItem(selectEvent: ContextMenuSelectEvent) {
-        if (selectEvent.item.label === 'Delete') {
-            console.log("DELETE: " + selectEvent.element.id);
+        if (selectEvent.item.id === 'delete') {
+            this.flowDiagram.handleDelete();
         }
     }
 }

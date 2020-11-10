@@ -76,24 +76,5 @@ export class Toolbox {
         }
         this.div.appendChild(ul);
         this.container.appendChild(this.div);
-
-        // events
-        ul.onmousedown = (e: MouseEvent) => {
-            // console.log("MOUSE DOWN");
-            let el = e.target as HTMLElement;
-            if (el.tagName !== 'LI') {
-              while ((el = el.parentElement as HTMLElement) && el.tagName !== 'LI') {
-                // find
-              }
-            }
-        };
-        ul.onmouseup = (_e: MouseEvent) => {
-            // console.log("MOUSE UP");
-        };
-        ul.onmouseout = (e: MouseEvent) => {
-            if (e.buttons !== 1) {
-                // console.log("MOUSE OUT BTNS=1");
-            }
-        };
     }
 }

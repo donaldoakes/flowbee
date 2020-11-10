@@ -1703,21 +1703,6 @@ export class Diagram extends Shape {
     }
   }
 
-  onDelete(e: MouseEvent, onChange) {
-    const selection = this.selection;
-    const selObj = selection.getSelectObj();
-    if (selObj && selObj.type !== 'label') {
-      const msg = selection.isMulti ? 'Delete selected elements?' : 'Delete ' + selObj.type + '?';
-      this.dialog.confirm('Confirm Delete', msg, function (res) {
-        if (res) {
-          selection.doDelete();
-          selection.diagram.draw();
-          onChange();
-        }
-      });
-    }
-  }
-
   getLatestInstance() {
     const instances = this.selection.getSelectObj().instances;
     if (instances && instances.length) {
