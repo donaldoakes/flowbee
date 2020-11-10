@@ -277,3 +277,52 @@
     }
   }
 }
+
+@mixin menu {
+  color: #303030;
+  background-color: #f6f6f6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, "Droid Sans", sans-serif;
+  font-size: 14px;
+  border: 1px solid #909090;
+  border-radius: 4px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.35);
+  line-height: 15px;
+  ul {
+    min-width: 150px;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    li {
+      height: 22px;
+      display: flex;
+      white-space: nowrap;
+      padding: 0 5px;
+      line-height: 22px;
+      img {
+        width: 16px;
+        min-width: 16px;
+        vertical-align: middle;
+        margin-bottom: 2px;
+        user-select: none;
+      }
+      label {
+        user-select: none;
+        flex-grow: 1;
+      }
+      span {
+        margin-left: 20px;
+      }
+    }
+    li:hover {
+      color: #ffffff;
+      background-color: #146dee;
+      outline-width: 0;
+    }
+  }
+}
+.flowbee-menu-light {
+  @include menu;
+}
+.flowbee-menu-dark {
+  @include menu;
+}

@@ -10,7 +10,9 @@ import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style/style';
 import { DrawingOptions } from './draw/options';
 import { Label } from './draw/label';
-import { TypedEvent, Listener } from './event';
+import { TypedEvent, Listener, FlowElementSelectEvent } from './event';
+import { SelectObj } from './draw/selection';
+import { ContextMenu, ContextMenuProvider, DefaultMenuProvider } from './menu';
 
 export class FlowDiagram {
 
@@ -18,6 +20,7 @@ export class FlowDiagram {
     private theme: string;
     private drawingOptions: DrawingOptions;
     flow: Flow;
+    contextMenuProvider: ContextMenuProvider;
 
     readonly = false;
     step?: string;
@@ -133,6 +136,8 @@ export class FlowDiagram {
             }
         };
         this.canvas.ondrop = e => this.onDrop(e);
+
+        this.canvas.oncontextmenu = e => this.onContextMenu(e);
     }
 
     /**
@@ -150,25 +155,7 @@ export class FlowDiagram {
     }
 
 
-
-    private down = false;
-    private dragging = false;
-
-    private onMouseMove(e: MouseEvent) {
-        if (this.down && !this.readonly) {
-            this.dragging = true;
-        }
-        if (this.diagram) {
-            if (this.dragging) {
-                if (this.diagram.onMouseDrag(e)) {
-                    this.handleChange();
-                }
-            }
-            else {
-                this.diagram.onMouseMove(e);
-            }
-        }
-    }
+    // Events
 
     private _onFlowChange = new TypedEvent<FlowChangeEvent>();
     onFlowChange(listener: Listener<FlowChangeEvent>) {
@@ -180,40 +167,52 @@ export class FlowDiagram {
         this._onFlowElementSelect.on(listener);
     }
 
+    private down = false;
+    private dragging = false;
+    private selectObj: SelectObj | null = null;
+
+    private onMouseMove(e: MouseEvent) {
+        if (this.down && !this.readonly) {
+            this.dragging = true;
+        }
+        if (this.dragging) {
+            if (this.diagram.onMouseDrag(e)) {
+                this.handleChange();
+            }
+        }
+        else {
+            this.diagram.onMouseMove(e);
+        }
+    }
+
     private onMouseDown(e: MouseEvent) {
         this.down = true;
         // $scope.closeContextMenu();
-        if (this.diagram) {
-            this.diagram.onMouseDown(e);
-            let selObj = this.diagram.selection.getSelectObj();
-            if (selObj && selObj.type === 'label') {
-                selObj = (selObj as Label).owner;
-            }
-            if (!selObj) selObj = this.diagram;
+        this.diagram.onMouseDown(e);
+        let selObj = this.diagram.selection.getSelectObj();
+        if (selObj && selObj.type === 'label') {
+            selObj = (selObj as Label).owner;
+        }
+        if (selObj) {
             this._onFlowElementSelect.emit({
                 element: selObj.flowElement,
                 instances: selObj.instances
             });
-            // else {
-            //     const bgObj = this.diagram.getBackgroundObj(e);
-            //     if (bgObj) {
-            //         // Inspector.setObj(bgObj, this.options.readonly && e.button !== 2);
-            //     }
-            // }
+        } else if (this.selectObj) {  // only fire on first deselect
+            this._onFlowElementSelect.emit({ element: null });
         }
+        this.selectObj = selObj;
     }
 
     private onMouseUp(e: MouseEvent) {
         this.down = false;
         this.dragging = false;
-        if (this.diagram) {
-            this.diagram.onMouseUp(e);
-        }
+        this.diagram.onMouseUp(e);
     }
 
     private onDrop(e: DragEvent) {
         e.preventDefault();
-        if (!this.readonly && this.diagram) {
+        if (!this.readonly) {
             if (this.diagram.onDrop(e, e.dataTransfer.getData('text/plain'))) {
                 this.handleChange();
             }
@@ -223,29 +222,24 @@ export class FlowDiagram {
     private onMouseOut(e: MouseEvent) {
         this.down = false;
         this.dragging = false;
-        if (this.diagram) {
-            this.diagram.onMouseOut(e);
-        }
+        this.diagram.onMouseOut(e);
     }
 
     private onDoubleClick(e: MouseEvent) {
-        if (this.diagram && !this.readonly) {
+        if (!this.readonly) {
             this.diagram.onDoubleClick(e);
-            // if (selObj) {
-            //     if (selObj.type === 'link' || selObj.type === 'step') {
-            //         // in-place editing (TODO: subflows and notes)
-            //         console.log("IN-PLACE: " + selObj.id);
-            //     }
-            // }
-            // if (selObj && selObj.type === 'label') {
-            //     selObj = (selObj as Label).owner;
-            // }
-            // if (!selObj) selObj = this.diagram;
-            // TODO: in-place editing
-            // this._onFlowElementSelect.emit({
-            //     element: selObj.flowElement,
-            //     instances: selObj.instances
-            // });
+        }
+    }
+
+    private onContextMenu(e: MouseEvent) {
+        e.preventDefault();
+        const provider = this.contextMenuProvider || new DefaultMenuProvider(this.readonly);
+        const items = provider.getItems({
+            element: this.selectObj?.flowElement,
+            instances: this.selectObj?.instances
+        });
+        if (items) {
+            new ContextMenu(items).render({ theme: this.diagram.options.theme }, e.pageX + 3, e.pageY);
         }
     }
 
@@ -259,8 +253,3 @@ export class FlowDiagram {
 export interface FlowChangeEvent {
     flow: Flow
 }
-export interface FlowElementSelectEvent {
-    element: FlowElement;
-    instances: FlowInstance[] | StepInstance[] | LinkInstance[] | SubflowInstance[];
-}
-

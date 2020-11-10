@@ -1725,35 +1725,6 @@ export class Diagram extends Shape {
     }
   }
 
-  getContextMenuItems(e: MouseEvent) {
-    const selObj = this.selection.getSelectObj();
-    if (selObj && selObj.type === 'step') {
-      const actions = [];
-      if (this.instance && (this.instance.status === 'In Progress' || this.instance.status === 'Waiting')) {
-        const inst = this.getLatestInstance();
-        if (inst && inst.status) {
-          if (inst.status === 'Failed') {
-            actions.push('retry');
-            actions.push('proceed');
-          }
-          else if (inst.status === 'Waiting' || inst.status === 'In Progress') {
-            const descriptor = (selObj as Step).descriptor;
-            if (inst.status === 'Waiting') {
-              actions.push('proceed');
-              if (descriptor && descriptor.category === 'pause') {
-                actions.push('resume');
-              }
-            }
-            if (descriptor && descriptor.category !== 'Task') {
-              actions.push('fail');
-            }
-          }
-        }
-      }
-      return actions;
-    }
-  }
-
   getHoverObj(x: number, y: number): SelectObj | undefined {
     if (this.zoom !== 100) {
       const scale = this.zoom / 100;
@@ -1817,28 +1788,6 @@ export class Diagram extends Shape {
         return this.steps[i];
       }
     }
-  }
-
-  /**
-   * when nothing selectable is hovered
-   */
-  getBackgroundObj(e: MouseEvent): SelectObj {
-    const rect = this.canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    let bgObj: Diagram | Subflow = this;
-    for (let i = 0; i < this.subflows.length; i++) {
-      if (this.subflows[i].isHover(x, y)) {
-        bgObj = this.subflows[i];
-        break;
-      }
-    }
-
-    if (bgObj !== this) {
-      bgObj.select();
-    }
-
-    return bgObj;
   }
 
   /**

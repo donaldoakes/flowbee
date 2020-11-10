@@ -36,3 +36,12 @@ export interface FlowTreeOptions {
 export const flowTreeDefault: FlowTreeOptions = {
     theme: 'light'
 };
+
+export interface MenuOptions {
+    theme?: string;
+    iconBase?: string;
+}
+export const menuDefault: MenuOptions = {
+    theme: 'light',
+    iconBase: null
+};
