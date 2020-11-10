@@ -85,9 +85,9 @@ export const decide = new FlowItemDescriptor({
     category: 'decision'
 });
 
-export const errorSubflow = new FlowItemDescriptor({
+export const embedded = new FlowItemDescriptor({
     path: 'subflow',
-    name: 'Error Subflow',
+    name: 'Embedded Subflow',
     type: 'subflow',
     icon: 'embedded.png',
     category: 'embedded'
@@ -97,7 +97,7 @@ export const note = new FlowItemDescriptor({
     path: 'note',
     name: 'Note',
     type: 'note',
-    icon: 'note.png',
+    icon: 'shape:note',
     category: 'note'
 });
 
@@ -106,7 +106,7 @@ export const StandardDescriptors: Descriptor[] = [
     stop,
     pause,
     decide,
-    errorSubflow,
+    embedded,
     note
 ];
 
