@@ -168,7 +168,8 @@ export class Step extends Shape {
     // title
     const diagram = this.diagram;
     diagram.context.font = this.diagram.options.defaultFont.name;
-  this.title.lines.forEach(function (line) {
+    this.title.y += yAdjust;
+    this.title.lines.forEach(function (line) {
       if (shape === 'start') {
         diagram.context.fillStyle = diagram.options.step.start.color;
       } else if (shape === 'stop') {
@@ -176,7 +177,8 @@ export class Step extends Shape {
       } else if (shape === 'pause') {
         diagram.context.fillStyle = diagram.options.step.pause.color;
       }
-      diagram.context.fillText(line.text, line.x, line.y + yAdjust);
+      line.y += yAdjust;
+      diagram.context.fillText(line.text, line.x, line.y);
       diagram.context.fillStyle = diagram.options.defaultColor;
     });
 
@@ -257,13 +259,21 @@ export class Step extends Shape {
     this.step.name.replace(/\r/g, '').split(/\n/).forEach(function (line) {
       titleLines.push({ text: line });
     });
-    const title = { text: this.step.name, lines: titleLines, w: 0, h: 0 };
+    const title = {
+      text: this.step.name,
+      lines: titleLines,
+      x: display.x,
+      y: display.y + display.h / 2 - this.diagram.options.defaultFont.size / 2 + 2,
+      w: 0,
+      h: 0
+    };
     this.diagram.context.font = this.diagram.options.defaultFont.name;
     for (let i = 0; i < title.lines.length; i++) {
       const line = title.lines[i];
       const textMetrics = this.diagram.context.measureText(line.text);
       if (textMetrics.width > title.w) {
         title.w = textMetrics.width;
+        title.x = display.x + display.w / 2 - textMetrics.width / 2;
       }
       title.h += this.diagram.options.defaultFont.size;
       line.x = display.x + display.w / 2 - textMetrics.width / 2;

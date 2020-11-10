@@ -97,7 +97,7 @@ export const note = new FlowItemDescriptor({
     path: 'note',
     name: 'Note',
     type: 'note',
-    icon: 'shape:note',
+    icon: 'note.svg',
     category: 'note'
 });
 

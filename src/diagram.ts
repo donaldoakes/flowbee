@@ -190,18 +190,16 @@ export class FlowDiagram {
                 selObj = (selObj as Label).owner;
             }
             if (!selObj) selObj = this.diagram;
-            if (this.instance) {
-                this._onFlowElementSelect.emit({
-                    element: selObj.flowElement,
-                    instances: selObj.instances
-                });
-            }
-            else {
-                const bgObj = this.diagram.getBackgroundObj(e);
-                if (bgObj) {
-                    // Inspector.setObj(bgObj, this.options.readonly && e.button !== 2);
-                }
-            }
+            this._onFlowElementSelect.emit({
+                element: selObj.flowElement,
+                instances: selObj.instances
+            });
+            // else {
+            //     const bgObj = this.diagram.getBackgroundObj(e);
+            //     if (bgObj) {
+            //         // Inspector.setObj(bgObj, this.options.readonly && e.button !== 2);
+            //     }
+            // }
         }
     }
 
@@ -232,15 +230,22 @@ export class FlowDiagram {
 
     private onDoubleClick(e: MouseEvent) {
         if (this.diagram && !this.readonly) {
-            let selObj = this.diagram.selection.getSelectObj();
-            if (selObj && selObj.type === 'label') {
-                selObj = (selObj as Label).owner;
-            }
-            if (!selObj) selObj = this.diagram;
-            this._onFlowElementSelect.emit({
-                element: selObj.flowElement,
-                instances: selObj.instances
-            });
+            this.diagram.onDoubleClick(e);
+            // if (selObj) {
+            //     if (selObj.type === 'link' || selObj.type === 'step') {
+            //         // in-place editing (TODO: subflows and notes)
+            //         console.log("IN-PLACE: " + selObj.id);
+            //     }
+            // }
+            // if (selObj && selObj.type === 'label') {
+            //     selObj = (selObj as Label).owner;
+            // }
+            // if (!selObj) selObj = this.diagram;
+            // TODO: in-place editing
+            // this._onFlowElementSelect.emit({
+            //     element: selObj.flowElement,
+            //     instances: selObj.instances
+            // });
         }
     }
 

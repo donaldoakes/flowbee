@@ -15,6 +15,7 @@ import { FlowElementType } from '../model/element';
 import { DrawingOptions } from './options';
 import { Grid } from './grid';
 import { LinkInstance } from '../model/link';
+import { Edit } from './edit';
 
 
 const Toolbox = null; // TODO
@@ -1702,11 +1703,18 @@ export class Diagram extends Shape {
     return true;
   }
 
+  onDoubleClick(e: MouseEvent) {
+    const selObj = this.selection.getSelectObj();
+    if (selObj?.type === 'step') {
+      new Edit(this).render(selObj as Step);
+    }
+  }
+
   onDelete(e: MouseEvent, onChange) {
     const selection = this.selection;
-    const selObj = this.selection.getSelectObj();
+    const selObj = selection.getSelectObj();
     if (selObj && selObj.type !== 'label') {
-      const msg = this.selection.isMulti ? 'Delete selected elements?' : 'Delete ' + selObj.type + '?';
+      const msg = selection.isMulti ? 'Delete selected elements?' : 'Delete ' + selObj.type + '?';
       this.dialog.confirm('Confirm Delete', msg, function (res) {
         if (res) {
           selection.doDelete();
