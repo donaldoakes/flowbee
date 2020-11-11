@@ -6,7 +6,7 @@ export interface DialogMessage {
 
 export interface DialogProvider {
     alert(message: DialogMessage);
-    confirm(message: DialogMessage): boolean;
+    confirm(message: DialogMessage): boolean | Promise<boolean>;
 }
 
 export class DefaultDialog implements DialogProvider {
@@ -14,6 +14,6 @@ export class DefaultDialog implements DialogProvider {
         alert(message.text);
     }
     confirm(message: DialogMessage): boolean {
-        return !!confirm(message.text);
+        return confirm(message.text) === true;
     }
 }

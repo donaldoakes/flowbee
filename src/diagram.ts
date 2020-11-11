@@ -277,13 +277,13 @@ export class FlowDiagram {
         });
     }
 
-    handleDelete() {
+    async handleDelete() {
         const selection = this.diagram.selection;
         const selObj = selection?.getSelectObj();
         if (selObj) {
             const text = selection.isMulti() ? 'Delete selected elements?' : 'Delete ' + selObj.type + '?';
             const dialog = this.dialogProvider || new DefaultDialog();
-            if (dialog.confirm({ title: 'Confirm Delete', text, level: 'warn' })) {
+            if (await dialog.confirm({ title: 'Confirm Delete', text, level: 'warn' })) {
                 selection.doDelete();
                 this.diagram.draw();
                 this.handleChange();

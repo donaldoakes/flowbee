@@ -9,3 +9,4 @@ export { TypedEvent, Listener, FlowElementEvent, FlowElementSelectEvent } from '
 export { DiagramOptions, ToolboxOptions, FlowTreeOptions } from './options';
 export { DrawingOptions } from './draw/options';
 export { MenuItem, ContextMenuProvider, DefaultMenuProvider, ContextMenuSelectEvent } from './menu';
+export { DialogMessage, DialogProvider, DefaultDialog } from './dialog';
