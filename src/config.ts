@@ -1,0 +1,175 @@
+import * as jsYaml from 'js-yaml';
+import { merge } from 'merge-anything';
+import { FlowElement, getLabel } from './model/element';
+import { ConfigTemplate, Widget } from './model/template';
+import { configuratorDefault, ConfiguratorOptions } from './options';
+import { Styles } from './style/style';
+import { Theme } from './theme';
+
+/**
+ * TODO: make template optional, and then display all attributes
+ * as text widgets on one tab
+ */
+export class Configurator {
+
+    private styles: Styles;
+    private stylesObj: object;
+
+    private div: HTMLDivElement;
+    private title: HTMLDivElement;
+    private tabs: HTMLUListElement;
+    private tabContent: HTMLDivElement;
+
+    private activeTab: { name: string, tab: HTMLLIElement} | undefined;
+    private flowElement: FlowElement | undefined;
+    private template: ConfigTemplate | undefined;
+
+    private options: ConfiguratorOptions;
+
+    constructor(readonly container: HTMLElement) {
+        // build html
+        this.div = document.createElement('div') as HTMLDivElement;
+        const header = document.createElement('div') as HTMLDivElement;
+        header.className = 'flowbee-config-header';
+        this.title = document.createElement('div') as HTMLDivElement;
+        this.title.className = 'flowbee-config-title';
+        header.appendChild(this.title);
+        const close = document.createElement('div') as HTMLDivElement;
+        close.className = 'flowbee-config-close';
+        close.onclick = _e => this.div.style.display = 'none';
+        const closeImg = document.createElement('input') as HTMLInputElement;
+        closeImg.type = 'image';
+        closeImg.alt = closeImg.title = 'Close Configurator';
+        closeImg.setAttribute('data-icon', 'close.svg');
+        close.appendChild(closeImg);
+        header.appendChild(close);
+        this.div.appendChild(header);
+        const content = document.createElement('div') as HTMLDivElement;
+        content.className = 'flowbee-config-content';
+        const tabbedContent = document.createElement('div') as HTMLDivElement;
+        tabbedContent.className = 'flowbee-config-tabbed-content';
+        this.tabs = document.createElement('ul') as HTMLUListElement;
+        this.tabs.className = 'flowbee-config-tabs';
+        tabbedContent.appendChild(this.tabs);
+        this.tabContent = document.createElement('div') as HTMLDivElement;
+        this.tabContent.className = 'flowbee-config-tab-content';
+        tabbedContent.appendChild(this.tabContent);
+        content.appendChild(tabbedContent);
+        this.div.appendChild(content);
+        container.appendChild(this.div);
+     }
+
+    render(flowElement: FlowElement, template: ConfigTemplate | string, options: ConfiguratorOptions) {
+
+        this.options = merge(configuratorDefault, options);
+
+        // loading styles is expensive, so only load if theme has changed
+        if (!this.styles || !this.stylesObj || (options.theme && options.theme !== this.styles.theme.name)) {
+            this.styles = new Styles('flowbee-configurator', new Theme(options.theme), this.container);
+            this.stylesObj = this.styles.getObject();
+            this.div.className = `flowbee-configurator flowbee-configurator-${this.options.theme || ''}`;
+        }
+
+        // clear old tabs and content
+        this.tabs.innerHTML = '';
+
+        this.flowElement = flowElement;
+        this.template = typeof template === 'string' ? Configurator.parseTemplate(template, getLabel(flowElement)) : template;
+        if (this.options.sourceTab) {
+            this.template['Source'] = { widgets: [{ type: 'source' }] };
+        }
+
+        // title
+        this.title.innerText = getLabel(flowElement);
+
+        for (const tabName of Object.keys(this.template)) {
+            const tab = this.addTab(tabName);
+            if (!this.activeTab) this.activate(tabName, tab);
+        }
+
+        this.div.style.display = 'flex';
+    }
+
+    addTab(label: string): HTMLLIElement {
+        const tab = document.createElement('li') as HTMLLIElement;
+        tab.innerText = label;
+        tab.className = 'flowbee-config-tab';
+        tab.onclick = e => {
+            this.activate(label, e.target as HTMLLIElement);
+        };
+        this.tabs.appendChild(tab);
+        return tab;
+    }
+
+    activate(tabName: string, tab: HTMLLIElement) {
+
+        if (this.activeTab) {
+            this.activeTab.tab.classList.toggle('flowbee-config-tab-active');
+        }
+        tab.classList.toggle('flowbee-config-tab-active');
+        this.activeTab = { name: tabName, tab };
+
+        this.tabContent.innerHTML = '';
+
+        for (const widget of this.template[tabName].widgets) {
+            if (widget.label) {
+                const label = document.createElement('label');
+                label.innerHTML = widget.label;
+                this.tabContent.appendChild(label);
+            } else {
+                // todo span
+            }
+
+            if (widget.type === 'text') {
+                const text = document.createElement('input') as HTMLInputElement;
+                text.setAttribute('type', 'text');
+                this.tabContent.appendChild(text);
+            } else if (widget.type === 'textarea') {
+                const textarea = document.createElement('textarea') as HTMLTextAreaElement;
+                this.tabContent.appendChild(textarea);
+            } else if (widget.type === 'select') {
+                const select = document.createElement('select') as HTMLSelectElement;
+                if (widget.options) {
+                    for (const opt of widget.options) {
+                        const option = document.createElement('option') as HTMLOptionElement;
+                        option.innerText = opt;
+                        select.appendChild(option);
+                    }
+                }
+                this.tabContent.appendChild(select);
+            } else if (widget.type === 'table') {
+                // TODO
+
+            } else if (widget.type === 'source') {
+                const pre = document.createElement('pre') as HTMLPreElement;
+                const indent = 2; // TODO config
+                if (this.options.sourceTab === 'yaml') {
+                    pre.innerText = jsYaml.safeDump(this.flowElement, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+                } else {
+                    pre.innerText = JSON.stringify(this.flowElement, null, indent);
+                }
+            }
+        }
+    }
+
+    /**
+     * TODO repeated in diagram.ts
+     */
+    toJson(indent = 2): string {
+        return JSON.stringify(this.template, null, indent);
+    }
+    toYaml(indent = 2): string {
+        return jsYaml.safeDump(this.template, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+    }
+    static parseTemplate(text: string, file: string): ConfigTemplate {
+        if (text.startsWith('{')) {
+            try {
+                return JSON.parse(text);
+            } catch (err) {
+                throw new Error(`Failed to parse ${file}: ${err.message}`);
+            }
+        } else {
+            return jsYaml.safeLoad(text, { filename: file });
+        }
+    }
+}

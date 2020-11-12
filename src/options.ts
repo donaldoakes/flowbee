@@ -29,6 +29,15 @@ export const toolboxDefault: ToolboxOptions = {
     iconBase: null
 };
 
+export interface ConfiguratorOptions {
+    theme?: string;
+    sourceTab?: 'json' | 'yaml';
+}
+export const configuratorDefault: ConfiguratorOptions = {
+    theme: 'light',
+    sourceTab: null
+};
+
 export interface FlowTreeOptions {
     theme?: string;
     fileIcon?: string | Icon;

@@ -11,6 +11,7 @@ import { TypedEvent, Listener, FlowElementSelectEvent } from './event';
 import { SelectObj } from './draw/selection';
 import { ContextMenu, ContextMenuProvider, DefaultMenuProvider } from './menu';
 import { DefaultDialog, DialogProvider } from './dialog';
+import { getFlowName } from './model/element';
 
 export class FlowDiagram {
 
@@ -159,20 +160,9 @@ export class FlowDiagram {
         };
     }
 
-    /**
-     * Without path or extension
-     */
     get flowName(): string {
-        const lastSlash = this.flow.path.lastIndexOf('/');
-        if (lastSlash > 0 && lastSlash < this.flow.path.length - 1) {
-          return this.flow.path.substring(lastSlash + 1);
-        }
-        const lastDot = this.flow.path.lastIndexOf('.');
-        if (lastDot > 1) {
-          return this.flow.path.substring(0, lastDot);
-        }
+        return getFlowName(this.flow);
     }
-
 
     // Events
 

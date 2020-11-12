@@ -214,6 +214,124 @@
   }
 }
 
+@mixin configurator {
+  display: none;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  background-color: #ffffff;
+  color: #616161;
+  border: 1px solid #c8c8c8;
+  box-shadow: 0 2px 8px #a8a8a8;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, "Helvetica Neue", sans-serif;
+  font-size: 13px;
+
+  .flowbee-config-header {
+    display: flex;
+    height: 25px;
+    background-color: #e6e6e6;
+    color: #616161;
+    border-bottom: 1px solid #c8c8c8;
+    padding: 5px 5px 0 5px;
+    font-weight: 500;
+  }
+  .flowbee-config-title {
+    flex-grow: 1;
+  }
+  .flowbee-config-close {
+    cursor: pointer;
+  }
+  .flowbee-config-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+  .flowbee-config-tabbed-content {
+    display: flex;
+    flex-grow: 1;
+  }
+  .flowbee-config-tabs {
+    list-style: none;
+    width: 140px;
+    background-color: #ececec;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+  }
+  .flowbee-config-tab {
+    background-color: #ececec;
+    color: #6a6a6a;
+    border-bottom: 1px solid #f3f3f3;
+    border-radius: 3px;
+    padding: 5px;
+    cursor: pointer;
+  }
+  .flowbee-config-tab-active {
+    background-color: #ffffff;
+    color: #333333;
+  }
+  .flowbee-config-tab-content {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    grid-auto-rows: 25px;
+    grid-gap: 10px 15px;
+    flex-grow: 1;
+    padding: 10px;
+  }
+  /** TODO: programmatically for these **/
+  .flowbee-config-tab-content select {
+    width: fit-content;
+    /*
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border);
+    */
+  }
+  .flowbee-config-tab-content input {
+    /*
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border);
+    */
+  }
+  .flowbee-config-tab-content textarea {
+    grid-column: 1/3;
+    grid-row: span 4;
+    /*
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border);
+    */
+  }
+}
+.flowbee-configurator-light {
+  @include configurator;
+}
+.flowbee-configurator-dark {
+  background-color: #1e1e1e;
+  color: #cccccc;
+  border: 1px solid #454545;
+  box-shadow: 0 2px 8px #000000;
+
+  .flowbee-config-header {
+    background-color: #323232;
+    color: #c8c8c8;
+    border-bottom: 1px solid #454545;
+  }
+  .flowbee-config-tabs {
+    background-color: #2d2d2d;
+  }
+  .flowbee-config-tab {
+    background-color: #2d2d2d;
+    color: #969696;
+    border-bottom: 1px solid #252526;
+  }
+  .flowbee-config-tab-active {
+    background-color: #1e1e1e;
+    color: #eaeaea;
+  }
+}
+
 @mixin tree {
   height: 100%;
   overflow: auto;
