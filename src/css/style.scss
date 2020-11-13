@@ -216,11 +216,11 @@
 
 @mixin configurator {
   display: none;
-  width: 850px;
+  width: 600px;
   height: 200px;
   position: fixed;
-  left: 350px;
-  bottom: 55px;
+  left: 15px;
+  bottom: 15px;
   flex-direction: column;
   background-color: #ffffff;
   color: #616161;
