@@ -1,5 +1,6 @@
 import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
+import { FlowElementUpdateEvent, Listener, TypedEvent } from './event';
 import { FlowElement, getLabel } from './model/element';
 import { ConfigTemplate, Widget } from './model/template';
 import { configuratorDefault, ConfiguratorOptions } from './options';
@@ -25,6 +26,11 @@ export class Configurator {
     template: ConfigTemplate | undefined;
 
     private options: ConfiguratorOptions;
+
+    private _onFlowElementUpdate = new TypedEvent<FlowElementUpdateEvent>();
+    onFlowElementUpdate(listener: Listener<FlowElementUpdateEvent>) {
+        this._onFlowElementUpdate.on(listener);
+    }
 
     constructor() {
         // build html
@@ -60,6 +66,8 @@ export class Configurator {
      }
 
     render(flowElement: FlowElement, template: ConfigTemplate | string, options: ConfiguratorOptions) {
+
+        if (!flowElement) throw new Error('flowElement is required');
 
         this.options = merge(configuratorDefault, options);
 
@@ -189,10 +197,11 @@ export class Configurator {
         } else {
             delete this.flowElement.attributes[attribute];
         }
+        this._onFlowElementUpdate.emit({ element: this.flowElement });
     }
 
     get isOpen(): boolean {
-        return this.div.style.display !== 'none';
+        return this.div.style.display && this.div.style.display !== 'none';
     }
 
     close() {

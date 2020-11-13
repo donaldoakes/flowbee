@@ -7,7 +7,7 @@ import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style/style';
 import { DrawingOptions } from './draw/options';
 import { Label } from './draw/label';
-import { TypedEvent, Listener, FlowElementSelectEvent } from './event';
+import { TypedEvent, Listener, FlowElementSelectEvent, FlowChangeEvent, FlowElementUpdateEvent } from './event';
 import { SelectObj } from './draw/selection';
 import { ContextMenu, ContextMenuProvider, DefaultMenuProvider } from './menu';
 import { DefaultDialog, DialogProvider } from './dialog';
@@ -67,6 +67,7 @@ export class FlowDiagram {
         } else {
             flow = jsYaml.safeLoad(text, { filename: file });
         }
+        flow.type = 'flow';
         flow.path = file.replace(/\\/g, '/'); // TODO relative to asset path
         return flow;
     }
@@ -95,11 +96,13 @@ export class FlowDiagram {
      * @param indent
      */
     toJson(indent = 2): string {
-        return JSON.stringify(this.flow, null, indent);
+        const { type: _type, path: _path, ...flow } = this.flow;
+        return JSON.stringify(flow, null, indent);
     }
 
     toYaml(indent = 2): string {
-        return jsYaml.safeDump(this.flow, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+        const { type: _type, path: _path, ...flow } = this.flow;
+        return jsYaml.safeDump(flow, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
     }
 
     get instance(): FlowInstance {
@@ -176,6 +179,11 @@ export class FlowDiagram {
         this._onFlowElementSelect.on(listener);
     }
 
+    private _onFlowElementUpdate = new TypedEvent<FlowElementUpdateEvent>();
+    onFlowElementUpdate(listener: Listener<FlowElementUpdateEvent>) {
+        this._onFlowElementUpdate.on(listener);
+    }
+
     private down = false;
     private dragging = false;
     private selectObj: SelectObj | null = null;
@@ -243,7 +251,13 @@ export class FlowDiagram {
             const selObj = this.diagram.selection.getSelectObj();
             if (selObj && selObj.type === 'step' || selObj.type === 'link'
                   || selObj.type === 'subflow' || selObj.type === 'note') {
-                (selObj as any).edit(_text => {
+                (selObj as any).edit(text => {
+                    if (selObj.type === 'step' || selObj.type === 'subflow') {
+                        (selObj.flowElement as any).name = text;
+                    } else {
+                        // TODO case of note content and link result
+                    }
+                    this._onFlowElementUpdate.emit({ element: selObj.flowElement });
                     this.handleChange();
                 });
             }
@@ -286,8 +300,4 @@ export class FlowDiagram {
             }
         }
     }
-}
-
-export interface FlowChangeEvent {
-    flow: Flow
 }
