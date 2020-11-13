@@ -26,7 +26,7 @@ export class Configurator {
 
     private options: ConfiguratorOptions;
 
-    constructor(readonly container: HTMLElement) {
+    constructor() {
         // build html
         this.div = document.createElement('div') as HTMLDivElement;
         const header = document.createElement('div') as HTMLDivElement;
@@ -56,7 +56,7 @@ export class Configurator {
         tabbedContent.appendChild(this.tabContent);
         content.appendChild(tabbedContent);
         this.div.appendChild(content);
-        container.appendChild(this.div);
+        document.body.appendChild(this.div);
      }
 
     render(flowElement: FlowElement, template: ConfigTemplate | string, options: ConfiguratorOptions) {
@@ -65,7 +65,7 @@ export class Configurator {
 
         // loading styles is expensive, so only load if theme has changed
         if (!this.styles || !this.stylesObj || (options.theme && options.theme !== this.styles.theme.name)) {
-            this.styles = new Styles('flowbee-configurator', new Theme(options.theme), this.container);
+            this.styles = new Styles('flowbee-configurator', new Theme(options.theme), this.div);
             this.stylesObj = this.styles.getObject();
             this.div.className = `flowbee-configurator flowbee-configurator-${this.options.theme || ''}`;
         }
@@ -88,6 +88,9 @@ export class Configurator {
         }
 
         this.div.style.display = 'flex';
+
+        // calculate tab content height based on total
+        this.tabContent.style.height = (this.div.clientHeight - 30) + 'px';
     }
 
     addTab(label: string): HTMLLIElement {
@@ -111,7 +114,8 @@ export class Configurator {
 
         this.tabContent.innerHTML = '';
 
-        for (const widget of this.template[tabName].widgets) {
+        const widgets = this.template[tabName].widgets;
+        for (const widget of widgets) {
             if (widget.label) {
                 const label = document.createElement('label');
                 label.innerHTML = widget.label;
@@ -120,34 +124,47 @@ export class Configurator {
                 // todo span
             }
 
+            this.tabContent.style.gridAutoRows = '25px';
+            const readonly = widget.readonly || this.flowElement.readonly;
+
             if (widget.type === 'text') {
                 const text = document.createElement('input') as HTMLInputElement;
                 text.setAttribute('type', 'text');
                 this.tabContent.appendChild(text);
-            } else if (widget.type === 'textarea') {
+            } else if (widget.type === 'textarea' && !readonly) {
                 const textarea = document.createElement('textarea') as HTMLTextAreaElement;
-                this.tabContent.appendChild(textarea);
+                if (widgets.length === 1) {
+                    // allow textarea to fill entire tab
+                    this.tabContent.style.gridAutoRows = '';
+                    this.tabContent.appendChild(textarea);
+                }
             } else if (widget.type === 'select') {
                 const select = document.createElement('select') as HTMLSelectElement;
                 if (widget.options) {
                     for (const opt of widget.options) {
                         const option = document.createElement('option') as HTMLOptionElement;
-                        option.innerText = opt;
+                        option.innerHTML = opt;
                         select.appendChild(option);
                     }
                 }
                 this.tabContent.appendChild(select);
             } else if (widget.type === 'table') {
                 // TODO
-
-            } else if (widget.type === 'source') {
+                if (widgets.length === 1) {
+                    // allow textarea to fill entire tab
+                    this.tabContent.style.gridAutoRows = '';
+                }
+            } else if (widget.type === 'source' || (widget.type === 'textarea' && readonly)) {
                 const pre = document.createElement('pre') as HTMLPreElement;
                 const indent = 2; // TODO config
+                // TODO: newline between pre opening tag and
                 if (this.options.sourceTab === 'yaml') {
-                    pre.innerText = jsYaml.safeDump(this.flowElement, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+                    pre.textContent = jsYaml.safeDump(this.flowElement, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
                 } else {
-                    pre.innerText = JSON.stringify(this.flowElement, null, indent);
+                    pre.textContent = JSON.stringify(this.flowElement, null, indent);
                 }
+                pre.style.margin = '0';
+                this.tabContent.appendChild(pre);
             }
         }
     }

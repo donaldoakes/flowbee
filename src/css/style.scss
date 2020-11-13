@@ -216,8 +216,11 @@
 
 @mixin configurator {
   display: none;
-  width: 100%;
-  height: 100%;
+  width: 850px;
+  height: 200px;
+  position: fixed;
+  left: 350px;
+  bottom: 55px;
   flex-direction: column;
   background-color: #ffffff;
   color: #616161;
@@ -228,12 +231,13 @@
 
   .flowbee-config-header {
     display: flex;
-    height: 25px;
+    height: 30px;
     background-color: #e6e6e6;
     color: #616161;
     border-bottom: 1px solid #c8c8c8;
     padding: 5px 5px 0 5px;
     font-weight: 500;
+    box-sizing: border-box;
   }
   .flowbee-config-title {
     flex-grow: 1;
@@ -244,11 +248,9 @@
   .flowbee-config-content {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
   }
   .flowbee-config-tabbed-content {
     display: flex;
-    flex-grow: 1;
   }
   .flowbee-config-tabs {
     list-style: none;
@@ -272,11 +274,15 @@
   }
   .flowbee-config-tab-content {
     display: grid;
-    grid-template-columns: 80px 1fr;
-    grid-auto-rows: 25px;
+    grid-template-columns: 80px auto;
     grid-gap: 10px 15px;
-    flex-grow: 1;
+    width: 100%;
+    overflow: auto;
     padding: 10px;
+    box-sizing: border-box;
+  }
+  .flowbee-config-tab-content label {
+    height: fit-content;
   }
   /** TODO: programmatically for these **/
   .flowbee-config-tab-content select {
@@ -303,11 +309,21 @@
     border: 1px solid var(--vscode-input-border);
     */
   }
+  .flowbee-config-tab-content table {
+    grid-column: 1/3;
+    grid-row: span 4;
+    /*
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border);
+    */
+  }
 }
 .flowbee-configurator-light {
   @include configurator;
 }
 .flowbee-configurator-dark {
+  @include configurator;
   background-color: #1e1e1e;
   color: #cccccc;
   border: 1px solid #454545;

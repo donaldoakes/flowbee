@@ -7,6 +7,7 @@ export interface FlowElement {
     id?: string,
     attributes?: {[key: string]: string};
     type?: FlowElementType; // TODO: optional because of marquee
+    readonly?: boolean;
 }
 
 /**
@@ -14,7 +15,7 @@ export interface FlowElement {
  */
 export const getLabel = (element: FlowElement): string => {
     if (element.type === 'flow') return getFlowName(element as Flow);
-    else if (element.type === 'step') return (element as Step).name;
+    else if (element.type === 'step') return (element as Step).name.replace(/[\r\n]+/g," ");
     else if (element.type === 'subflow') return (element as Subflow).name;
     else if (element.type === 'note') return 'Note';
     else if (element.type === 'link') return 'Link';
