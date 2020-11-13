@@ -1123,13 +1123,14 @@ export class Link {
     // not applicable
   }
 
-  edit() {
+  edit(onchange: (text: string) => void) {
     const edit = new Edit(this.diagram);
     const text = this.label?.text || '';
     const display = this.label?.display || { x: this.display.x + 2, y: this.display.y + Link.LABEL_CORR };
     display.y -= 1;
     edit.render(text, display, text => {
       this.link.result = text;
+      onchange(this.link.result);
     });
   }
 

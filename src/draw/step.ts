@@ -318,10 +318,11 @@ export class Step extends Shape {
     this.step.attributes.display = this.getAttr(display);
   }
 
-  edit() {
+  edit(onchange: (text: string) => void) {
     const edit = new Edit(this.diagram, true);
     edit.render(this.title.text, this.title, text => {
       this.step.name = text;
+      onchange(this.step.name);
     });
   }
 

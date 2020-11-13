@@ -19,8 +19,8 @@ export class Configurator {
     private title: HTMLDivElement;
     private tabs: HTMLUListElement;
     private tabContent: HTMLDivElement;
-
     private activeTab: { name: string, tab: HTMLLIElement} | undefined;
+
     private flowElement: FlowElement | undefined;
     private template: ConfigTemplate | undefined;
 
@@ -36,7 +36,7 @@ export class Configurator {
         header.appendChild(this.title);
         const close = document.createElement('div') as HTMLDivElement;
         close.className = 'flowbee-config-close';
-        close.onclick = _e => this.div.style.display = 'none';
+        close.onclick = _e => this.close();
         const closeImg = document.createElement('input') as HTMLInputElement;
         closeImg.type = 'image';
         closeImg.alt = closeImg.title = 'Close Configurator';
@@ -70,21 +70,23 @@ export class Configurator {
             this.div.className = `flowbee-configurator flowbee-configurator-${this.options.theme || ''}`;
         }
 
-        // clear old tabs and content
-        this.tabs.innerHTML = '';
-
         this.flowElement = flowElement;
         this.template = typeof template === 'string' ? Configurator.parseTemplate(template, getLabel(flowElement)) : template;
         if (this.options.sourceTab) {
             this.template['Source'] = { widgets: [{ type: 'source' }] };
         }
 
+        // clear old tabs and content
+        this.tabs.innerHTML = '';
+
         // title
         this.title.innerText = getLabel(flowElement);
 
-        for (const tabName of Object.keys(this.template)) {
+        const keys = Object.keys(this.template);
+        for (let i = 0; i < keys.length; i++) {
+            const tabName = keys[i];
             const tab = this.addTab(tabName);
-            if (!this.activeTab) this.activate(tabName, tab);
+            if (i === 0) this.activate(tabName, tab);
         }
 
         this.div.style.display = 'flex';
@@ -125,19 +127,24 @@ export class Configurator {
             }
 
             this.tabContent.style.gridAutoRows = '25px';
+            const value = this.flowElement.attributes ? this.flowElement.attributes[widget.attribute] : '';
             const readonly = widget.readonly || this.flowElement.readonly;
 
             if (widget.type === 'text') {
                 const text = document.createElement('input') as HTMLInputElement;
                 text.setAttribute('type', 'text');
+                if (value) text.value = value;
+                text.onchange = e => this.update(widget.attribute, text.value);
                 this.tabContent.appendChild(text);
             } else if (widget.type === 'textarea' && !readonly) {
                 const textarea = document.createElement('textarea') as HTMLTextAreaElement;
                 if (widgets.length === 1) {
                     // allow textarea to fill entire tab
                     this.tabContent.style.gridAutoRows = '';
-                    this.tabContent.appendChild(textarea);
                 }
+                if (value) textarea.value = value;
+                textarea.onchange = e => this.update(widget.attribute, textarea.value);
+                this.tabContent.appendChild(textarea);
             } else if (widget.type === 'select') {
                 const select = document.createElement('select') as HTMLSelectElement;
                 if (widget.options) {
@@ -147,6 +154,8 @@ export class Configurator {
                         select.appendChild(option);
                     }
                 }
+                if (value) select.selectedIndex = widget.options.indexOf(value);
+                select.onchange = e => this.update(widget.attribute, widget.options[select.selectedIndex]);
                 this.tabContent.appendChild(select);
             } else if (widget.type === 'table') {
                 // TODO
@@ -167,6 +176,27 @@ export class Configurator {
                 this.tabContent.appendChild(pre);
             }
         }
+    }
+
+    update(attribute: string, value: string) {
+        const val = value?.trim();
+        if (val) {
+            if (this.flowElement.attributes) {
+                this.flowElement.attributes[attribute] = val;
+            } else {
+                this.flowElement.attributes = { [attribute]: val };
+            }
+        } else {
+            delete this.flowElement.attributes[attribute];
+        }
+    }
+
+    get isOpen(): boolean {
+        return this.div.style.display !== 'none';
+    }
+
+    close() {
+        this.div.style.display = 'none';
     }
 
     /**

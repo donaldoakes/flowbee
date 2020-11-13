@@ -106,7 +106,7 @@ export class Note extends Shape {
     this.setDisplayAttr(display.x, display.y, display.w, display.h);
   }
 
-  edit() {
+  edit(onchange: (text: string) => void) {
     const edit = new Edit(this.diagram, true);
     edit.font = this.diagram.options.note.font;
     edit.textAlign = 'left';
@@ -116,6 +116,7 @@ export class Note extends Shape {
     }
     edit.render(this.note.text, this.display, text => {
       this.note.text = text;
+      onchange(this.note.text);
     }, e => {
       const target = e.target as HTMLElement;
       this.note.text = target.innerText;

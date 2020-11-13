@@ -240,7 +240,13 @@ export class FlowDiagram {
 
     private onDoubleClick(e: MouseEvent) {
         if (!this.readonly) {
-            this.diagram.onDoubleClick(e);
+            const selObj = this.diagram.selection.getSelectObj();
+            if (selObj && selObj.type === 'step' || selObj.type === 'link'
+                  || selObj.type === 'subflow' || selObj.type === 'note') {
+                (selObj as any).edit(_text => {
+                    this.handleChange();
+                });
+            }
         }
     }
 

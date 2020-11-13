@@ -295,11 +295,12 @@ export class Subflow extends Shape {
     this.setDisplayAttr(display.x, display.y, display.w, display.h);
   }
 
-  edit() {
+  edit(onchange: (text: string) => void) {
     const edit = new Edit(this.diagram);
     const display = { ...this.title, y: this.title.y + 2 };
     edit.render(this.title.text, display, text => {
       this.subflow.name = text;
+      onchange(this.subflow.name);
     });
   }
 

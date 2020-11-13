@@ -1693,14 +1693,6 @@ export class Diagram extends Shape {
     return true;
   }
 
-  onDoubleClick(e: MouseEvent) {
-    const selObj = this.selection.getSelectObj();
-    if (selObj && selObj.type === 'step' || selObj.type === 'link'
-          || selObj.type === 'subflow' || selObj.type === 'note') {
-        (selObj as any).edit();
-    }
-  }
-
   getLatestInstance() {
     const instances = this.selection.getSelectObj().instances;
     if (instances && instances.length) {
