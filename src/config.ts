@@ -21,8 +21,8 @@ export class Configurator {
     private tabContent: HTMLDivElement;
     private activeTab: { name: string, tab: HTMLLIElement} | undefined;
 
-    private flowElement: FlowElement | undefined;
-    private template: ConfigTemplate | undefined;
+    flowElement: FlowElement | undefined;
+    template: ConfigTemplate | undefined;
 
     private options: ConfiguratorOptions;
 
