@@ -141,7 +141,7 @@ export class Configurator {
             if (widget.type === 'text') {
                 const text = document.createElement('input') as HTMLInputElement;
                 text.setAttribute('type', 'text');
-                if (value) text.value = value;
+                text.value = value;
                 text.onchange = e => this.update(widget.attribute, text.value);
                 this.tabContent.appendChild(text);
             } else if (widget.type === 'textarea' && !readonly) {
@@ -150,7 +150,7 @@ export class Configurator {
                     // allow textarea to fill entire tab
                     this.tabContent.style.gridAutoRows = '';
                 }
-                if (value) textarea.value = value;
+                textarea.value = value;
                 textarea.onchange = e => this.update(widget.attribute, textarea.value);
                 this.tabContent.appendChild(textarea);
             } else if (widget.type === 'select') {
@@ -162,7 +162,11 @@ export class Configurator {
                         select.appendChild(option);
                     }
                 }
-                if (value) select.selectedIndex = widget.options.indexOf(value);
+                if (value) {
+                    select.selectedIndex = widget.options.indexOf(value);
+                } else {
+                    select.selectedIndex = 0;
+                }
                 select.onchange = e => this.update(widget.attribute, widget.options[select.selectedIndex]);
                 this.tabContent.appendChild(select);
             } else if (widget.type === 'table') {
