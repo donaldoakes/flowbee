@@ -271,7 +271,7 @@ export class Diagram extends Shape {
 
     const display = this.prepareDisplay();
 
-    if (!this.instance && this.options.grid.visibility === 'visible') {
+    if (!this.instance && this.options.showGrid) {
       this.grid = new Grid(this.context, display, this.options);
       this.grid.draw();
     }
@@ -423,7 +423,7 @@ export class Diagram extends Shape {
     const diagram = this; // forEach inner access
 
     // label
-    if (!this.instance && this.options.title.visibility === 'visible') {
+    if (!this.instance && this.options.showTitle) {
       const font = this.instance?.template ? this.options.template.font : this.options.title.font;
       diagram.label = new Label(this, this.name, this.getDisplay(), font);
       if (this.instance?.id) {
@@ -901,6 +901,9 @@ export class Diagram extends Shape {
         this.steps.push(step);
       }
     }
+    if (this.options.grid && this.options.snapToGrid) {
+      this.snap(step);
+    }
   }
 
   addLink(from: Step, to: Step) {
@@ -937,6 +940,9 @@ export class Diagram extends Shape {
     }
     this.flow.subflows.push(subflow.subflow);
     this.subflows.push(subflow);
+    if (this.options.grid && this.options.snapToGrid) {
+      this.snap(subflow);
+    }
   }
 
   addNote(x: number, y: number) {
@@ -946,6 +952,9 @@ export class Diagram extends Shape {
     }
     this.flow.notes.push(note.note);
     this.notes.push(note);
+    if (this.options.grid && this.options.snapToGrid) {
+      this.snap(note);
+    }
   }
 
   genId(items: (Step | Link | Subflow | Note)[], type: FlowElementType): number {
@@ -1399,6 +1408,47 @@ export class Diagram extends Shape {
     }
   }
 
+  snap(shape: Shape, resize: boolean = false) {
+    if (this.grid) {
+      if (shape.flowElement.type === 'step') {
+        const step = this.getStep(shape.flowElement.id);
+        if (step) {
+          this.grid.doSnap(step.display, resize);
+          step.setDisplayAttr();
+            for (const link of this.getLinks(step)) {
+              link.recalc(step);
+          }
+        } else {
+          for (const subflow of this.subflows) {
+            const step = subflow.getStep(shape.flowElement.id);
+            if (step) {
+              this.grid.doSnap(step.display, resize);
+              step.setDisplayAttr();
+              for (const link of subflow.getLinks(step)) {
+                link.recalc(step);
+              }
+            }
+          }
+        }
+      } else if (shape.flowElement.type === 'subflow') {
+        const subflow = this.getSubflow(shape.flowElement.id);
+        this.grid.doSnap(subflow.display, resize);
+        subflow.setDisplayAttr();
+        for (const step of subflow.steps) {
+          this.grid.doSnap(step.display);
+          step.setDisplayAttr();
+          for (const link of subflow.getLinks(step)) {
+            link.recalc(step);
+          }
+        }
+      } else if (shape.flowElement.type === 'note') {
+        const note = this.getNote(shape.flowElement.id);
+        this.grid.doSnap(note.display);
+        note.setDisplayAttr();
+      }
+    }
+  }
+
   /**
    * TODO: horizontal scroll
    */
@@ -1450,6 +1500,7 @@ export class Diagram extends Shape {
     }
   }
 
+  drag = false;
   dragX: number;
   dragY: number;
   shiftDrag = false;
@@ -1517,8 +1568,14 @@ export class Diagram extends Shape {
       this.marquee = null;
     }
     else {
+      if (this.drag && this.grid?.snap) {
+        this.selection.snap(this.anchor >= 0);
+        this.draw();
+      }
       this.selection.reselect();
     }
+
+    this.drag = false;
   }
 
   onMouseEnter(_e: MouseEvent) {
@@ -1566,6 +1623,7 @@ export class Diagram extends Shape {
 
   onMouseDrag(e: MouseEvent) {
     if (!this.readonly && this.dragX && this.dragY && !e.ctrlKey) {
+      this.drag = true;
       const rect = this.canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;

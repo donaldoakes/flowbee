@@ -89,8 +89,11 @@ export class Note extends Shape {
       display.w = maxW;
       display.h = h;
       this.diagram.context.font = this.diagram.options.defaultFont.name;
-      this.setDisplayAttr(display.x, display.y, display.w, display.h);
     }
+
+    display.w = Math.max(display.w, this.diagram.options.note.minWidth);
+    display.h = Math.max(display.h, this.diagram.options.note.minHeight);
+    this.setDisplayAttr(display.x, display.y, display.w, display.h);
 
     return display;
   }
@@ -102,7 +105,8 @@ export class Note extends Shape {
   }
 
   resize(x: number, y: number, deltaX: number, deltaY: number, limDisplay?: Display) {
-    const display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.note.minSize, limDisplay);
+    const display = this.resizeDisplay(x, y, deltaX, deltaY,
+       this.diagram.options.note.minWidth, this.diagram.options.note.minHeight, limDisplay);
     this.setDisplayAttr(display.x, display.y, display.w, display.h);
   }
 
@@ -134,9 +138,9 @@ export class Note extends Shape {
     return note;
   }
 
-  static noteElement(_diagram: Diagram, idNum: number, x: number, y: number): NoteElement {
-    const w = 200;
-    const h = 60;
+  static noteElement(diagram: Diagram, idNum: number, x: number, y: number): NoteElement {
+    const w = diagram.options.note.minWidth;
+    const h = diagram.options.note.minHeight;
     const noteX = Math.max(1, x - w / 2);
     const noteY = Math.max(1, y - h / 2);
     return {

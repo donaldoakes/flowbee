@@ -16,7 +16,8 @@ export interface LabelOptions {
 export interface StepOptions {
     outlineColor?: string;
     roundingRadius?: number;
-    minSize?: number;
+    minWidth?: number;
+    minHeight?: number;
     start?: { color?: string, fillColor?: string };
     stop?: { color?: string, fillColor?: string };
     pause?: { color?: string, fillColor?: string };
@@ -38,6 +39,8 @@ export interface LinkOptions {
 export interface SubflowOptions {
     outlineColor?: string;
     roundingRadius?: number;
+    minWidth?: number;
+    minHeight?: number;
     hitWidth?: number;
 }
 
@@ -47,7 +50,8 @@ export interface NoteOptions {
     outlineColor?: string;
     roundingRadius?: number;
     fillColor?: string;
-    minSize?: number;
+    minWidth?: number;
+    minHeight?: number;
     padding?: number;
 }
 
@@ -78,7 +82,7 @@ export interface DrawingOptions {
     padding?: number;
     meta?: { color: string };
     drag?: { min: number };
-    title?: { color?: string, font?: Font, visibility?: 'visible' | 'hidden' };
+    title?: { color?: string, font?: Font };
     template?: { font?: Font };
     label?: LabelOptions;
     milestone?: { color?: string };
@@ -86,7 +90,7 @@ export interface DrawingOptions {
     link?: LinkOptions;
     subflow?: SubflowOptions;
     note?: NoteOptions;
-    grid?: { visibility?: 'visible' | 'hidden', color?: string, width?: number };
+    grid?: { color?: string, width?: number };
     marquee?: MarqueeOptions;
     anchor?: AnchorOptions;
     highlight?: HighlightOptions;

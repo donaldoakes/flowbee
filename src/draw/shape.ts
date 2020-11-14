@@ -44,7 +44,12 @@ export class Shape {
     return display;
   }
 
-  setDisplayAttr(x: number, y: number, w: number, h: number) {
+  setDisplayAttr(
+    x: number = this.display.x,
+    y: number = this.display.y,
+    w: number = this.display.w,
+    h: number = this.display.h
+  ) {
     let attr = 'x=' + x + ',y=' + y;
     if (w) {
       attr += ',w=' + w + ',h=' + h;
@@ -94,7 +99,7 @@ export class Shape {
     }
   }
 
-  resizeDisplay(x: number, y: number, deltaX: number, deltaY: number, min: number, limDisplay?: Display) {
+  resizeDisplay(x: number, y: number, deltaX: number, deltaY: number, minWidth: number, minHeight: number, limDisplay?: Display) {
     const anchor = this.getAnchor(x, y);
     const display = { x: this.display.x, y: this.display.y, w: this.display.w, h: this.display.h };
     let t1: number, t2: number;
@@ -103,11 +108,11 @@ export class Shape {
       t2 = display.y + display.h;
       display.x = x + deltaX;
       display.y = y + deltaY;
-      if (t1 - display.x < min) {
-        display.x = t1 - min;
+      if (t1 - display.x < minWidth) {
+        display.x = t1 - minWidth;
       }
-      if (t2 - display.y < min) {
-        display.y = t2 - min;
+      if (t2 - display.y < minHeight) {
+        display.y = t2 - minHeight;
       }
       display.w = t1 - display.x;
       display.h = t2 - display.y;
@@ -115,35 +120,35 @@ export class Shape {
     else if (anchor === 1) {
       t2 = display.y + display.h;
       display.y = y + deltaY;
-      if (t2 - display.y < min) {
-        display.y = t2 - min;
+      if (t2 - display.y < minHeight) {
+        display.y = t2 - minHeight;
       }
       display.w = x - (display.x - deltaX);
-      if (display.w < min) {
-        display.w = min;
+      if (display.w < minWidth) {
+        display.w = minWidth;
       }
       display.h = t2 - display.y;
     }
     else if (anchor === 2) {
       display.w = x - (display.x - deltaX);
       display.h = y - (display.y - deltaY);
-      if (display.w < min) {
-        display.w = min;
+      if (display.w < minWidth) {
+        display.w = minWidth;
       }
-      if (display.h < min) {
-        display.h = min;
+      if (display.h < minHeight) {
+        display.h = minHeight;
       }
     }
     else if (anchor === 3) {
       t1 = display.x + display.w;
       display.x = x + deltaX;
-      if (t1 - display.x < min) {
-        display.x = t1 - min;
+      if (t1 - display.x < minWidth) {
+        display.x = t1 - minWidth;
       }
       display.w = t1 - display.x;
       display.h = y - (display.y - deltaY);
-      if (display.h < min) {
-        display.h = min;
+      if (display.h < minHeight) {
+        display.h = minHeight;
       }
     }
 

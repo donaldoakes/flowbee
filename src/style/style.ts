@@ -160,14 +160,12 @@ export class DiagramStyle {
                 min: styles.getSize(stylesObj[`${this.prefix} .drag`]['min-width'])
             },
             grid: {
-                visibility: grid.visibility,
                 color: grid.color,
                 width: styles.getSize(grid.width)
             },
             title: {
                 color: title.color,
                 font: styles.getFont(title),
-                visibility: title.visibility
             },
             meta: {
                 color: meta.color
@@ -185,7 +183,8 @@ export class DiagramStyle {
             step: {
                 outlineColor: step['border-color'],
                 roundingRadius: styles.getSize(step['border-radius']),
-                minSize: styles.getSize(step['min-width']),
+                minWidth: styles.getSize(step['min-width']),
+                minHeight: styles.getSize(step['min-height']),
                 start: {
                     color: step['start'].color,
                     fillColor: step['start']['background-color']
@@ -218,6 +217,8 @@ export class DiagramStyle {
             subflow: {
                 outlineColor: subflow['border-color'],
                 roundingRadius: styles.getSize(subflow['border-radius']),
+                minWidth: styles.getSize(subflow['min-width']),
+                minHeight: styles.getSize(subflow['min-height']),
                 hitWidth: styles.getSize(subflow.hit.width)
             },
             note: {
@@ -226,7 +227,8 @@ export class DiagramStyle {
                 outlineColor: note['border-color'],
                 fillColor: note['background-color'],
                 roundingRadius: styles.getSize(note['border-radius']),
-                minSize: styles.getSize(note['min-width']),
+                minWidth: styles.getSize(note['min-width']),
+                minHeight: styles.getSize(note['min-width']),
                 padding: styles.getSize(note.padding)
             },
             anchor: {

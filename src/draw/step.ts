@@ -314,7 +314,8 @@ export class Step extends Shape {
   }
 
   resize(x: number, y: number, deltaX: number, deltaY: number, limDisplay?: Display) {
-    const display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize, limDisplay);
+    const display = this.resizeDisplay(x, y, deltaX, deltaY,
+      this.diagram.options.step.minWidth, this.diagram.options.step.minHeight, limDisplay);
     this.step.attributes.display = this.getAttr(display);
   }
 

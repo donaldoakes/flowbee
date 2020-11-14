@@ -4,6 +4,7 @@ import { Link } from './link';
 import { Subflow } from './subflow';
 import { Note } from './note';
 import { Label } from './label';
+import { Shape } from './shape';
 
 export type SelectObj = Diagram | Step | Link | Subflow | Note | Label;
 
@@ -135,6 +136,7 @@ export class Selection {
   }
 
   move(startX: number, startY: number, deltaX: number, deltaY: number) {
+
     const selection = this;
 
     if (!this.isMulti() && this.getSelectObj().type === 'link') {
@@ -193,6 +195,12 @@ export class Selection {
       }
     }
     // TODO: diagram label loses select
+  }
+
+  snap(resize: boolean = false) {
+    for (const selObj of this.selectObjs) {
+      this.diagram.snap(selObj as Shape, resize);
+    }
   }
 
   /**

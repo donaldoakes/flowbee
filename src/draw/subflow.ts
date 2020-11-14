@@ -1,8 +1,8 @@
+import { Subflow as SubflowElement } from '../model/flow';
 import { Shape } from './shape';
 import { Step } from './step';
 import { Link } from './link';
 import { Diagram } from './diagram';
-import { Subflow as SubflowElement } from '../model/flow';
 import { Title } from './display';
 import { Edit } from './edit';
 
@@ -291,7 +291,8 @@ export class Subflow extends Shape {
   }
 
   resize(x: number, y: number, deltaX: number, deltaY: number) {
-    const display = this.resizeDisplay(x, y, deltaX, deltaY, this.diagram.options.step.minSize);
+    const display = this.resizeDisplay(x, y, deltaX, deltaY,
+      this.diagram.options.step.minWidth, this.diagram.options.step.minHeight);
     this.setDisplayAttr(display.x, display.y, display.w, display.h);
   }
 
@@ -304,57 +305,46 @@ export class Subflow extends Shape {
     });
   }
 
+  /**
+   * TODO template-driven
+   */
   static create(diagram: Diagram, idNum: number, startStepId: number, startLinkId: number,
         type: string, x: number, y: number): Subflow {
-    // TODO template-driven
     const subflowElement = Subflow.subflowElement(diagram, idNum, type, x, y);
     const subflow = new Subflow(diagram, subflowElement);
     subflow.steps = [];
     subflow.links = [];
     subflow.display = { x: x, y: y };
 
-    // TODO template-driven
+    let stepId = startStepId;
+    let stepX = Math.max(x - 120, 0);
+    let stepY = y;
+    const linkId = startLinkId;
 
-    // let stepId = startStepId;
-    // let stepX = x + 40;
-    // let stepY = y + 40;
-    // const linkId = startLinkId;
+    const startDescriptor = diagram.descriptors.find(d => d.category === 'start');
+    const start = Step.create(diagram, stepId, startDescriptor, stepX, stepY);
+    subflowElement.steps.push(start.step);
+    subflow.steps.push(start);
 
-    // const start = Step.create(diagram, stepId, diagram.startDescriptor, stepX, stepY);
-    // subflowElement.steps.push(start.step);
-    // subflow.steps.push(start);
+    stepId++;
 
-    // stepId++;
+    stepX = x + 120;
+    stepY = y;
+    const stopDescriptor = diagram.descriptors.find(d => d.category === 'stop');
+    const stop = Step.create(diagram, stepId, stopDescriptor, stepX, stepY);
+    subflowElement.steps.push(stop.step);
+    subflow.steps.push(stop);
+    const link = Link.create(diagram, linkId, start, stop);
+    subflow.links.push(link);
 
-    // let task;
-    // if (type === 'Error Handler') {
-    //   // TODO template
-    //   stepX = x + 170;
-    //   stepY = y + 30;
-    //   task = Step.create(diagram, stepId, diagram.taskDescriptor, stepX, stepY);
-    //   task.step.attributes.TASK_PAGELET = 'task.pagelet';
-    //   task.step.attributes.STATUS_AFTER_EVENT = 'Cancelled';
-    //   task.step.name = diagram.name + ' Fallout';
-    //   subflow.steps.push(task.step);
-    //   subflow.steps.push(task);
-    //   const link = Link.create(diagram, linkId, start, task);
-    //   subflow.links.push(link);
-    // }
-
-    // stepId++;
-    // stepX = x + 340;
-    // stepY = y + 40;
-    // const stop = Step.create(diagram, stepId, diagram.stopDescriptor, stepX, stepY);
-    // subflowElement.steps.push(stop.step);
-    // subflow.steps.push(stop);
-    // const link = Link.create(diagram, linkId, task ? task : start, stop);
-    // subflow.links.push(link);
+    const disp = subflow.getDisplay();
+    subflow.display = { x: disp.x, y: disp.y, w: disp.w, h: disp.h };
 
     return subflow;
   }
 
   static subflowElement(_diagram: Diagram, idNum: number, type: string, x: number, y: number): SubflowElement {
-    const w = 440;
+    const w = 400;
     const h = 120;
     const subflowX = Math.max(1, x - w / 2);
     const subflowY = Math.max(1, y - h / 2);

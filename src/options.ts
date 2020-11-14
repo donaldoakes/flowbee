@@ -5,6 +5,9 @@ export interface DiagramOptions {
     iconBase?: string;
     webSocketUrl?: string;
     resizeWithContainer?: boolean;
+    showGrid?: boolean;
+    snapToGrid?: boolean;
+    showTitle?: boolean;
     animationSpeed?: number; // segments/s;
     animationLinkFactor?: number; // relative link slice
     maxInstances?: number
@@ -15,6 +18,9 @@ export const diagramDefault: DiagramOptions = {
     iconBase: null,
     webSocketUrl: null,
     resizeWithContainer: false,
+    showGrid: true,
+    snapToGrid: true,
+    showTitle: false,
     animationSpeed: 8,
     animationLinkFactor: 3,
     maxInstances: 10
