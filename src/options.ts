@@ -17,7 +17,7 @@ export const diagramDefault: DiagramOptions = {
     theme: 'light',
     iconBase: null,
     webSocketUrl: null,
-    resizeWithContainer: false,
+    resizeWithContainer: true,
     showGrid: true,
     snapToGrid: true,
     showTitle: false,

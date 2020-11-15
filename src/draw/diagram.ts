@@ -45,9 +45,7 @@ export class Diagram extends Shape {
 
   static containerResizeObserver: ResizeObserver;
 
-  // TODO extract zoom
   zoom = 100;
-  zoomControl?: HTMLElement;
   origPanelWidth?: number;
 
   constructor(
@@ -56,79 +54,12 @@ export class Diagram extends Shape {
     public descriptors: Descriptor[]
   ) {
     super(canvas.getContext("2d"), options);
+    this.canvas.style.transform = null; // forget zoom
     this.container = canvas.parentElement;
     this.descriptors = descriptors;
     this.context = this.canvas.getContext("2d");
     this.anchor = -1;
     this.selection = new Selection(this);
-
-    // zoom setup TODO refactor
-    const zoomControls = document.getElementsByClassName('flow-zoom');
-    if (zoomControls.length === 1) {
-      const diagram = this;
-      this.zoomControl = zoomControls[0] as HTMLElement;
-      const rangeInput = diagram.zoomControl.getElementsByTagName('input')[0] as HTMLInputElement;
-      this.zoomControl.oninput = function (e) {
-        diagram.zoomCanvas(parseInt((e.target as HTMLInputElement).value));
-      };
-      this.zoomControl.onchange = function (e) {
-        diagram.adjustSection();
-      };
-      this.zoomControl.onclick = function (e) {
-        e.preventDefault();
-        if ((e.target as HTMLElement).className) {
-          if ((e.target as HTMLElement).className.endsWith('zoom-in') && diagram.zoom < 200) {
-            diagram.zoomCanvas(diagram.zoom + 20);
-            rangeInput.value = '' + (diagram.zoom + 20);
-            diagram.adjustSection();
-          }
-          else if ((e.target as HTMLElement).className.endsWith('zoom-out') && diagram.zoom > 20) {
-            diagram.zoomCanvas(diagram.zoom - 20);
-            rangeInput.value = '' + (diagram.zoom - 20);
-            diagram.adjustSection();
-          }
-        }
-      };
-      // zoom hover title
-      rangeInput.onmousemove = function (e) {
-        const rect = rangeInput.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const pct = (x / rangeInput.clientWidth) * 100;
-        let z = parseInt(rangeInput.min) + (parseInt(rangeInput.max) - parseInt(rangeInput.min)) * pct / 100;
-        if (z > (diagram.zoom - 10) && z < (diagram.zoom + 10)) {
-          z = diagram.zoom;
-        }
-        rangeInput.title = Math.round(z) + '%';
-      };
-      // show/hide/close
-      const closeBtn = this.zoomControl.getElementsByClassName('zoom-close')[0] as HTMLButtonElement;
-      this.zoomControl.onmouseover = function (e) {
-        closeBtn.style.visibility = 'visible';
-      };
-      this.zoomControl.onmouseout = function (e) {
-        closeBtn.style.visibility = 'hidden';
-      };
-      closeBtn.onclick = function (e) {
-        diagram.zoomControl.style.visibility = 'hidden';
-        (e.target as HTMLElement).style.visibility = 'hidden';
-      };
-      // pinch gesture
-      window.addEventListener('wheel', function (e) {
-        if (e.ctrlKey) {
-          e.preventDefault();
-          let z = diagram.zoom - e.deltaY;
-          if (z < 20) {
-            z = 20;
-          }
-          else if (z > 200) {
-            z = 200;
-          }
-          diagram.zoomCanvas(z);
-          rangeInput.value = '' + diagram.zoom;
-          diagram.adjustSection();
-        }
-      }, { passive: false });
-    }
   }
 
   get diagram(): Diagram { return this; }
@@ -179,36 +110,6 @@ export class Diagram extends Shape {
     const dh = this.canvas.height * scale - this.canvas.height;
     const dpRatio = window.devicePixelRatio || 1;
     this.canvas.style.transform = 'translate(' + (dw / (2 * dpRatio)) + 'px,' + (dh / (2 * dpRatio)) + 'px) scale(' + scale + ')';
-  }
-
-  /**
-   * adjust section to accommodate zoomed canvas
-   */
-  adjustSection() {
-    const sections = document.getElementsByClassName('zoom-section');
-    if (sections.length) {
-      const section = sections[0];
-      const scale = this.zoom / 100;
-      const cw = this.canvas.style.width.substring(0, this.canvas.style.width.length - 2);
-      let w = (cw ? parseInt(cw) : this.canvas.width) * scale; // canvas style width not populated on windows
-      const panels = document.getElementsByClassName('panel-full-width');
-      if (panels.length) {
-        // don't shrink width smaller than original panel width
-        if (!this.origPanelWidth) {
-          this.origPanelWidth = (panels[0] as HTMLElement).offsetWidth;
-        }
-        if (w < this.origPanelWidth - 37) {
-          w = this.origPanelWidth - 37;
-        }
-      }
-      const ch = this.canvas.style.height.substring(0, this.canvas.style.height.length - 2);
-      let h = (ch ? parseInt(ch) : this.canvas.height) * scale;
-      if (h < 540) {
-        h = 540;
-      }
-      (section as HTMLElement).style.width = (w + 20) + 'px';
-      (section as HTMLElement).style.height = (h + 20) + 'px';
-    }
   }
 
   /**

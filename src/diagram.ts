@@ -105,6 +105,13 @@ export class FlowDiagram {
         return jsYaml.safeDump(flow, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
     }
 
+    get zoom(): number {
+        return this.diagram.zoom;
+    }
+    set zoom(zoom: number) {
+        this.diagram.zoomCanvas(zoom);
+    }
+
     get instance(): FlowInstance {
         return this.diagram.instance;
     }
