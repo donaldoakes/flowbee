@@ -30,6 +30,8 @@ export class Diagram extends Shape {
   marquee?: Marquee;
   anchor = -1;
   selection: Selection;
+  zoom = 100;
+  mode: 'select' | 'connect' = 'select';
   container?: HTMLElement;
   scrollContainerId?: string;
   stepId?: string;
@@ -44,9 +46,6 @@ export class Diagram extends Shape {
   images?: {[key: string]: HTMLImageElement};
 
   static containerResizeObserver: ResizeObserver;
-
-  zoom = 100;
-  origPanelWidth?: number;
 
   constructor(
     readonly canvas: HTMLCanvasElement,
@@ -813,28 +812,31 @@ export class Diagram extends Shape {
   }
 
   addLink(from: Step, to: Step): Link {
-    let links = this.links.slice(0);
-    if (this.subflows) {
-      for (let i = 0; i < this.subflows.length; i++) {
-        links = links.concat(this.subflows[i].links);
-      }
-    }
-    const link = Link.create(this, this.genId(links, 'link'), from, to);
-    let destSubflow = null;
-    if (this.subflows) {
-      for (let i = 0; i < this.subflows.length; i++) {
-        if (this.subflows[i].get(to.step.id)) {
-          destSubflow = this.subflows[i];
+    // TODO: support link to self?
+    if (from.id !== to.id) {
+      let links = this.links.slice(0);
+      if (this.subflows) {
+        for (let i = 0; i < this.subflows.length; i++) {
+          links = links.concat(this.subflows[i].links);
         }
       }
+      const link = Link.create(this, this.genId(links, 'link'), from, to);
+      let destSubflow = null;
+      if (this.subflows) {
+        for (let i = 0; i < this.subflows.length; i++) {
+          if (this.subflows[i].get(to.step.id)) {
+            destSubflow = this.subflows[i];
+          }
+        }
+      }
+      if (destSubflow) {
+        destSubflow.links.push(link);
+      }
+      else {
+        this.links.push(link);
+      }
+      return link;
     }
-    if (destSubflow) {
-      destSubflow.links.push(link);
-    }
-    else {
-      this.links.push(link);
-    }
-    return link;
   }
 
   addSubflow(type: string, x: number, y: number): Subflow {
@@ -1413,7 +1415,7 @@ export class Diagram extends Shape {
   dragX: number;
   dragY: number;
   shiftDrag = false;
-  hoverObj: SelectObj;
+  connectObj: SelectObj;
 
   onMouseDown(e: MouseEvent) {
     const rect = this.canvas.getBoundingClientRect();
@@ -1425,42 +1427,56 @@ export class Diagram extends Shape {
     this.dragY = y;
 
     const selObj = this.getHoverObj(x, y);
-
-    if (selObj) {
-      if (!this.readonly && (e.shiftKey || e.metaKey || (!navigator.platform.startsWith('Mac') && e.ctrlKey))) {
-        if (this.selection.includes(selObj)) {
-          this.selection.remove(selObj);
-          this.diagram.draw(); // remove anchors
-          this.selection.select();
-        }
-        else {
-          this.selection.add(selObj);
+    if (this.mode === 'select') {
+      if (selObj) {
+        if (!this.readonly && (e.shiftKey || e.metaKey || (!navigator.platform.startsWith('Mac') && e.ctrlKey))) {
+          if (this.selection.includes(selObj)) {
+            this.selection.remove(selObj);
+            this.diagram.draw(); // remove anchors
+            this.selection.select();
+          }
+          else {
+            this.selection.add(selObj);
+            selObj.select();
+          }
+        } else if (!this.selection.includes(selObj)) {
+          // normal single select
+          this.selection.unselect();
+          this.draw();
+          this.selection.setSelectObj(selObj);
+          this.selection.reselect();
           selObj.select();
         }
-      } else if (!this.selection.includes(selObj)) {
-        // normal single select
+      } else {
+        // clicked on canvas
         this.selection.unselect();
         this.draw();
-        this.selection.setSelectObj(selObj);
-        this.selection.reselect();
-        selObj.select();
       }
-    } else {
-      // clicked on canvas
-      this.selection.unselect();
-      this.draw();
     }
   }
 
   onMouseUp(e: MouseEvent) {
-    if (this.shiftDrag && this.dragX && this.dragY) {
-      if (this.selection.getSelectObj() && this.selection.getSelectObj().type === 'step') {
+    if ((this.shiftDrag || this.mode === 'connect') && this.dragX && this.dragY) {
+      const selObj = this.mode === 'connect' ? this.connectObj : this.selection.getSelectObj();
+      if (selObj?.type === 'step') {
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         const destObj = this.getHoverObj(x, y);
         if (destObj && destObj.type === 'step') {
-          this.addLink(this.selection.getSelectObj() as Step, destObj as Step);
+          const srcStep = selObj as Step;
+          if (this.getStep(srcStep.id) && this.getStep(destObj.id)) {
+            this.addLink(srcStep, destObj as Step);
+          } else {
+            // src and dest must be in same subflow
+            for (let i = 0; i < this.subflows.length; i++) {
+              const subflow = this.subflows[i];
+              if (subflow.getStep(srcStep.id) && subflow.getStep(destObj.id)) {
+                this.addLink(srcStep, destObj as Step);
+                break;
+              }
+            }
+          }
         }
         this.draw();
       }
@@ -1473,8 +1489,7 @@ export class Diagram extends Shape {
       this.draw(); // to get rid of marquee
       this.selection.reselect();
       this.selection.select();
-    }
-    else if (!e.shiftKey) {
+    } else if (!e.shiftKey && this.mode === 'select') {
       this.selection.reselect();
       if (this.drag && this.grid?.snap) {
         this.selection.snap(this.anchor >= 0);
@@ -1500,12 +1515,26 @@ export class Diagram extends Shape {
     const y = e.clientY - rect.top;
     this.anchor = -1;
 
-    this.hoverObj = this.getHoverObj(x, y);
-    if (this.hoverObj) {
-      if (!this.readonly && (this.hoverObj.id === this.selection.getSelectObj()?.id)) {
-        this.anchor = this.hoverObj.getAnchor(x, y);
+    let hoverObj: SelectObj;
+    const hovObj = this.getHoverObj(x, y);
+    if (this.mode === 'select') {
+      hoverObj = hovObj;
+    } else if (this.mode === 'connect') {
+      hoverObj = hovObj?.type === 'link' ? hovObj : null;
+      this.selection.setSelectObj(hoverObj);
+      if (hoverObj) {
+        // link is selected by hovering
+        hoverObj.select();
+      } else {
+        this.selection.unselect();
+        this.draw();
+      }
+    }
+    if (hoverObj) {
+      if (!this.readonly && (hoverObj.id === this.selection.getSelectObj()?.id)) {
+        this.anchor = hoverObj.getAnchor(x, y);
         if (this.anchor >= 0) {
-          if (this.hoverObj.type === 'link') {
+          if (hoverObj.type === 'link') {
             document.body.style.cursor = this.canvas.style.cursor = 'crosshair';
           }
           else {
@@ -1541,7 +1570,14 @@ export class Diagram extends Shape {
 
       if (Math.abs(deltaX) > this.options.drag.min || Math.abs(deltaY) > this.options.drag.min) {
 
-        if (e.shiftKey) {
+        this.connectObj = null;
+        if (this.mode === 'connect') {
+          if (this.selection.getSelectObj()) {
+            this.connectObj = this.selection.getSelectObj();
+          } else {
+            this.connectObj = this.getHoverObj(this.dragX, this.dragY);
+          }
+        } else if (e.shiftKey) {
           this.shiftDrag = true;
           // select start obj
           this.selection.setSelectObj(this.getHoverObj(this.dragX, this.dragY));
@@ -1554,14 +1590,14 @@ export class Diagram extends Shape {
           this.canvas.height = this.canvas.height + this.options.padding;
         }
 
-        const selObj = this.selection.getSelectObj();
+        const selObj = this.mode === 'connect' ? this.connectObj : this.selection.getSelectObj();
         if (selObj) {
           if (this.allowInstanceEdit && (!selObj.flowElement || !this.isInstanceEditable(selObj.flowElement.id))) {
             return;
           }
 
           const diagram = this;
-          if (this.shiftDrag) {
+          if (this.shiftDrag || (this.mode === 'connect' && selObj.type === 'step')) {
             this.draw();
             const startObj = this.getHoverObj(this.dragX, this.dragY);
             if (startObj?.type === 'step') {
@@ -1577,19 +1613,23 @@ export class Diagram extends Shape {
             if (this.selection.getSelectObj().type === 'link') {
               const link = this.selection.getSelectObj() as Link;
               link.moveAnchor(this.anchor, x - this.dragX, y - this.dragY);
+              let hovStep;
               if (this.anchor === 0) {
-                const hovStep = this.getHoverStep(x, y);
+                hovStep = this.getHoverStep(x, y);
                 if (hovStep && link.from.step.id !== hovStep.step.id) {
                   link.setFrom(hovStep);
                 }
               }
               else if (this.anchor === (this.selection.getSelectObj() as Link).display.xs.length - 1) {
-                const hovStep = this.getHoverStep(x, y);
+                hovStep = this.getHoverStep(x, y);
                 if (hovStep && link.to.step.id !== hovStep.step.id) {
                   link.setTo(hovStep);
                 }
               }
               this.draw();
+              if (hovStep && link.display.xs.length === 2) {
+                link.recalc(hovStep);
+              }
             }
             if (this.selection.getSelectObj().resize) {
               if (this.selection.getSelectObj().type === 'step') {
@@ -1646,28 +1686,25 @@ export class Diagram extends Shape {
   }
 
   onDrop(e: DragEvent, descriptorName: string): boolean {
-    const rect = this.canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const descriptor = this.getDescriptor(descriptorName);
-    if (descriptor?.type === 'subflow') {
-      this.selection.setSelectObj(this.addSubflow(descriptor.path, x, y));
-    }
-    else if (descriptor?.type === 'note') {
-      this.selection.setSelectObj(this.addNote(x, y));
-    }
-    else {
-      this.selection.setSelectObj(this.addStep(descriptor?.path, x, y));
-    }
-    this.draw();
-    this.selection.getSelectObj().select();
-    return true;
-  }
-
-  getLatestInstance() {
-    const instances = this.selection.getSelectObj().instances;
-    if (instances && instances.length) {
-      return instances[0]; // they're sorted in descending order
+    if (this.mode === 'connect') {
+      return false;
+    } else {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const descriptor = this.getDescriptor(descriptorName);
+      if (descriptor?.type === 'subflow') {
+        this.selection.setSelectObj(this.addSubflow(descriptor.path, x, y));
+      }
+      else if (descriptor?.type === 'note') {
+        this.selection.setSelectObj(this.addNote(x, y));
+      }
+      else {
+        this.selection.setSelectObj(this.addStep(descriptor?.path, x, y));
+      }
+      this.draw();
+      this.selection.getSelectObj().select();
+      return true;
     }
   }
 

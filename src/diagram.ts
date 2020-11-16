@@ -112,6 +112,16 @@ export class FlowDiagram {
         this.diagram.zoomCanvas(zoom);
     }
 
+    get mode(): 'select' | 'connect' {
+        return this.diagram.mode;
+    }
+    set mode(mode: 'select' | 'connect') {
+        this.diagram.mode = mode;
+        if (this.diagram.flow) {
+            this.diagram.draw();
+        }
+    }
+
     get instance(): FlowInstance {
         return this.diagram.instance;
     }
@@ -223,10 +233,12 @@ export class FlowDiagram {
             selObj = (selObj as Label).owner;
         }
         if (selObj) {
-            this._onFlowElementSelect.emit({
-                element: selObj.flowElement,
-                instances: selObj.instances
-            });
+            if (this.diagram.mode === 'select') {
+                this._onFlowElementSelect.emit({
+                    element: selObj.flowElement,
+                    instances: selObj.instances
+                });
+            }
         } else if (this.selectObj) {  // only fire on first deselect
             this._onFlowElementSelect.emit({ element: null });
         }
