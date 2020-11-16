@@ -8,6 +8,7 @@ export interface DiagramOptions {
     showGrid?: boolean;
     snapToGrid?: boolean;
     showTitle?: boolean;
+    promptToDelete?: boolean;
     animationSpeed?: number; // segments/s;
     animationLinkFactor?: number; // relative link slice
     maxInstances?: number
@@ -21,6 +22,7 @@ export const diagramDefault: DiagramOptions = {
     showGrid: true,
     snapToGrid: true,
     showTitle: false,
+    promptToDelete: false,
     animationSpeed: 8,
     animationLinkFactor: 3,
     maxInstances: 10

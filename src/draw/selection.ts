@@ -17,7 +17,7 @@ export class Selection {
 
   includes(obj: SelectObj): boolean {
     for (let i = 0; i < this.selectObjs.length; i++) {
-      if (this.selectObjs[i] === obj) {
+      if (this.selectObjs[i].id === obj.id) {
         return true;
       }
     }
@@ -28,7 +28,7 @@ export class Selection {
     return this.selectObjs.length > 1;
   }
 
-  getSelectObj(): SelectObj {
+  getSelectObj(): SelectObj | null {
     if (this.selectObjs.length === 0) {
       return null;
     }
@@ -43,7 +43,7 @@ export class Selection {
 
   add(obj: SelectObj) {
     if (!this.includes(obj)) {
-      this.selectObjs.push(obj);
+      this.selectObjs.unshift(obj); // add first so becomes selection
       if (obj.type === 'step') {
         // add any contained links
         let stepLinks;
@@ -67,13 +67,13 @@ export class Selection {
             const stepLink = stepLinks[i];
             if (stepLink.from === obj) {
               if (this.includes(stepLink.to)) {
-                this.add(stepLink);
+                this.selectObjs.push(stepLink);
                 stepLink.select();
               }
             }
             else {
               if (this.includes(stepLink.from)) {
-                this.add(stepLink);
+                this.selectObjs.push(stepLink);
                 stepLink.select();
               }
             }
@@ -86,7 +86,7 @@ export class Selection {
   remove(obj: SelectObj) {
     const newSel = [];
     for (let i = 0; i < this.selectObjs.length; i++) {
-      if (this.selectObjs[i] !== obj) {
+      if (this.selectObjs[i].id !== obj.id) {
         newSel.push(this.selectObjs[i]);
       }
     }
@@ -112,27 +112,39 @@ export class Selection {
   }
 
   /**
-   * works for the primary (single) selection to reenable anchors
+   * find selected object(s) by id and set as selection
+   * (does not actually render anchors)
    */
   reselect() {
-    if (this.getSelectObj() && !this.isMulti()) {
-      const selObj = this.getSelectObj();
-      const id = selObj.flowElement ? selObj.flowElement.id : null;
-      if (typeof id === 'string') {
-        this.setSelectObj(this.diagram.get(id));
-        if (!this.getSelectObj()) {
-          for (let i = 0; i < this.diagram.subflows.length; i++) {
-            this.setSelectObj(this.diagram.subflows[i].get(id));
-            if (this.getSelectObj()) {
-              break;
-            }
+    const selObjs = this.selectObjs;
+    this.selectObjs = [];
+    for (const selObj of selObjs) {
+      let obj = this.diagram.get(selObj.flowElement.id);
+      if (!obj) {
+        for (let i = 0; i < this.diagram.subflows.length; i++) {
+          obj = this.diagram.subflows[i].get(selObj.flowElement.id);
+          if (obj) {
+            break;
           }
         }
       }
-      if (!this.getSelectObj()) {
-        this.setSelectObj(this.diagram.label);
+      if (obj) {
+        this.selectObjs.push(obj);
       }
     }
+  }
+
+  /**
+   * renders anchors on selected obj(s)
+   */
+  select() {
+    for (const selObj of this.selectObjs) {
+      selObj.select();
+    }
+  }
+
+  unselect() {
+    this.selectObjs = [];
   }
 
   move(startX: number, startY: number, deltaX: number, deltaY: number) {

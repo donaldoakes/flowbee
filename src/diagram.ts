@@ -96,12 +96,12 @@ export class FlowDiagram {
      * @param indent
      */
     toJson(indent = 2): string {
-        const { type: _type, path: _path, ...flow } = this.flow;
+        const { id: _id, type: _type, path: _path, ...flow } = this.flow;
         return JSON.stringify(flow, null, indent);
     }
 
     toYaml(indent = 2): string {
-        const { type: _type, path: _path, ...flow } = this.flow;
+        const { id: _id, type: _type, path: _path, ...flow } = this.flow;
         return jsYaml.safeDump(flow, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
     }
 
@@ -150,6 +150,7 @@ export class FlowDiagram {
         this.canvas.ondrop = e => this.onDrop(e);
 
         this.canvas.oncontextmenu = e => this.onContextMenu(e);
+
         this.canvas.onblur = e => {
             if (e.relatedTarget) {
                 const rt = e.relatedTarget as any;
@@ -163,7 +164,7 @@ export class FlowDiagram {
             }
         };
         this.canvas.onkeydown = e => {
-            if (!this.readonly && e.key === 'Delete') {
+            if (!this.readonly && (e.key === 'Delete' || e.metaKey && e.key === 'Backspace')) {
                 e.preventDefault();
                 this.handleDelete();
             }
@@ -298,9 +299,15 @@ export class FlowDiagram {
         const selection = this.diagram.selection;
         const selObj = selection?.getSelectObj();
         if (selObj) {
-            const text = selection.isMulti() ? 'Delete selected elements?' : 'Delete ' + selObj.type + '?';
-            const dialog = this.dialogProvider || new DefaultDialog();
-            if (await dialog.confirm({ title: 'Confirm Delete', text, level: 'warn' })) {
+            let isDelete = false;
+            if (this.diagram.options.promptToDelete) {
+                const text = selection.isMulti() ? 'Delete selected elements?' : 'Delete ' + selObj.type + '?';
+                const dialog = this.dialogProvider || new DefaultDialog();
+                isDelete = await dialog.confirm({ title: 'Confirm Delete', text, level: 'warn' });
+            } else {
+                isDelete = true;
+            }
+            if (isDelete) {
                 selection.doDelete();
                 this.diagram.draw();
                 this.handleChange();

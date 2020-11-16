@@ -326,6 +326,7 @@ export class Diagram extends Shape {
     // label
     if (!this.instance && this.options.showTitle) {
       const font = this.instance?.template ? this.options.template.font : this.options.title.font;
+      this.flowElement.id = '1'; // id needed for label reselect
       diagram.label = new Label(this, this.name, this.getDisplay(), font);
       if (this.instance?.id) {
         diagram.label.subtext = this.instance.id;
@@ -710,8 +711,11 @@ export class Diagram extends Shape {
     }
   }
 
-  get(id: string): Step | Link | Subflow | Note {
-    if (id.startsWith('s')) {
+  get(id: string): Step | Link | Subflow | Note | Label {
+    if (id === '1') {
+      return this.label;
+    }
+    else if (id.startsWith('s')) {
       return this.getStep(id);
     }
     else if (id.startsWith('l')) {
@@ -777,7 +781,7 @@ export class Diagram extends Shape {
     }
   }
 
-  addStep(descriptorName: string, x: number, y: number) {
+  addStep(descriptorName: string, x: number, y: number): Step {
     const descriptor = this.getDescriptor(descriptorName);
     let steps = this.steps.slice(0);
     if (this.subflows) {
@@ -805,9 +809,10 @@ export class Diagram extends Shape {
     if (this.options.grid && this.options.snapToGrid) {
       this.snap(step);
     }
+    return step;
   }
 
-  addLink(from: Step, to: Step) {
+  addLink(from: Step, to: Step): Link {
     let links = this.links.slice(0);
     if (this.subflows) {
       for (let i = 0; i < this.subflows.length; i++) {
@@ -829,9 +834,10 @@ export class Diagram extends Shape {
     else {
       this.links.push(link);
     }
+    return link;
   }
 
-  addSubflow(type: string, x: number, y: number) {
+  addSubflow(type: string, x: number, y: number): Subflow {
     const startStepId = this.genId(this.steps, 'step');
     const startLinkId = this.genId(this.links, 'link');
     const subprocId = this.genId(this.subflows, 'subflow');
@@ -844,9 +850,10 @@ export class Diagram extends Shape {
     if (this.options.grid && this.options.snapToGrid) {
       this.snap(subflow);
     }
+    return subflow;
   }
 
-  addNote(x: number, y: number) {
+  addNote(x: number, y: number): Note {
     const note = Note.create(this, this.genId(this.notes, 'note'), x, y);
     if (!this.flow.notes) {
       this.flow.notes = [];
@@ -856,6 +863,7 @@ export class Diagram extends Shape {
     if (this.options.grid && this.options.snapToGrid) {
       this.snap(note);
     }
+    return note;
   }
 
   genId(items: (Step | Link | Subflow | Note)[], type: FlowElementType): number {
@@ -1316,7 +1324,7 @@ export class Diagram extends Shape {
         if (step) {
           this.grid.doSnap(step.display, resize);
           step.setDisplayAttr();
-            for (const link of this.getLinks(step)) {
+          for (const link of this.getLinks(step)) {
               link.recalc(step);
           }
         } else {
@@ -1418,29 +1426,32 @@ export class Diagram extends Shape {
 
     const selObj = this.getHoverObj(x, y);
 
-    if (!this.readonly && e.ctrlKey) {
-      if (selObj) {
+    console.log("COMING DOWN: " + this.selection);
+
+    if (selObj) {
+      if (!this.readonly && (e.shiftKey || e.metaKey || (!navigator.platform.startsWith('Mac') && e.ctrlKey))) {
         if (this.selection.includes(selObj)) {
           this.selection.remove(selObj);
+          this.diagram.draw(); // remove anchors
+          this.selection.select();
         }
         else {
           this.selection.add(selObj);
+          selObj.select();
         }
-        selObj.select();
-      }
-    }
-    else {
-      if (!this.selection.includes(selObj)) {
+      } else if (!this.selection.includes(selObj)) {
         // normal single select
+        this.selection.unselect();
+        this.draw();
         this.selection.setSelectObj(selObj);
-        this.unselect();
-        if (this.selection.getSelectObj()) {
-          this.selection.getSelectObj().select();
-          if (!this.readonly && e.shiftKey && this.selection.getSelectObj().type === 'step') {
-            this.shiftDrag = true;
-          }
-        }
+        this.selection.reselect();
+        selObj.select();
+        console.log("SINGLE: " + this.selection);
       }
+    } else {
+      // clicked on canvas
+      this.selection.unselect();
+      this.draw();
     }
   }
 
@@ -1453,27 +1464,26 @@ export class Diagram extends Shape {
         const destObj = this.getHoverObj(x, y);
         if (destObj && destObj.type === 'step') {
           this.addLink(this.selection.getSelectObj() as Step, destObj as Step);
-          this.draw();
         }
+        this.draw();
       }
     }
     this.shiftDrag = false;
 
     if (this.marquee) {
-      this.selection.setSelectObj(null);
-      const selObjs = this.marquee.getSelectObjs();
-      for (let i = 0; i < selObjs.length; i++) {
-        selObjs[i].select();
-        this.selection.add(selObjs[i]);
-      }
+      this.selection.selectObjs = this.marquee.getSelectObjs();
       this.marquee = null;
+      this.draw(); // to get rid of marquee
+      this.selection.reselect();
+      this.selection.select();
     }
-    else {
+    else if (!e.shiftKey) {
+      this.selection.reselect();
       if (this.drag && this.grid?.snap) {
         this.selection.snap(this.anchor >= 0);
         this.draw();
       }
-      this.selection.reselect();
+      this.selection.select();
     }
 
     this.drag = false;
@@ -1492,6 +1502,7 @@ export class Diagram extends Shape {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     this.anchor = -1;
+
     this.hoverObj = this.getHoverObj(x, y);
     if (this.hoverObj) {
       if (!this.readonly && (this.hoverObj === this.selection.getSelectObj())) {
@@ -1523,7 +1534,7 @@ export class Diagram extends Shape {
   }
 
   onMouseDrag(e: MouseEvent) {
-    if (!this.readonly && this.dragX && this.dragY && !e.ctrlKey) {
+    if (!this.readonly && this.dragX && this.dragY) {
       this.drag = true;
       const rect = this.canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -1532,6 +1543,10 @@ export class Diagram extends Shape {
       const deltaY = y - this.dragY;
 
       if (Math.abs(deltaX) > this.options.drag.min || Math.abs(deltaY) > this.options.drag.min) {
+
+        if (e.shiftKey) {
+          this.shiftDrag = true;
+        }
 
         if (x > rect.right - this.options.padding) {
           this.canvas.width = this.canvas.width + this.options.padding;
@@ -1548,8 +1563,10 @@ export class Diagram extends Shape {
 
           const diagram = this;
           if (this.shiftDrag) {
-            if (this.selection.getSelectObj().type === 'step') {
-              this.draw();
+            this.draw();
+            const startObj = this.getHoverObj(this.dragX, this.dragY);
+            if (startObj?.type === 'step') {
+              document.body.style.cursor = this.canvas.style.cursor = 'crosshair';
               this.drawLine([{
                 from: { x: this.dragX, y: this.dragY },
                 to: { x: x, y: y }
@@ -1611,16 +1628,12 @@ export class Diagram extends Shape {
             }
           }
           else {
+            console.log("THIS.SEL: " + JSON.stringify(this.selection.toString()));
             this.selection.move(this.dragX, this.dragY, deltaX, deltaY);
-            // non-workflow selection may not be reselected after move
-            const hovObj = this.getHoverObj(x, y);
-            if (hovObj) {
-              hovObj.select();
-            }
             return true;
           }
         }
-        else {
+        else if (!e.shiftKey) {
           if (this.marquee) {
             this.marquee.resize(this.dragX, this.dragY, x - this.dragX, y - this.dragY);
           }
@@ -1640,15 +1653,16 @@ export class Diagram extends Shape {
     const y = e.clientY - rect.top;
     const descriptor = this.getDescriptor(descriptorName);
     if (descriptor?.type === 'subflow') {
-      this.addSubflow(descriptor.path, x, y);
+      this.selection.setSelectObj(this.addSubflow(descriptor.path, x, y));
     }
     else if (descriptor?.type === 'note') {
-      this.addNote(x, y);
+      this.selection.setSelectObj(this.addNote(x, y));
     }
     else {
-      this.addStep(descriptor?.path, x, y);
+      this.selection.setSelectObj(this.addStep(descriptor?.path, x, y));
     }
     this.draw();
+    this.selection.getSelectObj().select();
     return true;
   }
 
@@ -1722,13 +1736,6 @@ export class Diagram extends Shape {
         return this.steps[i];
       }
     }
-  }
-
-  /**
-   * removes anchors from currently selected obj, if any
-   */
-  unselect() {
-    this.draw();
   }
 
   select() {
