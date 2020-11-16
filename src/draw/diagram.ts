@@ -1426,8 +1426,6 @@ export class Diagram extends Shape {
 
     const selObj = this.getHoverObj(x, y);
 
-    console.log("COMING DOWN: " + this.selection);
-
     if (selObj) {
       if (!this.readonly && (e.shiftKey || e.metaKey || (!navigator.platform.startsWith('Mac') && e.ctrlKey))) {
         if (this.selection.includes(selObj)) {
@@ -1446,7 +1444,6 @@ export class Diagram extends Shape {
         this.selection.setSelectObj(selObj);
         this.selection.reselect();
         selObj.select();
-        console.log("SINGLE: " + this.selection);
       }
     } else {
       // clicked on canvas
@@ -1628,7 +1625,6 @@ export class Diagram extends Shape {
             }
           }
           else {
-            console.log("THIS.SEL: " + JSON.stringify(this.selection.toString()));
             this.selection.move(this.dragX, this.dragY, deltaX, deltaY);
             return true;
           }
