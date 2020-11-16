@@ -149,8 +149,6 @@ export class Selection {
 
   move(startX: number, startY: number, deltaX: number, deltaY: number) {
 
-    const selection = this;
-
     if (!this.isMulti() && this.getSelectObj().type === 'link') {
       // move link label
       const link = this.getSelectObj() as Link;
@@ -162,7 +160,7 @@ export class Selection {
       for (let i = 0; i < this.selectObjs.length; i++) {
         const selObj = this.selectObjs[i];
         if (selObj.type === 'step') {
-          const step = this.diagram.getStep((selObj as Step).step.id);
+          const step = this.diagram.getStep(selObj.id);
           if (step) {
             selObj.move(deltaX, deltaY);
             const links = this.diagram.getLinks(step);
@@ -171,8 +169,7 @@ export class Selection {
                 links[j].recalc(step);
               }
             }
-          }
-          else {
+          } else {
             // try subflows
             for (let j = 0; j < this.diagram.subflows.length; j++) {
               const subflow = this.diagram.subflows[j];
@@ -181,17 +178,19 @@ export class Selection {
                 // only within bounds of subflow
                 selObj.move(deltaX, deltaY, subflow.display);
                 const links = subflow.getLinks(step);
-                for (let k = 0; k < links.length; k++) {
-                  if (!this.includes(links[k])) {
-                    links[k].recalc(step);
-                  }
+                for (const link of links) {
+                  link.recalc(step);
                 }
+                break;
               }
             }
           }
-        }
-        else {
-          // TODO: prevent subproc links in multisel from moving beyond border
+        } else if (selObj.type === 'link') {
+          const link = this.diagram.getLink(selObj.id);
+          if (link) {
+            selObj.move(deltaX, deltaY);
+          }
+        } else {
           selObj.move(deltaX, deltaY);
         }
       }
@@ -206,7 +205,6 @@ export class Selection {
         reselObj.select();
       }
     }
-    // TODO: diagram label loses select
   }
 
   snap(resize: boolean = false) {

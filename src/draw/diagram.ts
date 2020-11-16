@@ -1502,7 +1502,7 @@ export class Diagram extends Shape {
 
     this.hoverObj = this.getHoverObj(x, y);
     if (this.hoverObj) {
-      if (!this.readonly && (this.hoverObj === this.selection.getSelectObj())) {
+      if (!this.readonly && (this.hoverObj.id === this.selection.getSelectObj()?.id)) {
         this.anchor = this.hoverObj.getAnchor(x, y);
         if (this.anchor >= 0) {
           if (this.hoverObj.type === 'link') {
@@ -1543,6 +1543,8 @@ export class Diagram extends Shape {
 
         if (e.shiftKey) {
           this.shiftDrag = true;
+          // select start obj
+          this.selection.setSelectObj(this.getHoverObj(this.dragX, this.dragY));
         }
 
         if (x > rect.right - this.options.padding) {
