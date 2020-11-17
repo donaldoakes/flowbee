@@ -232,10 +232,7 @@ export class FlowDiagram {
     }
 
     private onMouseClick(e: MouseEvent) {
-        let selObj = this.diagram.selection.getSelectObj();
-        if (selObj && selObj.type === 'label') {
-            selObj = (selObj as Label).owner;
-        }
+        const selObj = this.selObj;
         if (selObj) {
             if (this.diagram.mode === 'select') {
                 this._onFlowElementSelect.emit({
@@ -272,7 +269,7 @@ export class FlowDiagram {
 
     private onDoubleClick(e: MouseEvent) {
         if (!this.readonly) {
-            const selObj = this.diagram.selection.getSelectObj();
+            const selObj = this.selObj;
             if (selObj && (selObj.type === 'step' || selObj.type === 'link'
                   || selObj.type === 'subflow' || selObj.type === 'note')) {
                 (selObj as any).edit(text => {
@@ -290,18 +287,21 @@ export class FlowDiagram {
 
     private onContextMenu(e: MouseEvent) {
         e.preventDefault();
-        const provider = this.contextMenuProvider || new DefaultMenuProvider(this);
-        const evt = {
-            element: this.selectObj?.flowElement,
-            instances: this.selectObj?.instances
-        };
-        const items = provider.getItems(evt);
-        if (items) {
-            this.menu = new ContextMenu(items);
-            this.menu.render({ theme: this.diagram.options.theme }, e.pageX + 3, e.pageY, item => {
-                provider.onSelectItem({ item, ...evt });
-                this.menu = null;
-            });
+        const selObj = this.selObj;
+        if (selObj) {
+            const provider = this.contextMenuProvider || new DefaultMenuProvider(this);
+            const evt = {
+                element: selObj.flowElement,
+                instances: selObj.instances
+            };
+            const items = provider.getItems(evt);
+            if (items && items.length > 0) {
+                this.menu = new ContextMenu(items);
+                this.menu.render({ theme: this.diagram.options.theme }, e.pageX + 3, e.pageY, item => {
+                    provider.onSelectItem({ item, ...evt });
+                    this.menu = null;
+                });
+            }
         }
     }
 
@@ -309,6 +309,14 @@ export class FlowDiagram {
         this._onFlowChange.emit({
             flow: this.flow
         });
+    }
+
+    get selObj(): SelectObj | undefined {
+        let selObj = this.diagram.selection.getSelectObj();
+        if (selObj?.type === 'label') {
+            selObj = (selObj as Label).owner;
+        }
+        return selObj;
     }
 
     async handleDelete() {
