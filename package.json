@@ -1,6 +1,6 @@
 {
   "name": "flowbee",
-  "version": "0.1.1-beta.3",
+  "version": "0.1.2-beta.4",
   "description": "Flow Diagramming",
   "type": "module",
   "main": "dist/index.js",
