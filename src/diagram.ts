@@ -256,6 +256,7 @@ export class FlowDiagram {
         e.preventDefault();
         if (!this.readonly) {
             if (this.diagram.onDrop(e, e.dataTransfer.getData('text/plain'))) {
+                this.diagram.canvas.focus();
                 this.handleChange();
             }
         }

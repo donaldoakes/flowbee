@@ -1686,26 +1686,24 @@ export class Diagram extends Shape {
   }
 
   onDrop(e: DragEvent, descriptorName: string): boolean {
-    if (this.mode === 'connect') {
-      return false;
-    } else {
-      const rect = this.canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const descriptor = this.getDescriptor(descriptorName);
-      if (descriptor?.type === 'subflow') {
-        this.selection.setSelectObj(this.addSubflow(descriptor.path, x, y));
-      }
-      else if (descriptor?.type === 'note') {
-        this.selection.setSelectObj(this.addNote(x, y));
-      }
-      else {
-        this.selection.setSelectObj(this.addStep(descriptor?.path, x, y));
-      }
-      this.draw();
-      this.selection.getSelectObj().select();
-      return true;
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const descriptor = this.getDescriptor(descriptorName);
+    if (descriptor?.type === 'subflow') {
+      this.selection.setSelectObj(this.addSubflow(descriptor.path, x, y));
     }
+    else if (descriptor?.type === 'note') {
+      this.selection.setSelectObj(this.addNote(x, y));
+    }
+    else {
+      this.selection.setSelectObj(this.addStep(descriptor?.path, x, y));
+    }
+    this.draw();
+    if (this.mode !== 'connect') {
+      this.selection.getSelectObj().select();
+    }
+    return true;
   }
 
   getHoverObj(x: number, y: number): SelectObj | undefined {
