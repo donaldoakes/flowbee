@@ -147,6 +147,7 @@ export class FlowDiagram {
         // events
         this.canvas.onmousedown = e => this.onMouseDown(e);
         this.canvas.onmouseup = e => this.onMouseUp(e);
+        this.canvas.onclick = e => this.onMouseClick(e);
         this.canvas.onmousemove = e => this.onMouseMove(e);
         this.canvas.onmouseout = e => this.onMouseOut(e);
         this.canvas.ondblclick = e => this.onDoubleClick(e);
@@ -228,6 +229,9 @@ export class FlowDiagram {
             this.menu = null;
         }
         this.diagram.onMouseDown(e);
+    }
+
+    private onMouseClick(e: MouseEvent) {
         let selObj = this.diagram.selection.getSelectObj();
         if (selObj && selObj.type === 'label') {
             selObj = (selObj as Label).owner;

@@ -273,9 +273,7 @@ class Table {
         }
         this.tableElement.appendChild(headRow);
 
-        if (value) {
-            this.rows = JSON.parse(value);
-        }
+        this.rows = value ? JSON.parse(value) : [];
         this.setRows();
     }
 
