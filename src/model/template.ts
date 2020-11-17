@@ -37,4 +37,10 @@ export interface Widget {
      * Read-only
      */
     readonly?: boolean;
+    /**
+     * Default value.
+     * Set this for selects so that attribute will
+     * be populated with first value.
+     */
+    default?: string;
 }

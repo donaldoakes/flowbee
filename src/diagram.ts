@@ -269,8 +269,8 @@ export class FlowDiagram {
     private onDoubleClick(e: MouseEvent) {
         if (!this.readonly) {
             const selObj = this.diagram.selection.getSelectObj();
-            if (selObj && selObj.type === 'step' || selObj.type === 'link'
-                  || selObj.type === 'subflow' || selObj.type === 'note') {
+            if (selObj && (selObj.type === 'step' || selObj.type === 'link'
+                  || selObj.type === 'subflow' || selObj.type === 'note')) {
                 (selObj as any).edit(text => {
                     if (selObj.type === 'step' || selObj.type === 'subflow') {
                         (selObj.flowElement as any).name = text;
@@ -322,6 +322,7 @@ export class FlowDiagram {
             if (isDelete) {
                 selection.doDelete();
                 this.diagram.draw();
+                this._onFlowElementSelect.emit( { element: undefined } );
                 this.handleChange();
             }
         }

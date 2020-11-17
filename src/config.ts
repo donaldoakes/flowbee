@@ -126,7 +126,7 @@ export class Configurator {
 
         const widgets = this.template[tabName].widgets;
         for (const widget of widgets) {
-            if (widget.label) {
+            if (widget.label && (widgets.length > 1 || widget.type !== 'textarea')) {
                 const label = document.createElement('label');
                 label.innerHTML = widget.label;
                 this.tabContent.appendChild(label);
@@ -135,7 +135,13 @@ export class Configurator {
             }
 
             this.tabContent.style.gridAutoRows = '25px';
-            const value = this.flowElement.attributes ? this.flowElement.attributes[widget.attribute] : '';
+            let value = '';
+            if (this.flowElement.attributes && this.flowElement.attributes[widget.attribute]) {
+                value = this.flowElement.attributes[widget.attribute];
+            } else if (widget.default) {
+                value = widget.default;
+                this.update(widget.attribute, value);
+            }
             const readonly = widget.readonly || this.flowElement.readonly;
 
             if (widget.type === 'text') {
@@ -151,6 +157,9 @@ export class Configurator {
                     this.tabContent.style.gridAutoRows = '';
                 }
                 textarea.value = value;
+                if (widget.label) {
+                    textarea.placeholder = widget.label;
+                }
                 textarea.onchange = e => this.update(widget.attribute, textarea.value);
                 this.tabContent.appendChild(textarea);
             } else if (widget.type === 'select') {
