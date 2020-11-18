@@ -71,7 +71,7 @@ export class Diagram extends Shape {
         name = name.substring(lastSlash + 1);
       }
       const lastDot = name.lastIndexOf('.');
-      if (lastDot > 1) {
+      if (lastDot > 0) {
         name = name.substring(0, lastDot);
       }
     }
@@ -380,22 +380,6 @@ export class Diagram extends Shape {
     if (this.marquee) {
       diagram.makeRoom(canvasDisplay, this.marquee.prepareDisplay());
     }
-
-    // TODO embedded toolbox (like Hub)
-    // if (!this.readonly && Toolbox) {
-    //   var toolbox = Toolbox.getToolbox();
-    //   // fill available
-    //   var parentWidth = this.canvas.parentElement.offsetWidth;
-    //   if (toolbox) {
-    //     parentWidth -= toolbox.getWidth();
-    //   }
-    //   if (canvasDisplay.w < parentWidth) {
-    //     canvasDisplay.w = parentWidth;
-    //   }
-    //   if (toolbox && canvasDisplay.h < toolbox.getHeight()) {
-    //     canvasDisplay.h = toolbox.getHeight();
-    //   }
-    // }
 
     // allow extra room
     canvasDisplay.w += this.options.padding;
