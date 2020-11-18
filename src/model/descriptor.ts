@@ -18,14 +18,14 @@ export interface Descriptor {
      */
     icon?: string;
     /**
-     * Arbitrary categorization.
+     * Categorization.
      */
     category?: string; // design and run time
     template?: object; // design time -- translates to attributes
 }
 
 /**
- * TODO: below here to be removed
+ * TODO: below here to be removed?
  */
 export class FlowItemDescriptor implements Descriptor {
 

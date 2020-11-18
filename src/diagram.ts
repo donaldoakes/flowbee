@@ -276,8 +276,6 @@ export class FlowDiagram {
                 (selObj as any).edit(text => {
                     if (selObj.type === 'step' || selObj.type === 'subflow') {
                         (selObj.flowElement as any).name = text;
-                    } else {
-                        // TODO case of note content and link result
                     }
                     this._onFlowElementUpdate.emit({ element: selObj.flowElement });
                     this.handleChange();

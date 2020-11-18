@@ -35,6 +35,7 @@ export interface FlowInstance {
     stepInstances?: StepInstance[];
     linkInstances?: LinkInstance[];
     subflowInstances?: SubflowInstance[];
+    values?: Values;
     start?: Date;
     end?: Date;
     template?: boolean;

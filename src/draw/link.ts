@@ -1129,7 +1129,8 @@ export class Link {
     const display = this.label?.display || { x: this.display.x + 2, y: this.display.y + Link.LABEL_CORR };
     display.y -= 1;
     edit.render(text, display, text => {
-      this.link.result = text;
+      if (text) this.link.result = text;
+      else delete this.link.result;
       onchange(this.link.result);
     });
   }
