@@ -9,7 +9,7 @@ export * from './model/element';
 export * from './model/template';
 export { Descriptor, FlowItemDescriptor, StandardDescriptors,
     start, stop, pause, decide, embedded, note } from './model/descriptor';
-export { FlowElement as FlowItem, FlowElementType as FlowItemType } from './model/element';
+export { FlowElement as FlowItem, FlowElementType as FlowItemType, getFlowName } from './model/element';
 export { Toolbox } from './toolbox';
 export { FlowTree, FileTree, FileItemType, FlowTreeSelectEvent } from './tree';
 export { TypedEvent, Listener, FlowChangeEvent, FlowElementEvent, FlowElementSelectEvent } from './event';
