@@ -258,6 +258,7 @@ export class DiagramStyle {
                 { name: 'Unknown', color: 'transparent' },
                 { name: 'Pending', color: 'blue' },
                 { name: 'In Progress', color: 'green' },
+                { name: 'Errored', color: 'red' },
                 { name: 'Failed', color: 'red' },
                 { name: 'Completed', color: 'black' },
                 { name: 'Canceled', color: 'darkgray' },

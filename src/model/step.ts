@@ -13,13 +13,14 @@ export interface Step extends FlowElement {
 }
 
 // TODO: combine with FlowStatus?
-export type StepStatus = 'In Progress' | 'Waiting' | 'Failed' | 'Completed' | 'Canceled'
+export type StepStatus = 'In Progress' | 'Waiting' | 'Failed' | 'Errored' | 'Completed' | 'Canceled'
 
 export interface StepInstance {
     id: string;
     flowInstanceId: string;
     stepId: string;
     status: StepStatus;
+    message?: string;
     result?: string;
     start?: Date;
     end?: Date;

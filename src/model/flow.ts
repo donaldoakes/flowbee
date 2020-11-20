@@ -25,7 +25,7 @@ export interface Subflow extends FlowElement {
     attributes?: {[key: string]: string};
 }
 
-export type FlowStatus = 'Pending' | 'In Progress' | 'Waiting' | 'Failed' | 'Completed' | 'Canceled'
+export type FlowStatus = 'Pending' | 'In Progress' | 'Waiting' | 'Errored' | 'Completed' | 'Canceled'
 
 export interface FlowInstance {
     id: string;
