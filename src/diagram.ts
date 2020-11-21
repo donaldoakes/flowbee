@@ -175,7 +175,8 @@ export class FlowDiagram {
             }
         };
         this.canvas.onkeydown = e => {
-            if (!this.readonly && (e.key === 'Delete' || e.metaKey && e.key === 'Backspace')) {
+            if (!this.readonly &&
+              (e.key === 'Delete' || ((e.metaKey || navigator.platform.startsWith('Mac')) && e.key === 'Backspace'))) {
                 e.preventDefault();
                 this.handleDelete();
             }
