@@ -20,7 +20,7 @@ export class ContextMenu {
     private static stylesObj: object;
 
     constructor(
-        private items: MenuItem[]
+        private items: (MenuItem | 'separator')[]
     ) { }
 
     render(options: MenuOptions = {}, x: number, y: number, select: (item: MenuItem) => void ) {
@@ -44,31 +44,36 @@ export class ContextMenu {
         let tabIndex = 1;
         for (const item of this.items) {
             const li = document.createElement('li') as HTMLLIElement;
-            li.setAttribute('id', item.id);
-            li.setAttribute('data-flowbee-menu-item', item.id);
-            li.tabIndex = tabIndex++;
-            const iconDiv = document.createElement('div') as HTMLDivElement;
-            if (item.icon) {
-                const iconImg = document.createElement('img') as HTMLImageElement;
-                const iconBase = menuOptions.iconBase ? menuOptions.iconBase : '';
-                iconImg.src = `${iconBase}/${item.icon}`;
-                iconDiv.appendChild(iconImg);
+            if (item === 'separator') {
+                li.classList.add('separator');
+                li.appendChild(document.createElement('hr'));
             } else {
-                iconDiv.style.minWidth = iconWidth + 'px';
+                li.setAttribute('id', item.id);
+                li.setAttribute('data-flowbee-menu-item', item.id);
+                li.tabIndex = tabIndex++;
+                const iconDiv = document.createElement('div') as HTMLDivElement;
+                if (item.icon) {
+                    const iconImg = document.createElement('img') as HTMLImageElement;
+                    const iconBase = menuOptions.iconBase ? menuOptions.iconBase : '';
+                    iconImg.src = `${iconBase}/${item.icon}`;
+                    iconDiv.appendChild(iconImg);
+                } else {
+                    iconDiv.style.minWidth = iconWidth + 'px';
+                }
+                li.appendChild(iconDiv);
+                const label = document.createElement('label') as HTMLLabelElement;
+                label.appendChild(document.createTextNode(item.label));
+                li.appendChild(label);
+                if (item.key) {
+                    const span = document.createElement('span') as HTMLSpanElement;
+                    span.appendChild(document.createTextNode(item.key));
+                    li.appendChild(span);
+                }
+                li.onclick = e => {
+                    this.close();
+                    select(item);
+                };
             }
-            li.appendChild(iconDiv);
-            const label = document.createElement('label') as HTMLLabelElement;
-            label.appendChild(document.createTextNode(item.label));
-            li.appendChild(label);
-            if (item.key) {
-                const span = document.createElement('span') as HTMLSpanElement;
-                span.appendChild(document.createTextNode(item.key));
-                li.appendChild(span);
-            }
-            li.onclick = e => {
-                this.close();
-                select(item);
-            };
             ul.appendChild(li);
         }
         this.div.appendChild(ul);
@@ -76,15 +81,15 @@ export class ContextMenu {
     }
 
     close() {
-        if (this.div) {
-            document.body.removeChild(this.div);
-            this.div = null;
-        }
+        // if (this.div) {
+        //     document.body.removeChild(this.div);
+        //     this.div = null;
+        // }
     }
 }
 
 export interface ContextMenuProvider {
-    getItems(flowElementEvent: FlowElementEvent): MenuItem[] | undefined;
+    getItems(flowElementEvent: FlowElementEvent): (MenuItem | 'separator')[] | undefined;
     onSelectItem(selectEvent: ContextMenuSelectEvent): boolean | Promise<boolean>;
 }
 
@@ -95,7 +100,7 @@ export interface ContextMenuSelectEvent extends FlowElementEvent {
 
 export class DefaultMenuProvider implements ContextMenuProvider {
     constructor(readonly flowDiagram: FlowDiagram) { }
-    getItems(flowElementEvent: FlowElementEvent): MenuItem[] | undefined {
+    getItems(flowElementEvent: FlowElementEvent): (MenuItem | 'separator')[] | undefined {
         if (!this.flowDiagram.readonly && flowElementEvent.element) {
             return [
                 { id: 'delete', label: 'Delete', key: 'Del' }
