@@ -287,12 +287,13 @@ export class FlowDiagram {
 
     private onContextMenu(e: MouseEvent) {
         e.preventDefault();
-        const selObj = this.selObj;
-        if (selObj) {
+        this.selectObj = this.selObj;
+        const element = this.selectObj?.flowElement || this.flow;
+        if (element) {
             const provider = this.contextMenuProvider || new DefaultMenuProvider(this);
             const evt = {
-                element: selObj.flowElement,
-                instances: selObj.instances
+                element,
+                instances: element.type === 'flow' ? [this.instance] : this.selObj?.instances
             };
             const items = provider.getItems(evt);
             if (items && items.length > 0) {

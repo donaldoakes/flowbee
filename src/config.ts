@@ -128,7 +128,7 @@ export class Configurator {
         for (const widget of widgets) {
             if (widget.label && (widgets.length > 1 || widget.type !== 'textarea')) {
                 const label = document.createElement('label');
-                label.innerHTML = widget.label;
+                label.innerHTML = widget.type === 'note' ? '' : widget.label;
                 this.tabContent.appendChild(label);
             } else {
                 // todo span
@@ -146,10 +146,36 @@ export class Configurator {
 
             if (widget.type === 'text') {
                 const text = document.createElement('input') as HTMLInputElement;
-                text.setAttribute('type', 'text');
+                text.type = 'text';
                 text.value = value;
                 text.onchange = e => this.update(widget.attribute, text.value);
                 this.tabContent.appendChild(text);
+            } else if (widget.type === 'checkbox') {
+                const checkbox = document.createElement('input') as HTMLInputElement;
+                checkbox.type = 'checkbox';
+                checkbox.checked = value === 'true';
+                checkbox.onclick = e => this.update(widget.attribute, '' + checkbox.checked);
+                this.tabContent.appendChild(checkbox);
+            } else if (widget.type === 'radio') {
+                const div = document.createElement('div') as HTMLDivElement;
+                if (widget.options) {
+                    for (const opt of widget.options) {
+                        const radio = document.createElement('input') as HTMLInputElement;
+                        radio.type = 'radio';
+                        radio.id = opt.replace(/\s+/g, '-').toLowerCase();
+                        radio.name = widget.attribute;
+                        if (opt === value) {
+                            radio.checked = true;
+                        }
+                        radio.onchange = e => this.update(widget.attribute, opt);
+                        div.appendChild(radio);
+                        const label = document.createElement('label') as HTMLLabelElement;
+                        label.setAttribute('for', radio.id);
+                        label.innerHTML = opt;
+                        div.appendChild(label);
+                    }
+                }
+                this.tabContent.appendChild(div);
             } else if (widget.type === 'textarea' && !readonly) {
                 if (widgets.length === 1) {
                     this.tabContent.style.gridAutoRows = ''; // allow textarea to fill entire tab
@@ -184,6 +210,10 @@ export class Configurator {
                 const table = new Table(widget, value, readonly);
                 table.onTableUpdate(tableUpdate => this.update(widget.attribute, tableUpdate.value));
                 this.tabContent.appendChild(table.tableElement);
+            } else if (widget.type === 'note') {
+                const span = document.createElement('span');
+                span.innerText = widget.label;
+                this.tabContent.appendChild(span);
             } else if (widget.type === 'source' || (widget.type === 'textarea' && readonly)) {
                 const pre = document.createElement('pre') as HTMLPreElement;
                 const indent = 2; // TODO config

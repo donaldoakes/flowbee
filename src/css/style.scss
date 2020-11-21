@@ -287,6 +287,7 @@
     height: fit-content;
   }
   .flowbee-config-tab-content input {
+    background-color: #ffffff;
   }
   .flowbee-config-tab-content select {
     width: fit-content;
@@ -305,6 +306,11 @@
     border: 1px solid #4f4f4f;
     text-align: left;
     padding-left: 3px;
+  }
+  .flowbee-config-tab-content div > label {
+    padding-right: 10px;
+    position: relative;
+    top: -2px;
   }
 }
 .flowbee-configurator-light {
@@ -337,6 +343,12 @@
   .flowbee-config-tab-content input {
     background-color: #3c3c3c;
     color: #cccccc;
+  }
+  .flowbee-config-tab-content input[type=checkbox] {
+    opacity: .8;
+  }
+  .flowbee-config-tab-content input[type=radio] {
+    opacity: .8;
   }
   .flowbee-config-tab-content select {
     background-color: #3c3c3c;
