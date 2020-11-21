@@ -81,10 +81,10 @@ export class ContextMenu {
     }
 
     close() {
-        // if (this.div) {
-        //     document.body.removeChild(this.div);
-        //     this.div = null;
-        // }
+        if (this.div) {
+            document.body.removeChild(this.div);
+            this.div = null;
+        }
     }
 }
 
