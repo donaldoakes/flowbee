@@ -16,6 +16,10 @@ export type WidgetType =
 
 export interface Widget {
     /**
+     * Widget type
+     */
+    type: WidgetType;
+    /**
      * Attribute name from flow definition.
      */
     attribute?: string;
@@ -24,10 +28,6 @@ export interface Widget {
      * No label means span tab width.
      */
     label?: string;
-    /**
-     * Widget type
-     */
-    type?: WidgetType;
     /**
      * Options for select or list widgets.
      */
