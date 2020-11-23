@@ -25,3 +25,11 @@ export interface StepInstance {
     start?: Date;
     end?: Date;
 }
+
+export type StepEventType = 'start' | 'exec' | 'finish' | 'error';
+
+export interface StepEvent {
+    type: StepEventType;
+    instance: StepInstance;
+}
+

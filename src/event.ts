@@ -23,7 +23,7 @@ export interface Listener<T> {
 }
 
 export interface Disposable {
-    dispose();
+    dispose(): void;
 }
 
 export class TypedEvent<T> {

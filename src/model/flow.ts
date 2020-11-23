@@ -40,6 +40,14 @@ export interface FlowInstance {
     end?: Date;
     template?: boolean;
 }
+export type Values = {[key: string]: string | boolean | number | Date | object};
+
+export type FlowEventType = 'start' | 'finish' | 'error';
+
+export interface FlowEvent {
+    type: FlowEventType;
+    instance: FlowInstance;
+}
 
 export interface SubflowInstance {
     id: string;
@@ -52,4 +60,11 @@ export interface SubflowInstance {
     end?: Date;
 }
 
-export type Values = {[key: string]: string | boolean | number | Date | object};
+export type SubflowEventType = 'start' | 'finish' | 'error';
+
+export interface SubflowEvent {
+    type: SubflowEventType;
+    instance: SubflowInstance;
+}
+
+
