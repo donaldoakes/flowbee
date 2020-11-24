@@ -49,11 +49,13 @@ export interface FlowEvent {
     instance: FlowInstance;
 }
 
+export type SubflowStatus = 'Pending' | 'In Progress' | 'Waiting' | 'Errored' | 'Completed' | 'Canceled'
+
 export interface SubflowInstance {
     id: string;
     flowInstanceId: string;
     subflowId: string;
-    status: FlowStatus;
+    status: SubflowStatus;
     stepInstances?: StepInstance[];
     linkInstances?: LinkInstance[];
     start?: Date;
