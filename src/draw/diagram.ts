@@ -114,7 +114,7 @@ export class Diagram extends Shape {
   /**
    * params are only passed during initial draw
    */
-  draw(flow?: Flow, instance?: any, step?: string, animate = false, editInstanceId?: string, data?: any) {
+  draw(flow?: Flow, instance?: any, step?: string, animate = false, data?: any) {
     if (flow) {
       this.flow = flow;
       this.flowElement = { ...flow, type: 'flow' };
@@ -239,61 +239,65 @@ export class Diagram extends Shape {
       }
     }
 
+    if (diagram.options.webSocketUrl) {
+      const socket = new WebSocket(diagram.options.webSocketUrl);
+      socket.addEventListener('open', function (event) {
+        socket.send(`{ "topic": "flowInstance-${diagram.instance.id}" }`);
+      });
+      socket.addEventListener('message', function (event) {
+        const message = JSON.parse(event.data);
+        if (message.type === 'flow') {
+          console.log("MESSAGE: " + message);
+        }
+        else if (message.type === 'step') {
+          const step = diagram.getStep(message.instance.stepId);
+          if (step) {
+            if (!step.instances) {
+              step.instances = [];
+            }
+            const stepIdx = step.instances.findIndex(inst => inst.id === message.instance.id);
+            if (stepIdx) {
+              step.instances[stepIdx] = message.instance;
+            }
+            else {
+              step.instances.push(message.instance);
+              diagram.instance.stepInstances.push(message.instance);
+            }
+            step.draw();
+            diagram.scrollIntoView(step);
+          }
+        }
+        else if (message.subtype === 'l') {
+          const link = diagram.getLink('l' + message.id);
+          if (link) {
+            if (!link.instances) {
+              link.instances = [];
+            }
+            const linkInst = link.instances.find(function (inst) {
+              return inst.id === message.instId;
+            });
+            if (linkInst) {
+              linkInst.status = message.status;
+            }
+            else {
+              link.instances.push({
+                linkId: message.id,
+                id: message.instId,
+                status: message.status
+              });
+            }
+            link.draw();
+            diagram.scrollIntoView(link);
+          }
+        }
+      });
+    }
+
     if (this.instance) {
       this.applyState(animate, function () {
         diagram.notes.forEach(function (note) {
           note.draw();
         });
-        if (diagram.options.webSocketUrl) {
-          const socket = new WebSocket(diagram.options.webSocketUrl);
-          socket.addEventListener('open', function (event) {
-            socket.send(`{ "topic": "flowInstance-${diagram.instance.id}" }`);
-          });
-          socket.addEventListener('message', function (event) {
-            const message = JSON.parse(event.data);
-            if (message.type === 'step') {
-              const step = diagram.getStep(message.instance.stepId);
-              if (step) {
-                if (!step.instances) {
-                  step.instances = [];
-                }
-                const stepIdx = step.instances.findIndex(inst => inst.id === message.instance.id);
-                if (stepIdx) {
-                  step.instances[stepIdx] = message.instance;
-                }
-                else {
-                  step.instances.push(message.instance);
-                  diagram.instance.stepInstances.push(message.instance);
-                }
-                step.draw();
-                diagram.scrollIntoView(step);
-              }
-            }
-            else if (message.subtype === 'l') {
-              const link = diagram.getLink('l' + message.id);
-              if (link) {
-                if (!link.instances) {
-                  link.instances = [];
-                }
-                const linkInst = link.instances.find(function (inst) {
-                  return inst.id === message.instId;
-                });
-                if (linkInst) {
-                  linkInst.status = message.status;
-                }
-                else {
-                  link.instances.push({
-                    linkId: message.id,
-                    id: message.instId,
-                    status: message.status
-                  });
-                }
-                link.draw();
-                diagram.scrollIntoView(link);
-              }
-            }
-          });
-        }
       });
     }
     else if (this.data) {

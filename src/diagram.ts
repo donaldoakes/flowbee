@@ -140,7 +140,6 @@ export class FlowDiagram {
             this.instance,
             this.step,
             animate,
-            this.editInstanceId,
             this.data
         );
 

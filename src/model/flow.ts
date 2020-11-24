@@ -1,7 +1,7 @@
 import { Step, StepInstance } from './step';
 import { LinkInstance } from './link';
 import { Note } from './note';
-import { FlowElement } from './element';
+import { FlowElement, FlowElementType } from './element';
 
 /**
  * Model for a flow diagram
@@ -42,11 +42,15 @@ export interface FlowInstance {
 }
 export type Values = {[key: string]: string | boolean | number | Date | object};
 
-export type FlowEventType = 'start' | 'finish' | 'error';
+/**
+ * exec only applies to steps
+ */
+export type FlowEventType = 'start' | 'exec' | 'finish' | 'error';
 
 export interface FlowEvent {
     type: FlowEventType;
-    instance: FlowInstance;
+    elementType: FlowElementType;
+    instance: FlowInstance | SubflowInstance | StepInstance | LinkInstance;
 }
 
 export type SubflowStatus = 'Pending' | 'In Progress' | 'Waiting' | 'Errored' | 'Completed' | 'Canceled'
@@ -60,13 +64,6 @@ export interface SubflowInstance {
     linkInstances?: LinkInstance[];
     start?: Date;
     end?: Date;
-}
-
-export type SubflowEventType = 'start' | 'finish' | 'error';
-
-export interface SubflowEvent {
-    type: SubflowEventType;
-    instance: SubflowInstance;
 }
 
 
