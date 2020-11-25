@@ -46,7 +46,7 @@ export class Link {
   dpRatio = 1;
 
   status?: LinkStatus;
-  instances?: null; // only for SelObj interface
+  instances?; // SelectObj interface
 
   constructor(readonly diagram: Diagram, readonly link: LinkElement, public from: Step, public to: Step) {
     this.flowElement = { ...link, type: 'link' };
