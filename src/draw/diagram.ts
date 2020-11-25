@@ -37,7 +37,6 @@ export class Diagram extends Shape {
   stepId?: string;
   instance?: FlowInstance;
   instances?: FlowInstance[]; // SelectObj type
-  websocket?: WebSocket
   stepInstanceId?: string;
   drawBoxes = true;
   allowInstanceEdit = false;
@@ -1260,15 +1259,14 @@ export class Diagram extends Shape {
   }
 
   listenForInstanceUpdates() {
-    this.websocket?.close(1000, 'Relisten');
     if (!this.options.webSocketUrl) return; // not configured
     if (!this.instance) return; // no instance to listen on
 
-    this.websocket = new WebSocket(this.options.webSocketUrl);
-    this.websocket.addEventListener('open', () => {
-      this.websocket.send(`{ "topic": "flowInstance-${this.instance.id}" }`);
+    const websocket = new WebSocket(this.options.webSocketUrl);
+    websocket.addEventListener('open', () => {
+      websocket.send(`{ "topic": "flowInstance-${this.instance.id}" }`);
     });
-    this.websocket.addEventListener('message', event => {
+    websocket.addEventListener('message', event => {
       const flowEvent = JSON.parse(event.data) as FlowEvent;
       if (flowEvent.elementType === 'subflow') {
         const subInstance = flowEvent.instance as SubflowInstance;
@@ -1282,6 +1280,7 @@ export class Diagram extends Shape {
             this.instance.subflowInstances.push(subInstance);
           } else {
             subflow.instances[subIdx] = subInstance;
+            this.instance.subflowInstances[subIdx] = subInstance;
           }
           subflow.draw();
         }
@@ -1297,6 +1296,7 @@ export class Diagram extends Shape {
             this.instance.stepInstances.push(stepInstance);
           } else {
             step.instances[stepIdx] = stepInstance;
+            this.instance.stepInstances[stepIdx] = stepInstance;
           }
         } else {
           for (const subflow of this.subflows) {
@@ -1312,6 +1312,7 @@ export class Diagram extends Shape {
                   subflowInst.stepInstances.push(stepInstance);
                 } else {
                   step.instances[stepIdx] = stepInstance;
+                  subflowInst.stepInstances[stepIdx] = stepInstance;
                 }
               }
               break;
