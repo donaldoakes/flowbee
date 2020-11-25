@@ -1290,12 +1290,16 @@ export class Diagram extends Shape {
         if (step) {
           if (!step.instances) step.instances = [];
           if (!this.instance.stepInstances) this.instance.stepInstances = [];
-          const stepIdx = step.instances.findIndex(inst => inst.id === stepInstance.id);
+          let stepIdx = step.instances.findIndex(inst => inst.id === stepInstance.id);
           if (stepIdx === -1) {
             step.instances.push(stepInstance);
-            this.instance.stepInstances.push(stepInstance);
           } else {
             step.instances[stepIdx] = stepInstance;
+          }
+          stepIdx = this.instance.stepInstances.findIndex(inst => inst.id === stepInstance.id);
+          if (stepIdx === -1) {
+            this.instance.stepInstances.push(stepInstance);
+          } else {
             this.instance.stepInstances[stepIdx] = stepInstance;
           }
         } else {
