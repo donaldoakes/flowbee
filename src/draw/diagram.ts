@@ -248,7 +248,6 @@ export class Diagram extends Shape {
       });
       socket.addEventListener('message', event => {
         const flowEvent = JSON.parse(event.data) as FlowEvent;
-        console.log("flowEvent: " + JSON.stringify(flowEvent, null, 2));
         if (flowEvent.elementType === 'flow') {
           this.instance = flowEvent.instance as FlowInstance;
         } else if (flowEvent.elementType === 'subflow') {
