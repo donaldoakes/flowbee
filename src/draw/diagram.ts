@@ -36,7 +36,7 @@ export class Diagram extends Shape {
   scrollContainerId?: string;
   stepId?: string;
   instance?: FlowInstance;
-  instances = null;
+  instances = null; // only for interface
   stepInstanceId?: string;
   drawBoxes = true;
   allowInstanceEdit = false;
@@ -248,23 +248,42 @@ export class Diagram extends Shape {
       });
       socket.addEventListener('message', event => {
         const flowEvent = JSON.parse(event.data) as FlowEvent;
+        console.log("flowEvent: " + JSON.stringify(flowEvent, null, 2));
         if (flowEvent.elementType === 'flow') {
           this.instance = flowEvent.instance as FlowInstance;
-        }
-        else if (flowEvent.elementType === 'step') {
+        } else if (flowEvent.elementType === 'subflow') {
+          const subInstance = flowEvent.instance as SubflowInstance;
+          const subflow = this.getSubflow(subInstance.subflowId);
+          if (subflow) {
+            if (!subflow.instances) subflow.instances = [];
+            if (!this.instance.subflowInstances) this.instance.subflowInstances = [];
+            const subIdx = subflow.instances.findIndex(inst => inst.id === subInstance.id);
+            if (subIdx === -1) {
+              subflow.instances.push(subInstance);
+              this.instance.subflowInstances.push(subInstance);
+            } else {
+              subflow.instances[subIdx] = subInstance;
+            }
+            subflow.draw();
+          }
+        } else if (flowEvent.elementType === 'step') {
           const stepInstance = flowEvent.instance as StepInstance;
-          const step = this.getStep(stepInstance.stepId);
+          let step = this.getStep(stepInstance.stepId);
+          if (!step) {
+            for (const subflow of this.subflows) {
+              step = subflow.getStep(stepInstance.stepId);
+              if (step) break;
+            }
+          }
           if (step) {
-            if (!step.instances) {
-              step.instances = [];
-            }
-            const stepIdx = step.instances.findIndex(inst => inst.id === stepInstance.stepId);
-            if (stepIdx) {
-              step.instances[stepIdx] = stepInstance;
-            }
-            else {
+            if (!step.instances) step.instances = [];
+            if (!this.instance.stepInstances) this.instance.stepInstances = [];
+            const stepIdx = step.instances.findIndex(inst => inst.id === stepInstance.id);
+            if (stepIdx === -1) {
               step.instances.push(stepInstance);
               this.instance.stepInstances.push(stepInstance);
+            } else {
+              step.instances[stepIdx] = stepInstance;
             }
             if (flowEvent.eventType === 'start') {
               for (const inLink of this.getInLinks(step)) {
@@ -275,7 +294,6 @@ export class Diagram extends Shape {
             step.draw();
             this.scrollIntoView(step);
           }
-          // TODO set upstream link status and draw
         }
       });
     }
@@ -375,40 +393,32 @@ export class Diagram extends Shape {
   applyState(animate: boolean) {
     const diagram = this; // forEach inner access
 
-    if (this.flow.steps) {
-      this.flow.steps.forEach(function (step) {
-        diagram.getStep(step.id).instances = diagram.getStepInstances(step.id);
-      });
-    }
-
-    diagram.steps.forEach(function (step) {
-      if (step.step.links) {
-        step.step.links.forEach(function (link) {
-          diagram.getLink(link.id).status = diagram.getLinkStatus(link.id);
-        });
-      }
+    this.flow.steps?.forEach(step => {
+      diagram.getStep(step.id).instances = diagram.getStepInstances(step.id);
     });
 
-    if (this.flow.subflows) {
-      this.flow.subflows.forEach(function (subproc) {
-        const subflow = diagram.getSubflow(subproc.id);
-        subflow.instances = diagram.getSubflowInstances(subproc.id);
-        // needed for subflow & task instance retrieval
-        subflow.mainFlowInstanceId = diagram.instance.id;
-        if (subflow.subflow.steps) {
-          subflow.subflow.steps.forEach(function (step) {
-            subflow.getStep(step.id).instances = subflow.getStepInstances(step.id);
+    diagram.steps.forEach(step => {
+      step.step.links?.forEach(function (link) {
+        diagram.getLink(link.id).status = diagram.getLinkStatus(link.id);
+      });
+    });
+
+    this.flow.subflows?.forEach(sub => {
+      const subflow = diagram.getSubflow(sub.id);
+      subflow.instances = diagram.getSubflowInstances(sub.id);
+      if (subflow.subflow.steps) {
+        subflow.subflow.steps.forEach(function (step) {
+          subflow.getStep(step.id).instances = subflow.getStepInstances(step.id);
+        });
+      }
+      subflow.steps?.forEach(function (step) {
+        if (step.step.links) {
+          step.step.links.forEach(function (link) {
+            subflow.getLink(link.id).status = subflow.getLinkStatus(link.id);
           });
         }
-        subflow.steps.forEach(function (step) {
-          if (step.step.links) {
-            step.step.links.forEach(function (link) {
-              subflow.getLink(link.id).status = subflow.getLinkStatus(link.id);
-            });
-          }
-        });
       });
-    }
+    });
 
     let highlighted = null;
     const sequence = this.getSequence(true);
@@ -625,6 +635,9 @@ export class Diagram extends Shape {
     return this.links.find(link => link.link.id === linkId);
   }
 
+  /**
+   * also searches subflows
+   */
   getInLinks(step: Step): Link[] {
     let links = this.links.filter(link => link.to.step.id === step.step.id);
     for (const subflow of this.subflows) {
@@ -633,6 +646,9 @@ export class Diagram extends Shape {
     return links;
   }
 
+  /**
+   * also searches subflows
+   */
   getOutLinks(step: Step): Link[] {
     let links = this.links.filter(link => link.from.step.id === step.step.id);
     for (const subflow of this.subflows) {
@@ -912,22 +928,10 @@ export class Diagram extends Shape {
   }
 
   getStepInstances(stepId: string): StepInstance[] {
-    if (this.instance) {
-      const insts = []; // should always return something, even if empty
-      if (this.instance.stepInstances) {
-        const flowInstId = this.instance.id;
-        this.instance.stepInstances.forEach(function (stepInst) {
-          if (stepInst.stepId === stepId) {
-            stepInst.flowInstanceId = flowInstId; // needed for subflow & task instance retrieval
-            insts.push(stepInst);
-          }
-        });
-      }
-      insts.sort(function (s1, s2) {
-        return s2.id - s1.id;
-      });
-      return insts;
+    if (this.instance && this.instance.stepInstances) {
+      return this.instance.stepInstances.filter(inst => inst.stepId === stepId);
     }
+    return [];
   }
 
   getLinkStatus(linkId: string): LinkStatus | undefined {

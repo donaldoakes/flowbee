@@ -20,12 +20,15 @@ export class Step extends Shape {
     this.step = step;
   }
 
+  get shape(): string | undefined {
+    if (this.descriptor.icon && this.descriptor.icon.startsWith('shape:')) {
+      return this.descriptor.icon.substring(6);
+    }
+  }
+
   draw(animationTimeSlice?: number) {
     const step = this.step;
-    let shape: string;
-    if (this.descriptor.icon && this.descriptor.icon.startsWith('shape:')) {
-      shape = this.descriptor.icon.substring(6);
-    }
+    const shape = this.shape;
 
     let title: string, fill: string;
     let opacity = null;
@@ -77,7 +80,6 @@ export class Step extends Shape {
       this.diagram.drawData(this.display, 10 * this.data.heat, this.data.color, 0.8);
     }
 
-    let yAdjust = -2;
     if (this.descriptor.icon) {
       if (shape) {
         if ('start' === shape) {
@@ -117,7 +119,6 @@ export class Step extends Shape {
         }
         else if ('decision' === shape) {
           this.diagram.drawDiamond(this.display.x, this.display.y, this.display.w, this.display.h);
-          yAdjust = this.title.lines.length === 1 ? -2 : -8;
         }
         else if ('step' === shape) {
           this.diagram.rect(
@@ -130,7 +131,6 @@ export class Step extends Shape {
             fill,
             opacity
           );
-          yAdjust = -8;
         }
       }
       else {
@@ -148,9 +148,8 @@ export class Step extends Shape {
         }
         const iconSrc = this.descriptor.icon;
         const iconX = this.display.x + this.display.w / 2 - 12;
-        const iconY = this.display.y + 6;
+        const iconY = this.display.y + 12;
         this.diagram.drawIcon(iconSrc, iconX, iconY);
-        yAdjust = this.title.lines.length === 1 ? 10 : 6;
       }
     }
     else {
@@ -167,21 +166,18 @@ export class Step extends Shape {
     }
 
     // title
-    const diagram = this.diagram;
-    diagram.context.font = this.diagram.options.defaultFont.name;
-    this.title.y += yAdjust;
-    this.title.lines.forEach(function (line) {
+    this.diagram.context.font = this.diagram.options.defaultFont.name;
+    for (const line of this.title.lines) {
       if (shape === 'start') {
-        diagram.context.fillStyle = diagram.options.step.start.color;
+        this.diagram.context.fillStyle = this.diagram.options.step.start.color;
       } else if (shape === 'stop') {
-        diagram.context.fillStyle = diagram.options.step.stop.color;
+        this.diagram.context.fillStyle = this.diagram.options.step.stop.color;
       } else if (shape === 'pause') {
-        diagram.context.fillStyle = diagram.options.step.pause.color;
+        this.diagram.context.fillStyle = this.diagram.options.step.pause.color;
       }
-      line.y += yAdjust;
-      diagram.context.fillText(line.text, line.x, line.y);
-      diagram.context.fillStyle = diagram.options.defaultColor;
-    });
+      this.diagram.context.fillText(line.text, line.x, line.y);
+      this.diagram.context.fillStyle = this.diagram.options.defaultColor;
+    }
 
     // logical id
     this.diagram.context.fillStyle = this.diagram.options.meta.color;
@@ -260,7 +256,7 @@ export class Step extends Shape {
     this.step.name.replace(/\r/g, '').split(/\n/).forEach(function (line) {
       titleLines.push({ text: line });
     });
-    const title = {
+    this.title = {
       text: this.step.name,
       lines: titleLines,
       x: display.x,
@@ -268,17 +264,28 @@ export class Step extends Shape {
       w: 0,
       h: 0
     };
+
+    const shape = this.shape;
+    let yAdjust = -2;
+    if (shape) {
+      if (shape === 'decision') yAdjust = this.title.lines.length === 1 ? -2 : -8;
+      else if (shape === 'step') yAdjust = -8;
+    } else {
+      yAdjust = this.title.lines.length === 1 ? 10 : 6;
+    }
+    this.title.y += yAdjust;
+
     this.diagram.context.font = this.diagram.options.defaultFont.name;
-    for (let i = 0; i < title.lines.length; i++) {
-      const line = title.lines[i];
+    for (let i = 0; i < this.title.lines.length; i++) {
+      const line = this.title.lines[i];
       const textMetrics = this.diagram.context.measureText(line.text);
-      if (textMetrics.width > title.w) {
-        title.w = textMetrics.width;
-        title.x = display.x + display.w / 2 - textMetrics.width / 2;
+      if (textMetrics.width > this.title.w) {
+        this.title.w = textMetrics.width;
+        this.title.x = display.x + display.w / 2 - textMetrics.width / 2;
       }
-      title.h += this.diagram.options.defaultFont.size;
+      this.title.h += this.diagram.options.defaultFont.size;
       line.x = display.x + display.w / 2 - textMetrics.width / 2;
-      line.y = display.y + display.h / 2 + this.diagram.options.defaultFont.size * (i + 0.5);
+      line.y = display.y + display.h / 2 + this.diagram.options.defaultFont.size * (i + 0.5) + yAdjust;
       if (line.x + textMetrics.width > maxDisplay.w) {
         maxDisplay.w = line.x + textMetrics.width;
       }
@@ -288,7 +295,6 @@ export class Step extends Shape {
     }
 
     this.display = display;
-    this.title = title;
 
     return maxDisplay;
   }
@@ -346,7 +352,7 @@ export class Step extends Shape {
       }
       else {
         w = 100;
-        h = 60;
+        h = 80;
       }
     }
     let name = descriptor.name;

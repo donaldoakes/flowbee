@@ -46,7 +46,7 @@ export class Selection {
       this.selectObjs.unshift(obj); // add first so becomes selection
       if (obj.type === 'step') {
         // add any contained links
-        let stepLinks;
+        let stepLinks: Link[];
         const step = this.diagram.getStep((obj as Step).step.id);
         if (step) {
           stepLinks = this.diagram.getLinks(obj as Step);
@@ -54,7 +54,6 @@ export class Selection {
         else {
           for (let i = 0; i < this.diagram.subflows.length; i++) {
             const subflow = this.diagram.subflows[i];
-            const step = subflow.getStep((obj as Step).step.id);
             stepLinks = subflow.getLinks(obj as Step);
             if (stepLinks) {
               break;

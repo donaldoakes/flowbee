@@ -1,4 +1,4 @@
-import { Subflow as SubflowElement } from '../model/flow';
+import { Subflow as SubflowElement, SubflowInstance } from '../model/flow';
 import { Shape } from './shape';
 import { Step } from './step';
 import { Link } from './link';
@@ -13,8 +13,7 @@ export class Subflow extends Shape {
   title: Title;
   steps: Step[];
   links: Link[];
-  mainFlowInstanceId: string;
-  instances = null;
+  instances?: SubflowInstance[];
 
   constructor(readonly diagram: Diagram, readonly subflow: SubflowElement) {
     super(diagram.canvas.getContext("2d"), diagram.options, subflow);
@@ -221,28 +220,17 @@ export class Subflow extends Shape {
     }
   }
 
-  getStepInstances(id: string): StepInstance[] {
+  getStepInstances(stepId: string): StepInstance[] {
+    let stepInsts = [];
     if (this.instances) {
-      const stepInsts: StepInstance[] = [];
-      const mainFlowInstanceId = this.mainFlowInstanceId;
-      this.instances.forEach(function (inst) {
-        if (inst.steps) {
-          const flowInstId = mainFlowInstanceId;
-          inst.steps.forEach(function (stepInst) {
-            if (stepInst.stepId === id) {
-              stepInsts.push(stepInst);
-              // needed for subflow & task instance retrieval
-              stepInst.flowInstanceId = flowInstId;
-              stepInst.embeddedFlowInstanceId = inst.id;
-            }
-          });
+      for (const inst of this.instances) {
+        if (inst.stepInstances) {
+          stepInsts = [ ...stepInsts, ...inst.stepInstances.filter(si => si.stepId === stepId)];
         }
-      });
-      stepInsts.sort(function (s1, s2) {
-        return s2.start.getTime() - s1.start.getTime();
-      });
+      }
       return stepInsts;
     }
+    return stepInsts;
   }
 
   getLinkStatus(linkId: string): LinkStatus | undefined {
