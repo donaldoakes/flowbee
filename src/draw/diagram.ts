@@ -8,13 +8,13 @@ import { Note } from './note';
 import { Marquee } from './marquee';
 import { Descriptor } from '../model/descriptor';
 import { DiagramOptions } from '../options';
-import { Flow, FlowInstance, SubflowInstance } from '../model/flow';
+import { Flow, FlowEvent, FlowInstance, SubflowInstance } from '../model/flow';
 import { StepInstance } from '../model/step';
 import { Display } from './display';
 import { FlowElementType } from '../model/element';
 import { DrawingOptions } from './options';
 import { Grid } from './grid';
-import { LinkInstance } from '../model/link';
+import { LinkStatus } from '../model/link';
 
 export class Diagram extends Shape {
 
@@ -163,7 +163,6 @@ export class Diagram extends Shape {
     }
     if (instance) {
       this.instance = instance;
-      // this.editInstanceId = editInstanceId;
     }
     this.data = data;
 
@@ -180,7 +179,6 @@ export class Diagram extends Shape {
       this.label.draw(this.options.title.color);
     }
 
-    const diagram = this;
     let highlighted = null;
     if (animate && !this.instance) {
       const sequence = this.getSequence();
@@ -199,14 +197,14 @@ export class Diagram extends Shape {
       const nonLinkSlice = totalTime / (nonLinkCt + 2 * linkCt);
       const linkSlice = this.options.animationLinkFactor * nonLinkSlice;
       let timeSlice = nonLinkSlice;
-      const s = function () {
+      const s = () => {
         const it = sequence[i];
         it.draw(timeSlice);
-        if (it instanceof Step && it.flowElement.id === diagram.stepId) {
+        if (it instanceof Step && it.flowElement.id === this.stepId) {
           it.highlight();
           highlighted = it;
         }
-        diagram.scrollIntoView(it, timeSlice);
+        this.scrollIntoView(it, timeSlice);
         i++;
         if (i < sequence.length) {
           const nextSlice = sequence[i] instanceof Link ? linkSlice : nonLinkSlice;
@@ -214,99 +212,79 @@ export class Diagram extends Shape {
           timeSlice = nextSlice;
         }
         else if (highlighted) {
-          diagram.scrollIntoView(highlighted, nonLinkSlice);
+          this.scrollIntoView(highlighted, nonLinkSlice);
         }
       };
       s();
     }
     else {
       // draw quickly
-      this.steps.forEach(function (step) {
+      for (const step of this.steps) {
         step.draw();
-        if (step.flowElement.id === diagram.stepId) {
+        if (step.flowElement.id === this.stepId) {
           step.highlight();
           highlighted = step;
         }
-      });
-      this.links.forEach(function (link) {
+      }
+      for (const link of this.links) {
         link.draw();
-      });
-      this.subflows.forEach(function (subflow) {
+      }
+      for (const subflow of this.subflows) {
         subflow.draw();
-      });
+      }
+      for (const note of this.notes) {
+        note.draw();
+      }
+
       if (highlighted) {
-        this.scrollIntoView(highlighted, diagram.stepId ? 0 : 500);
+        this.scrollIntoView(highlighted, this.stepId ? 0 : 500);
       }
     }
 
-    if (diagram.options.webSocketUrl) {
-      const socket = new WebSocket(diagram.options.webSocketUrl);
-      socket.addEventListener('open', function (event) {
-        socket.send(`{ "topic": "flowInstance-${diagram.instance.id}" }`);
+    if (this.instance && this.options.webSocketUrl) {
+      const socket = new WebSocket(this.options.webSocketUrl);
+      socket.addEventListener('open', () => {
+        socket.send(`{ "topic": "flowInstance-${this.instance.id}" }`);
       });
-      socket.addEventListener('message', function (event) {
-        const message = JSON.parse(event.data);
-        if (message.type === 'flow') {
-          console.log("MESSAGE: " + message);
+      socket.addEventListener('message', event => {
+        const flowEvent = JSON.parse(event.data) as FlowEvent;
+        if (flowEvent.elementType === 'flow') {
+          this.instance = flowEvent.instance as FlowInstance;
         }
-        else if (message.type === 'step') {
-          const step = diagram.getStep(message.instance.stepId);
+        else if (flowEvent.elementType === 'step') {
+          const stepInstance = flowEvent.instance as StepInstance;
+          const step = this.getStep(stepInstance.stepId);
           if (step) {
             if (!step.instances) {
               step.instances = [];
             }
-            const stepIdx = step.instances.findIndex(inst => inst.id === message.instance.id);
+            const stepIdx = step.instances.findIndex(inst => inst.id === stepInstance.stepId);
             if (stepIdx) {
-              step.instances[stepIdx] = message.instance;
+              step.instances[stepIdx] = stepInstance;
             }
             else {
-              step.instances.push(message.instance);
-              diagram.instance.stepInstances.push(message.instance);
+              step.instances.push(stepInstance);
+              this.instance.stepInstances.push(stepInstance);
+            }
+            if (flowEvent.eventType === 'start') {
+              for (const inLink of this.getInLinks(step)) {
+                inLink.status = this.getLinkStatus(inLink.link.id);
+                inLink.draw();
+              }
             }
             step.draw();
-            diagram.scrollIntoView(step);
+            this.scrollIntoView(step);
           }
-        }
-        else if (message.subtype === 'l') {
-          const link = diagram.getLink('l' + message.id);
-          if (link) {
-            if (!link.instances) {
-              link.instances = [];
-            }
-            const linkInst = link.instances.find(function (inst) {
-              return inst.id === message.instId;
-            });
-            if (linkInst) {
-              linkInst.status = message.status;
-            }
-            else {
-              link.instances.push({
-                linkId: message.id,
-                id: message.instId,
-                status: message.status
-              });
-            }
-            link.draw();
-            diagram.scrollIntoView(link);
-          }
+          // TODO set upstream link status and draw
         }
       });
     }
 
     if (this.instance) {
-      this.applyState(animate, function () {
-        diagram.notes.forEach(function (note) {
-          note.draw();
-        });
-      });
+      this.applyState(animate);
     }
     else if (this.data) {
       this.applyData();
-    }
-    else {
-      diagram.notes.forEach(function (note) {
-        note.draw();
-      });
     }
 
     if (this.marquee) {
@@ -394,10 +372,7 @@ export class Diagram extends Shape {
     return canvasDisplay;
   }
 
-  /**
-   * post-animation callback is the only way to prevent notes from screwing up context font (why?)
-   */
-  applyState(animate: boolean, callback: () => void) {
+  applyState(animate: boolean) {
     const diagram = this; // forEach inner access
 
     if (this.flow.steps) {
@@ -409,7 +384,7 @@ export class Diagram extends Shape {
     diagram.steps.forEach(function (step) {
       if (step.step.links) {
         step.step.links.forEach(function (link) {
-          diagram.getLink(link.id).instances = diagram.getLinkInstances(link.id);
+          diagram.getLink(link.id).status = diagram.getLinkStatus(link.id);
         });
       }
     });
@@ -428,7 +403,7 @@ export class Diagram extends Shape {
         subflow.steps.forEach(function (step) {
           if (step.step.links) {
             step.step.links.forEach(function (link) {
-              subflow.getLink(link.id).instances = subflow.getLinkInstances(link.id);
+              subflow.getLink(link.id).status = subflow.getLinkStatus(link.id);
             });
           }
         });
@@ -447,7 +422,7 @@ export class Diagram extends Shape {
             diagram.scrollIntoView(it, slice);
           }
           if (diagram.stepInstanceId) {
-            it.instances.forEach(function (inst) {
+            it.instances?.forEach(inst => {
               if (inst.id === diagram.stepInstanceId) {
                 highlight = true;
               }
@@ -485,9 +460,6 @@ export class Diagram extends Shape {
             setTimeout(s, timeSlice);
             timeSlice = nextSlice;
           }
-          else {
-            callback();
-          }
         };
         if (sequence.length > 0) {
           s();
@@ -498,7 +470,6 @@ export class Diagram extends Shape {
         if (highlighted) {
           this.scrollIntoView(highlighted, diagram.stepInstanceId ? 0 : 500);
         }
-        callback();
       }
     }
   }
@@ -565,7 +536,7 @@ export class Diagram extends Shape {
     const outSteps = [];
     const stepIdToInLinks = {};
     this.getOutLinks(step).forEach(function (link) {
-      if (!runtime || link.instances.length > 0) {
+      if (!runtime || link.status) {
         const outStep = link.to;
         const exist = stepIdToInLinks[outStep.step.id];
         if (!exist) {
@@ -626,14 +597,6 @@ export class Diagram extends Shape {
     });
   }
 
-  getStart(): Step | undefined {
-    for (let i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.path === 'flowbee-demo.start') { // TODO TODO TODO
-        return this.steps[i];
-      }
-    }
-  }
-
   makeRoom(canvasDisplay: Display, display: Display) {
     if (display.w > canvasDisplay.w) {
       canvasDisplay.w = display.w;
@@ -643,59 +606,53 @@ export class Diagram extends Shape {
     }
   }
 
+  /**
+   * Returns first step whose descriptor category is Start
+   */
+  getStart(): Step | undefined {
+    const startDescriptors = this.descriptors.filter(d => d.category === 'start');
+    return this.steps.find(step => {
+      const desc = startDescriptors.find(d => d.path === step.step.path);
+      if (desc) return desc;
+    });
+  }
+
   getStep(stepId: string): Step | undefined {
-    for (let i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.id === stepId) {
-        return this.steps[i];
-      }
-    }
+    return this.steps.find(step => step.step.id === stepId);
   }
 
   getLink(linkId: string): Link | undefined {
-    for (let i = 0; i < this.links.length; i++) {
-      if (this.links[i].link.id === linkId) {
-        return this.links[i];
-      }
-    }
+    return this.links.find(link => link.link.id === linkId);
   }
 
-  getLinks(step: Step): Link[] {
-    const links: Link[] = [];
-    for (let i = 0; i < this.links.length; i++) {
-      if (step.step.id === this.links[i].to.step.id || step.step.id === this.links[i].from.step.id) {
-        links.push(this.links[i]);
-      }
+  getInLinks(step: Step): Link[] {
+    let links = this.links.filter(link => link.to.step.id === step.step.id);
+    for (const subflow of this.subflows) {
+      links = [ ...links, ...subflow.getInLinks(step) ];
     }
     return links;
   }
 
   getOutLinks(step: Step): Link[] {
-    let links: Link[] = [];
-    for (let i = 0; i < this.links.length; i++) {
-      if (step.step.id === this.links[i].from.step.id) {
-        links.push(this.links[i]);
-      }
+    let links = this.links.filter(link => link.from.step.id === step.step.id);
+    for (const subflow of this.subflows) {
+      links = [ ...links, ...subflow.getOutLinks(step) ];
     }
-    this.subflows.forEach(function (subflow) {
-      links = links.concat(subflow.getOutLinks(step));
-    });
     return links;
   }
 
+  getLinks(step: Step): Link[] {
+    return this.links.filter(link => {
+      return link.to.step.id === step.step.id || link.from.step.id === step.step.id;
+    });
+  }
+
   getSubflow(subflowId: string): Subflow | undefined {
-    for (let i = 0; i < this.subflows.length; i++) {
-      if (this.subflows[i].subflow.id === subflowId) {
-        return this.subflows[i];
-      }
-    }
+    return this.subflows.find(subflow => subflow.id === subflowId);
   }
 
   getNote(noteId: string): Note | undefined {
-    for (let i = 0; i < this.notes.length; i++) {
-      if (this.notes[i].note.id === noteId) {
-        return this.notes[i];
-      }
-    }
+    return this.notes.find(note => note.note.id === noteId);
   }
 
   get(id: string): Step | Link | Subflow | Note | Label {
@@ -973,20 +930,21 @@ export class Diagram extends Shape {
     }
   }
 
-  getLinkInstances(linkId: string): LinkInstance[] {
+  getLinkStatus(linkId: string): LinkStatus | undefined {
     if (this.instance) {
-      const insts = []; // should always return something, even if empty
-      if (this.instance.linkInstances) {
-        this.instance.linkInstances.forEach(function (linkInst) {
-          if (linkInst.linkId === linkId) {
-            insts.push(linkInst);
-          }
-        });
+      const link = this.getLink(linkId);
+      if (link) {
+        const downstreamStepInsts = this.getStepInstances(link.to.step.id);
+        if (downstreamStepInsts.length > 0) {
+          return 'Traversed';
+        }
       }
-      insts.sort(function (l1, l2) {
-        return l2.id - l1.id;
-      });
-      return insts;
+    }
+    for (const subflow of this.subflows) {
+      const subflowLinkStatus = subflow.getLinkStatus(linkId);
+      if (subflowLinkStatus) {
+        return subflowLinkStatus;
+      }
     }
   }
 

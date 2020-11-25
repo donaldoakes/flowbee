@@ -5,6 +5,8 @@ import { Link } from './link';
 import { Diagram } from './diagram';
 import { Title } from './display';
 import { Edit } from './edit';
+import { StepInstance } from '../model/step';
+import { LinkStatus } from '../model/link';
 
 export class Subflow extends Shape {
 
@@ -136,48 +138,33 @@ export class Subflow extends Shape {
   }
 
   getStart() {
-    for (let i = 0; i < this.steps.length; i++) {
-      const descriptor = this.diagram.getDescriptor(this.steps[i].step.path);
-      if (descriptor.category === 'start') {
-        return this.steps[i];
-      }
-    }
+    const startDescriptors = this.diagram.descriptors.filter(d => d.category === 'start');
+    return this.steps.find(step => {
+      const desc = startDescriptors.find(d => d.path === step.step.path);
+      if (desc) return desc;
+    });
   }
 
   getStep(stepId: string): Step {
-    for (let i = 0; i < this.steps.length; i++) {
-      if (this.steps[i].step.id === stepId) {
-        return this.steps[i];
-      }
-    }
+    return this.steps.find(step => step.step.id === stepId);
   }
 
   getLink(linkId: string): Link {
-    for (let i = 0; i < this.links.length; i++) {
-      if (this.links[i].link.id === linkId) {
-        return this.links[i];
-      }
-    }
+    return this.links.find(link => link.link.id === linkId);
   }
 
   getOutLinks(step: Step): Link[] {
-    const links = [];
-    for (let i = 0; i < this.links.length; i++) {
-      if (step.step.id === this.links[i].from.step.id) {
-        links.push(this.links[i]);
-      }
-    }
-    return links;
+    return this.links.filter(link => link.from.step.id === step.step.id);
+  }
+
+  getInLinks(step: Step): Link[] {
+    return this.links.filter(link => link.to.step.id === step.step.id);
   }
 
   getLinks(step: Step): Link[] {
-    const links = [];
-    for (let i = 0; i < this.links.length; i++) {
-      if (step === this.links[i].to || step === this.links[i].from) {
-        links.push(this.links[i]);
-      }
-    }
-    return links;
+    return this.links.filter(link => {
+      return link.to.step.id === step.step.id || link.from.step.id === step.step.id;
+    });
   }
 
   get(id: string): Step | Link {
@@ -234,9 +221,9 @@ export class Subflow extends Shape {
     }
   }
 
-  getStepInstances(id: string) {
+  getStepInstances(id: string): StepInstance[] {
     if (this.instances) {
-      const stepInsts = [];
+      const stepInsts: StepInstance[] = [];
       const mainFlowInstanceId = this.mainFlowInstanceId;
       this.instances.forEach(function (inst) {
         if (inst.steps) {
@@ -251,29 +238,22 @@ export class Subflow extends Shape {
           });
         }
       });
-      stepInsts.sort(function (a1, a2) {
-        return a2.id - a1.id;
+      stepInsts.sort(function (s1, s2) {
+        return s2.start.getTime() - s1.start.getTime();
       });
       return stepInsts;
     }
   }
 
-  getLinkInstances(id: string) {
+  getLinkStatus(linkId: string): LinkStatus | undefined {
     if (this.instances) {
-      const linkInsts = [];
-      this.instances.forEach(function (inst) {
-        if (inst.links) {
-          inst.links.forEach(function (linkInst) {
-            if (linkInst.linkId === id) {
-              linkInsts.push(linkInst);
-            }
-          });
+      const link = this.getLink(linkId);
+      if (link) {
+        const downstreamStepInsts = this.getStepInstances(link.to.step.id);
+        if (downstreamStepInsts.length > 0) {
+          return 'Traversed';
         }
-      });
-      linkInsts.sort(function (t1, t2) {
-        return t2.id - t1.id;
-      });
-      return linkInsts;
+      }
     }
   }
 

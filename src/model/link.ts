@@ -14,12 +14,3 @@ export interface Link extends FlowElement {
 }
 
 export type LinkStatus = 'Initiated' | 'Traversed';
-
-export interface LinkInstance {
-    id: string;
-    flowInstanceId: string;
-    linkId: string;
-    status: LinkStatus;
-    start?: Date;
-    end?: Date;
-}

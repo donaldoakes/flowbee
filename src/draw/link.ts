@@ -1,6 +1,6 @@
 import { Diagram } from './diagram';
 import { Label } from './label';
-import { Link as LinkElement } from '../model/link';
+import { Link as LinkElement, LinkStatus } from '../model/link';
 import { Step } from './step';
 import { FlowElement } from '../model/element';
 import { Display, LinkDisplay } from './display';
@@ -44,7 +44,9 @@ export class Link {
   label?: Label;
   display: LinkDisplay;
   dpRatio = 1;
-  instances = null;
+
+  status?: LinkStatus;
+  instances?: null; // only for SelObj interface
 
   constructor(readonly diagram: Diagram, readonly link: LinkElement, public from: Step, public to: Step) {
     this.flowElement = { ...link, type: 'link' };
@@ -65,7 +67,7 @@ export class Link {
     this.drawConnector(null, null, animationTimeSlice);
 
     if (this.label) {
-      if (this.diagram.instance && (!this.instances || this.instances.length === 0)) {
+      if (this.diagram.instance && !this.status) {
         this.label.draw(this.diagram.options.link.colors.default);
       }
       else {
@@ -162,9 +164,8 @@ export class Link {
     const event = this.link.event || 'Finish';
     let color = Link.EVENTS[event].color;
     if (this.diagram.instance) {
-      if (this.instances && this.instances.length > 0) {
-        const latest = this.instances[0];
-        if (latest.status === 'Initiated') {
+      if (this.status) {
+        if (this.status === 'Initiated') {
           color = this.diagram.options.link.colors.initiated;
         }
         else {

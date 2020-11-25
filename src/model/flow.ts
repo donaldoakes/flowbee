@@ -1,5 +1,4 @@
 import { Step, StepInstance } from './step';
-import { LinkInstance } from './link';
 import { Note } from './note';
 import { FlowElement, FlowElementType } from './element';
 
@@ -33,7 +32,6 @@ export interface FlowInstance {
     flowPath: string;
     status: FlowStatus;
     stepInstances?: StepInstance[];
-    linkInstances?: LinkInstance[];
     subflowInstances?: SubflowInstance[];
     values?: Values;
     start?: Date;
@@ -48,9 +46,11 @@ export type Values = {[key: string]: string | boolean | number | Date | object};
 export type FlowEventType = 'start' | 'exec' | 'finish' | 'error';
 
 export interface FlowEvent {
-    type: FlowEventType;
+    eventType: FlowEventType;
     elementType: FlowElementType;
-    instance: FlowInstance | SubflowInstance | StepInstance | LinkInstance;
+    flowPath: string,
+    flowInstanceId: string,
+    instance: FlowInstance | SubflowInstance | StepInstance;
 }
 
 export type SubflowStatus = 'Pending' | 'In Progress' | 'Waiting' | 'Errored' | 'Completed' | 'Canceled'
@@ -61,7 +61,6 @@ export interface SubflowInstance {
     subflowId: string;
     status: SubflowStatus;
     stepInstances?: StepInstance[];
-    linkInstances?: LinkInstance[];
     start?: Date;
     end?: Date;
 }

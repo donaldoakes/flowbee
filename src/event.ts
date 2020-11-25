@@ -1,6 +1,5 @@
 import { FlowElement } from './model/element';
 import { Flow, FlowInstance, SubflowInstance } from './model/flow';
-import { LinkInstance } from './model/link';
 import { StepInstance } from './model/step';
 
 /**
@@ -8,7 +7,7 @@ import { StepInstance } from './model/step';
  */
 export interface FlowElementEvent {
     element?: FlowElement;
-    instances?: FlowInstance[] | StepInstance[] | LinkInstance[] | SubflowInstance[];
+    instances?: FlowInstance[] | StepInstance[] | SubflowInstance[];
 }
 export interface FlowElementSelectEvent extends FlowElementEvent { }
 export interface FlowChangeEvent {
