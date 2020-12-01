@@ -1,6 +1,6 @@
 import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
-import { FlowElementUpdateEvent, Listener, TypedEvent } from './event';
+import { FlowElementInstance, FlowElementUpdateEvent, Listener, TypedEvent } from './event';
 import { FlowElement, getLabel } from './model/element';
 import { ConfigTemplate, Widget } from './model/template';
 import { configuratorDefault, ConfiguratorOptions } from './options';
@@ -20,10 +20,11 @@ export class Configurator {
     private title: HTMLDivElement;
     private tabs: HTMLUListElement;
     private tabContent: HTMLDivElement;
-    private activeTab: { name: string, tab: HTMLLIElement} | undefined;
+    private activeTab?: { name: string, tab: HTMLLIElement };
 
-    flowElement: FlowElement | undefined;
-    template: ConfigTemplate | undefined;
+    flowElement?: FlowElement;
+    instance?: FlowElementInstance;
+    template?: ConfigTemplate;
 
     private options: ConfiguratorOptions;
 
@@ -65,7 +66,7 @@ export class Configurator {
         document.body.appendChild(this.div);
      }
 
-    render(flowElement: FlowElement, template: ConfigTemplate | string, options: ConfiguratorOptions) {
+    render(flowElement: FlowElement, instances: FlowElementInstance[], template: ConfigTemplate | string, options: ConfiguratorOptions) {
 
         if (!flowElement) throw new Error('flowElement is required');
 
@@ -79,6 +80,7 @@ export class Configurator {
         }
 
         this.flowElement = flowElement;
+        this.instance = instances.length > 0 ? instances[instances.length - 1] : null;
         this.template = typeof template === 'string' ? Configurator.parseTemplate(template, getLabel(flowElement)) : template;
         if (this.options.sourceTab) {
             this.template['Source'] = { widgets: [{ type: 'source' }] };
@@ -136,25 +138,36 @@ export class Configurator {
 
             this.tabContent.style.gridAutoRows = '25px';
             let value = '';
-            if (this.flowElement.attributes && this.flowElement.attributes[widget.attribute]) {
+            if (widget.instanceProp && this.instance) {
+                value = this.instance[widget.instanceProp];
+            } else if (this.flowElement.attributes && this.flowElement.attributes[widget.attribute]) {
                 value = this.flowElement.attributes[widget.attribute];
             } else if (widget.default) {
                 value = widget.default;
                 this.update(widget.attribute, value);
             }
-            const readonly = widget.readonly || this.flowElement.readonly;
+            const readonly = !!this.instance || widget.readonly || this.flowElement.readonly;
 
             if (widget.type === 'text') {
                 const text = document.createElement('input') as HTMLInputElement;
                 text.type = 'text';
                 text.value = value;
-                text.onchange = e => this.update(widget.attribute, text.value);
+                if (readonly) {
+                    text.readOnly = true;
+                    text.style.width = 'fit-content';
+                } else {
+                    text.onchange = e => this.update(widget.attribute, text.value);
+                }
                 this.tabContent.appendChild(text);
             } else if (widget.type === 'checkbox') {
                 const checkbox = document.createElement('input') as HTMLInputElement;
                 checkbox.type = 'checkbox';
                 checkbox.checked = value === 'true';
-                checkbox.onclick = e => this.update(widget.attribute, '' + checkbox.checked);
+                if (readonly) {
+                    checkbox.readOnly = true;
+                } else {
+                    checkbox.onclick = e => this.update(widget.attribute, '' + checkbox.checked);
+                }
                 this.tabContent.appendChild(checkbox);
             } else if (widget.type === 'radio') {
                 const div = document.createElement('div') as HTMLDivElement;
@@ -167,7 +180,9 @@ export class Configurator {
                         if (opt === value) {
                             radio.checked = true;
                         }
-                        radio.onchange = e => this.update(widget.attribute, opt);
+                        if (!readonly) {
+                            radio.onchange = e => this.update(widget.attribute, opt);
+                        }
                         div.appendChild(radio);
                         const label = document.createElement('label') as HTMLLabelElement;
                         label.setAttribute('for', radio.id);
@@ -176,17 +191,24 @@ export class Configurator {
                     }
                 }
                 this.tabContent.appendChild(div);
-            } else if (widget.type === 'textarea' && !readonly) {
+            } else if (widget.type === 'textarea') {
                 if (widgets.length === 1) {
-                    this.tabContent.style.gridAutoRows = ''; // allow textarea to fill entire tab
+                    this.tabContent.style.gridAutoRows = ''; // fill entire tab
                 }
-                const textarea = document.createElement('textarea') as HTMLTextAreaElement;
-                textarea.value = value;
-                if (widget.label) {
-                    textarea.placeholder = widget.label;
+                if (readonly) {
+                    const pre = document.createElement('pre') as HTMLPreElement;
+                    pre.textContent = value;
+                    pre.style.margin = '0';
+                    this.tabContent.appendChild(pre);
+                } else {
+                    const textarea = document.createElement('textarea') as HTMLTextAreaElement;
+                    textarea.value = value;
+                    if (widget.label) {
+                        textarea.placeholder = widget.label;
+                    }
+                    textarea.onchange = e => this.update(widget.attribute, textarea.value);
+                    this.tabContent.appendChild(textarea);
                 }
-                textarea.onchange = e => this.update(widget.attribute, textarea.value);
-                this.tabContent.appendChild(textarea);
             } else if (widget.type === 'select') {
                 const select = document.createElement('select') as HTMLSelectElement;
                 if (widget.options) {
@@ -201,11 +223,13 @@ export class Configurator {
                 } else {
                     select.selectedIndex = 0;
                 }
-                select.onchange = e => this.update(widget.attribute, widget.options[select.selectedIndex]);
+                if (!readonly) {
+                    select.onchange = e => this.update(widget.attribute, widget.options[select.selectedIndex]);
+                }
                 this.tabContent.appendChild(select);
             } else if (widget.type === 'table') {
                 if (widgets.length === 1) {
-                    this.tabContent.style.gridAutoRows = ''; // allow table to fill entire tab
+                    this.tabContent.style.gridAutoRows = ''; // fill entire tab
                 }
                 const table = new Table(widget, value, readonly);
                 table.onTableUpdate(tableUpdate => this.update(widget.attribute, tableUpdate.value));
@@ -214,14 +238,14 @@ export class Configurator {
                 const span = document.createElement('span');
                 span.innerText = widget.label;
                 this.tabContent.appendChild(span);
-            } else if (widget.type === 'source' || (widget.type === 'textarea' && readonly)) {
+            } else if (widget.type === 'source') {
                 const pre = document.createElement('pre') as HTMLPreElement;
                 const indent = 2; // TODO config
-                // TODO: newline between pre opening tag and
+                const sourceObj = this.instance || this.flowElement;
                 if (this.options.sourceTab === 'yaml') {
-                    pre.textContent = jsYaml.safeDump(this.flowElement, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+                    pre.textContent = jsYaml.safeDump(sourceObj, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
                 } else {
-                    pre.textContent = JSON.stringify(this.flowElement, null, indent);
+                    pre.textContent = JSON.stringify(sourceObj, null, indent);
                 }
                 pre.style.margin = '0';
                 this.tabContent.appendChild(pre);
@@ -230,6 +254,7 @@ export class Configurator {
     }
 
     update(attribute: string, value: string) {
+        if (!attribute) return;
         const val = value?.trim();
         if (val) {
             if (this.flowElement.attributes) {

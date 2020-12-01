@@ -2,12 +2,14 @@ import { FlowElement } from './model/element';
 import { Flow, FlowInstance, SubflowInstance } from './model/flow';
 import { StepInstance } from './model/step';
 
+export type FlowElementInstance = FlowInstance | StepInstance | SubflowInstance;
+
 /**
  * Event is fired with no element on first deselect.
  */
 export interface FlowElementEvent {
     element?: FlowElement;
-    instances?: FlowInstance[] | StepInstance[] | SubflowInstance[];
+    instances?: FlowElementInstance[];
 }
 export interface FlowElementSelectEvent extends FlowElementEvent { }
 export interface FlowChangeEvent {

@@ -24,6 +24,10 @@ export interface Widget {
      */
     attribute?: string;
     /**
+     * Instance property
+     */
+    instanceProp?: string
+    /**
      * Label when rendered in Configurator.
      * No label means span tab width.
      */

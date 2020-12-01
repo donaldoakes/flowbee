@@ -52,13 +52,12 @@ export class ContextMenu {
                 li.setAttribute('data-flowbee-menu-item', item.id);
                 li.tabIndex = tabIndex++;
                 const iconDiv = document.createElement('div') as HTMLDivElement;
+                iconDiv.style.minWidth = (iconWidth + 4) + 'px';
                 if (item.icon) {
                     const iconImg = document.createElement('img') as HTMLImageElement;
                     const iconBase = menuOptions.iconBase ? menuOptions.iconBase : '';
                     iconImg.src = `${iconBase}/${item.icon}`;
                     iconDiv.appendChild(iconImg);
-                } else {
-                    iconDiv.style.minWidth = iconWidth + 'px';
                 }
                 li.appendChild(iconDiv);
                 const label = document.createElement('label') as HTMLLabelElement;
