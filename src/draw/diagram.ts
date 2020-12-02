@@ -31,7 +31,7 @@ export class Diagram extends Shape {
   anchor = -1;
   selection: Selection;
   zoom = 100;
-  mode: 'select' | 'connect' = 'select';
+  mode: 'select' | 'connect' | 'runtime' = 'select';
   container?: HTMLElement;
   scrollContainerId?: string;
   stepId?: string;

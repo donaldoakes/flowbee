@@ -112,11 +112,14 @@ export class FlowDiagram {
         this.diagram.zoomCanvas(zoom);
     }
 
-    get mode(): 'select' | 'connect' {
+    get mode(): 'select' | 'connect' | 'runtime' {
         return this.diagram.mode;
     }
-    set mode(mode: 'select' | 'connect') {
+    set mode(mode: 'select' | 'connect' | 'runtime') {
         this.diagram.mode = mode;
+        if (mode !== 'runtime') {
+            this.instance = null;
+        }
         if (this.diagram.flow) {
             this.diagram.draw();
         }
