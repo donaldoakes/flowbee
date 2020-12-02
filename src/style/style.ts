@@ -248,12 +248,6 @@ export class DiagramStyle {
             hyperlink: {
                 color: stylesObj[`${this.prefix} .hyperlink`].color
             },
-            data: {
-                roundingRadius: styles.getSize(data['border-radius'])
-            },
-            template: {
-                font: styles.getFont(template)
-            },
             statuses: [
                 { name: 'Unknown', color: 'transparent' },
                 { name: 'Pending', color: 'blue' },

@@ -6,7 +6,7 @@ import { Edit } from './edit';
 
 export class Note extends Shape {
 
-  instances = null; // TODO not applicable (needed by Diagram.isInstanceEditable())
+  instances = null; // needed to be a SelectObj
 
   constructor(readonly diagram: Diagram, readonly note: NoteElement) {
     super(diagram.canvas.getContext("2d"), diagram.options, note);

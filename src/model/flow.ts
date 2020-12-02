@@ -36,7 +36,6 @@ export interface FlowInstance {
     values?: Values;
     start?: Date;
     end?: Date;
-    template?: boolean;
 }
 export type Values = {[key: string]: string | boolean | number | Date | object};
 

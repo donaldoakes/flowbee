@@ -11,7 +11,7 @@ import { DiagramOptions } from '../options';
 import { Flow, FlowEvent, FlowInstance, SubflowInstance } from '../model/flow';
 import { StepInstance } from '../model/step';
 import { Display } from './display';
-import { FlowElementType } from '../model/element';
+import { FlowElementType, getFlowName } from '../model/element';
 import { DrawingOptions } from './options';
 import { Grid } from './grid';
 import { LinkStatus } from '../model/link';
@@ -39,9 +39,6 @@ export class Diagram extends Shape {
   instances?: FlowInstance[]; // SelectObj type
   stepInstanceId?: string;
   drawBoxes = true;
-  allowInstanceEdit = false;
-  editInstanceId?: string;
-  data?: any;
 
   images?: {[key: string]: HTMLImageElement};
 
@@ -62,21 +59,6 @@ export class Diagram extends Shape {
   }
 
   get diagram(): Diagram { return this; }
-
-  get name(): string {
-    let name = this.flow.path;
-    if (!this.instance?.template) {
-      const lastSlash = name.lastIndexOf('/');
-      if (lastSlash > 0 && lastSlash < name.length - 1) {
-        name = name.substring(lastSlash + 1);
-      }
-      const lastDot = name.lastIndexOf('.');
-      if (lastDot > 0) {
-        name = name.substring(0, lastDot);
-      }
-    }
-    return name;
-  }
 
   get dpRatio(): number {
     if (window.devicePixelRatio) {
@@ -114,7 +96,7 @@ export class Diagram extends Shape {
   /**
    * params are only passed during initial draw
    */
-  draw(flow?: Flow, instance?: any, step?: string, animate = false, data?: any) {
+  draw(flow?: Flow, instance?: any, step?: string, animate = false) {
     if (flow) {
       this.flow = flow;
       this.flowElement = { ...flow, type: 'flow' };
@@ -165,7 +147,6 @@ export class Diagram extends Shape {
       this.instance = instance;
       this.instances = [ instance ];
     }
-    this.data = data;
 
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -249,9 +230,6 @@ export class Diagram extends Shape {
     if (this.instance) {
       this.applyState(animate);
     }
-    else if (this.data) {
-      this.applyData();
-    }
 
     if (this.marquee) {
       this.marquee.draw();
@@ -272,9 +250,8 @@ export class Diagram extends Shape {
 
     // label
     if (!this.instance && this.options.showTitle) {
-      const font = this.instance?.template ? this.options.template.font : this.options.title.font;
       this.flowElement.id = '1'; // id needed for label reselect
-      diagram.label = new Label(this, this.name, this.getDisplay(), font);
+      diagram.label = new Label(this, getFlowName(this.flow), this.getDisplay(), this.options.title.font);
       if (this.instance?.id) {
         diagram.label.subtext = this.instance.id;
       }
@@ -428,34 +405,6 @@ export class Diagram extends Shape {
         if (highlighted) {
           this.scrollIntoView(highlighted, diagram.stepInstanceId ? 0 : 500);
         }
-      }
-    }
-  }
-
-  applyData() {
-    const diagram = this; // forEach inner access
-
-    if (this.data.hotspots && this.data.hotspots.length) {
-      const hottest = this.data.hotspots.reduce((max, cur) => cur.ms > max.ms ? cur : max);
-      diagram.steps.forEach(function (step) {
-        const hotspot = diagram.data.hotspots.find(hs => hs.id === step.step.id);
-        if (hotspot && hotspot.ms) {
-          step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
-          step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
-          step.draw();
-        }
-      });
-      if (diagram.subflows) {
-        diagram.subflows.forEach(function (subflow) {
-          subflow.steps.forEach(function (step) {
-            const hotspot = diagram.data.hotspots.find(hs => hs.id === step.step.id);
-            if (hotspot && hotspot.ms) {
-              step.data = { message: hotspot.ms + ' ms', heat: hotspot.ms / hottest.ms };
-              step.data.color = "hsl(" + ((1.0 - step.data.heat) * 240) + ", 100%, 50%)";
-              step.draw();
-            }
-          });
-        });
       }
     }
   }
@@ -634,30 +583,6 @@ export class Diagram extends Shape {
     }
     else if (id.startsWith('n')) {
       return this.getNote(id);
-    }
-  }
-
-  /**
-   * Whether the obj can be edited at instance level.
-   * Cannot have instances and (TODO) must be reachable downstream of a currently paused step.
-   */
-  isInstanceEditable(id: string): boolean {
-    if (this.allowInstanceEdit) {
-      let obj = this.get(id);
-      if (!obj && this.subflows) {
-        for (let i = 0; i < this.subflows.length; i++) {
-          obj = this.subflows[i].get(id);
-          if (obj) break;
-        }
-      }
-      if (obj) {
-        if (obj.type === 'subflow' && obj.instances && obj.instances.length === 1 && obj.instances[0].status === 'In Progress') {
-          return true;
-        }
-        if (!obj.instances || !obj.instances.length) {
-          return true;
-        }
-      }
     }
   }
 
@@ -992,34 +917,6 @@ export class Diagram extends Shape {
           }
         }
       }
-    }
-  }
-
-  drawData(display: Display, size: number, color: string, opacity: number) {
-    if (opacity) {
-      this.context.globalAlpha = opacity;
-    }
-    const rounding = this.options.data.roundingRadius;
-    let x1: number, y1: number, w1: number, h1: number;
-    this.rect(
-      display.x,
-      display.y,
-      display.w,
-      display.h,
-      color, rounding, color);
-    x1 = display.x + size;
-    y1 = display.y + size;
-    w1 = display.w - 2 * size;
-    h1 = display.h - 2 * size;
-    x1 += this.options.step.state.previous.width;
-    y1 += this.options.step.state.previous.width;
-    w1 -= 2 * this.options.step.state.previous.width;
-    h1 -= 2 * this.options.step.state.previous.width;
-    if (w1 > 0 && h1 > 0) {
-      this.context.clearRect(x1, y1, w1, h1);
-    }
-    if (opacity) {
-      this.context.globalAlpha = 1.0;
     }
   }
 
@@ -1569,10 +1466,6 @@ export class Diagram extends Shape {
 
         const selObj = this.mode === 'connect' ? this.connectObj : this.selection.getSelectObj();
         if (selObj) {
-          if (this.allowInstanceEdit && (!selObj.flowElement || !this.isInstanceEditable(selObj.flowElement.id))) {
-            return;
-          }
-
           const diagram = this;
           if (this.shiftDrag || (this.mode === 'connect' && selObj.type === 'step')) {
             this.draw();

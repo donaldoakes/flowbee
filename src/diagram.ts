@@ -1,7 +1,7 @@
 import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
-import { Flow, FlowInstance, SubflowInstance } from './model/flow';
+import { Flow, FlowInstance } from './model/flow';
 import { Descriptor, StandardDescriptors } from './model/descriptor';
 import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style/style';
@@ -24,8 +24,6 @@ export class FlowDiagram {
 
     readonly = false;
     step?: string;
-    editInstanceId?: string;
-    data?: any;
 
     /**
      * Create a flow diagram
@@ -142,8 +140,7 @@ export class FlowDiagram {
             flow,
             this.instance,
             this.step,
-            animate,
-            this.data
+            animate
         );
 
         // events
@@ -295,7 +292,7 @@ export class FlowDiagram {
             const provider = this.contextMenuProvider || new DefaultMenuProvider(this);
             const evt = {
                 element,
-                instances: this.selObj?.instances
+                instances: this.selObj?. instances
             };
             const items = provider.getItems(evt);
             if (items && items.length > 0) {
@@ -304,7 +301,7 @@ export class FlowDiagram {
                     theme: this.diagram.options.theme,
                     iconBase: this.diagram.options.iconBase
                 };
-                // TODO adjust menu position according to available space (or native menu?)
+                // TODO adjust menu position according to available space (or native menu)
                 this.menu.render(options, e.pageX + 3, e.pageY, item => {
                     provider.onSelectItem({ item, ...evt });
                     this.menu = null;

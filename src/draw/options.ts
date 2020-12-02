@@ -83,7 +83,6 @@ export interface DrawingOptions {
     meta?: { color: string };
     drag?: { min: number };
     title?: { color?: string, font?: Font };
-    template?: { font?: Font };
     label?: LabelOptions;
     milestone?: { color?: string };
     step?: StepOptions;
@@ -95,7 +94,6 @@ export interface DrawingOptions {
     anchor?: AnchorOptions;
     highlight?: HighlightOptions;
     hyperlink?: { color?: string };
-    data?: { roundingRadius: number };
     statuses?: Status[];
 }
 

@@ -11,7 +11,6 @@ export class Step extends Shape {
   title: Title;
   descriptor: Descriptor;
   instances?: StepInstance[];
-  data = null;
 
   constructor(readonly diagram: Diagram, readonly step: StepElement) {
     super(diagram.canvas.getContext("2d"), diagram.options, step);
@@ -75,9 +74,6 @@ export class Step extends Shape {
         );
       }
       fill = null; // otherwise runtime info lost below
-    }
-    else if (this.data) {
-      this.diagram.drawData(this.display, 10 * this.data.heat, this.data.color, 0.8);
     }
 
     if (this.descriptor.icon) {
@@ -181,11 +177,7 @@ export class Step extends Shape {
 
     // logical id
     this.diagram.context.fillStyle = this.diagram.options.meta.color;
-    let showText = step.id;
-    if (this.data && this.data.message) {
-      showText += ' (' + this.data.message + ')';
-    }
-    this.diagram.context.fillText(showText, this.display.x + 2, this.display.y - 2);
+    this.diagram.context.fillText(step.id, this.display.x + 2, this.display.y - 2);
     this.diagram.context.fillStyle = this.diagram.options.defaultColor;
   }
 
