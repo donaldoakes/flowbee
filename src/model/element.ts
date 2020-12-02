@@ -22,17 +22,13 @@ export const getLabel = (element: FlowElement): string => {
 };
 
 /**
- * Without path or extension
+ * Without path
  */
 export const getFlowName = (flow: Flow): string => {
     let name = flow.path;
     const lastSlash = name.lastIndexOf('/');
     if (lastSlash > 0 && lastSlash < name.length - 1) {
       name = name.substring(lastSlash + 1);
-    }
-    const lastDot = name.lastIndexOf('.');
-    if (lastDot > 0) {
-      name = name.substring(0, lastDot);
     }
     return name;
 };
