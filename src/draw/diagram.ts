@@ -35,7 +35,7 @@ export class Diagram extends Shape {
   container?: HTMLElement;
   scrollContainerId?: string;
   stepId?: string;
-  instance?: FlowInstance;
+  instance?: FlowInstance = null;
   instances?: FlowInstance[]; // SelectObj type
   stepInstanceId?: string;
   drawBoxes = true;
@@ -1301,7 +1301,7 @@ export class Diagram extends Shape {
     this.dragY = y;
 
     const selObj = this.getHoverObj(x, y);
-    if (this.mode === 'select') {
+    if (this.mode !== 'connect') {
       if (selObj) {
         if (!this.readonly && (e.shiftKey || e.metaKey || (!navigator.platform.startsWith('Mac') && e.ctrlKey))) {
           if (this.selection.includes(selObj)) {
@@ -1363,7 +1363,7 @@ export class Diagram extends Shape {
       this.draw(); // to get rid of marquee
       this.selection.reselect();
       this.selection.select();
-    } else if (!e.shiftKey && this.mode === 'select') {
+    } else if (!e.shiftKey && this.mode !== 'connect') {
       this.selection.reselect();
       if (this.drag && this.grid?.snap) {
         this.selection.snap(this.anchor >= 0);
@@ -1391,7 +1391,7 @@ export class Diagram extends Shape {
 
     let hoverObj: SelectObj;
     const hovObj = this.getHoverObj(x, y);
-    if (this.mode === 'select') {
+    if (this.mode === 'select' || this.mode === 'runtime') {
       hoverObj = hovObj;
     } else if (this.mode === 'connect') {
       hoverObj = hovObj?.type === 'link' ? hovObj : null;

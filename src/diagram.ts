@@ -123,10 +123,10 @@ export class FlowDiagram {
         }
     }
 
-    get instance(): FlowInstance {
+    get instance(): FlowInstance | null {
         return this.diagram.instance;
     }
-    set instance(instance: FlowInstance) {
+    set instance(instance: FlowInstance | null) {
         this.diagram.instance = instance;
     }
 
@@ -234,7 +234,7 @@ export class FlowDiagram {
     private onMouseClick(e: MouseEvent) {
         const selObj = this.selObj;
         if (selObj) {
-            if (this.diagram.mode === 'select') {
+            if (this.diagram.mode !== 'connect') {
                 this._onFlowElementSelect.emit({
                     element: selObj.flowElement,
                     instances: selObj.instances
