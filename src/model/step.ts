@@ -24,5 +24,6 @@ export interface StepInstance {
     result?: string;
     start?: Date;
     end?: Date;
+    data?: any;
 }
 
