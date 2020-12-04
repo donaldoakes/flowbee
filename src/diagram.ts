@@ -47,6 +47,7 @@ export class FlowDiagram {
             diagramDefault,
             this.descriptors
         );
+        this.selectObj = this.diagram;
     }
 
     /**
@@ -205,7 +206,7 @@ export class FlowDiagram {
 
     private down = false;
     private dragging = false;
-    private selectObj: SelectObj | null = null;
+    private selectObj: SelectObj;
     private menu: ContextMenu | null = null;
 
     private onMouseMove(e: MouseEvent) {
@@ -233,15 +234,15 @@ export class FlowDiagram {
 
     private onMouseClick(e: MouseEvent) {
         const selObj = this.selObj;
-        if (selObj) {
-            if (this.diagram.mode !== 'connect') {
-                this._onFlowElementSelect.emit({
-                    element: selObj.flowElement,
-                    instances: selObj.instances
-                });
-            }
-        } else if (this.selectObj) {  // only fire on first deselect
-            this._onFlowElementSelect.emit({ element: null });
+        if (selObj.type === 'flow' && this.selectObj.type === 'flow') {
+            // only fire on first diagram select
+            return;
+        }
+        if (this.diagram.mode !== 'connect') {
+            this._onFlowElementSelect.emit({
+                element: selObj.flowElement,
+                instances: selObj.instances
+            });
         }
         this.selectObj = selObj;
     }
@@ -271,8 +272,8 @@ export class FlowDiagram {
     private onDoubleClick(e: MouseEvent) {
         if (!this.readonly) {
             const selObj = this.selObj;
-            if (selObj && (selObj.type === 'step' || selObj.type === 'link'
-                  || selObj.type === 'subflow' || selObj.type === 'note')) {
+            if (selObj.type === 'step' || selObj.type === 'link'
+                  || selObj.type === 'subflow' || selObj.type === 'note') {
                 (selObj as any).edit(text => {
                     if (selObj.type === 'step' || selObj.type === 'subflow') {
                         (selObj.flowElement as any).name = text;
@@ -287,12 +288,12 @@ export class FlowDiagram {
     private onContextMenu(e: MouseEvent) {
         e.preventDefault();
         this.selectObj = this.selObj;
-        const element = this.selectObj?.flowElement || this.flow;
+        const element = this.selectObj.flowElement;
         if (element) {
             const provider = this.contextMenuProvider || new DefaultMenuProvider(this);
             const evt = {
                 element,
-                instances: this.selObj?. instances
+                instances: this.selObj?.instances
             };
             const items = provider.getItems(evt);
             if (items && items.length > 0) {
@@ -316,9 +317,9 @@ export class FlowDiagram {
         });
     }
 
-    get selObj(): SelectObj | undefined {
-        let selObj = this.diagram.selection.getSelectObj();
-        if (selObj?.type === 'label') {
+    private get selObj(): SelectObj {
+        let selObj = this.diagram.selection.getSelectObj() || this.diagram;
+        if (selObj.type === 'label') {
             selObj = (selObj as Label).owner;
         }
         return selObj;

@@ -4,11 +4,8 @@ import { StepInstance } from './model/step';
 
 export type FlowElementInstance = FlowInstance | StepInstance | SubflowInstance;
 
-/**
- * Event is fired with no element on first deselect.
- */
 export interface FlowElementEvent {
-    element?: FlowElement;
+    element: FlowElement;
     instances?: FlowElementInstance[];
 }
 export interface FlowElementSelectEvent extends FlowElementEvent { }

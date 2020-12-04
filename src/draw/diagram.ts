@@ -36,7 +36,6 @@ export class Diagram extends Shape {
   scrollContainerId?: string;
   stepId?: string;
   instance?: FlowInstance = null;
-  instances?: FlowInstance[]; // SelectObj type
   stepInstanceId?: string;
   drawBoxes = true;
 
@@ -59,6 +58,10 @@ export class Diagram extends Shape {
   }
 
   get diagram(): Diagram { return this; }
+
+  get instances(): FlowInstance[] | null {
+    return this.instance ? [ this.instance ] : null;
+  }
 
   get dpRatio(): number {
     if (window.devicePixelRatio) {
@@ -145,7 +148,6 @@ export class Diagram extends Shape {
     }
     if (instance) {
       this.instance = instance;
-      this.instances = [ instance ];
     }
 
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1155,6 +1157,7 @@ export class Diagram extends Shape {
     }
   }
 
+  // TODO: values
   listenForInstanceUpdates() {
     if (!this.options.webSocketUrl) return; // not configured
     if (!this.instance) return; // no instance to listen on

@@ -22,7 +22,7 @@ export class Configurator {
     private tabContent: HTMLDivElement;
     private activeTab?: { name: string, tab: HTMLLIElement };
 
-    flowElement?: FlowElement;
+    flowElement: FlowElement;
     instance?: FlowElementInstance;
     template?: ConfigTemplate;
 
