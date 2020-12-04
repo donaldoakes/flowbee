@@ -279,9 +279,13 @@
   }
   .flowbee-config-tab-content label {
     height: fit-content;
+    padding-top: 3px;
   }
   .flowbee-config-tab-content input {
     background-color: #ffffff;
+  }
+  .flowbee-config-tab-content input[type=checkbox] {
+    margin-top: 5px;
   }
   .flowbee-config-tab-content select {
     width: fit-content;

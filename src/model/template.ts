@@ -10,6 +10,8 @@ export type WidgetType =
     'radio' |
     'textarea' |
     'select' |
+    'date' |
+    'datetime' |
     'table' |
     'note' |
     'source';

@@ -148,13 +148,15 @@ export class Configurator {
             }
             const readonly = !!this.instance || widget.readonly || this.flowElement.readonly;
 
-            if (widget.type === 'text') {
+            // TODO separate date/datetime entry widget
+            if (widget.type === 'text' || widget.type === 'datetime') {
                 const text = document.createElement('input') as HTMLInputElement;
                 text.type = 'text';
-                text.value = value;
+                text.value = value && widget.type === 'datetime' ? this.datetime(new Date(value)) : value;
                 if (readonly) {
                     text.readOnly = true;
-                    text.style.width = 'fit-content';
+                    text.style.borderColor = 'transparent';
+                    text.style.outline = 'none';
                 } else {
                     text.onchange = e => this.update(widget.attribute, text.value);
                 }
@@ -284,6 +286,11 @@ export class Configurator {
     }
     toYaml(indent = 2): string {
         return jsYaml.safeDump(this.template, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+    }
+
+    datetime(date: Date): string {
+        const millis = String(date.getMilliseconds()).padStart(3, '0');
+        return `${date.toLocaleString(navigator.language, { hour12: false })}:${millis}`;
     }
 
     static parseTemplate(text: string, file: string): ConfigTemplate {
