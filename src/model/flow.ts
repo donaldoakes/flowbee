@@ -20,7 +20,6 @@ export interface Subflow extends FlowElement {
     id: string;
     name: string;
     steps?: Step[];
-    subflows?: Flow[];
     attributes?: {[key: string]: string};
 }
 
