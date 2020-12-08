@@ -1,4 +1,4 @@
-import { FlowElement } from './element';
+import { FlowElement, FlowElementStatus } from './element';
 import { Link } from './link';
 
 /**
@@ -12,14 +12,11 @@ export interface Step extends FlowElement {
     attributes?: {[key: string]: string};
 }
 
-// TODO: combine with FlowStatus?
-export type StepStatus = 'In Progress' | 'Waiting' | 'Failed' | 'Errored' | 'Completed' | 'Canceled'
-
 export interface StepInstance {
     id: string;
     flowInstanceId: string;
     stepId: string;
-    status: StepStatus;
+    status: FlowElementStatus;
     message?: string;
     result?: string;
     start?: Date;

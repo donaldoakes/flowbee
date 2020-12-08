@@ -10,6 +10,15 @@ export interface FlowElement {
     readonly?: boolean;
 }
 
+export type FlowElementStatus =
+    'Pending' |
+    'In Progress' |
+    'Waiting' |
+    'Failed' |
+    'Errored' |
+    'Completed' |
+    'Canceled';
+
 /**
  * Title for a flow element
  */

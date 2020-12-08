@@ -1,6 +1,6 @@
 import { Step, StepInstance } from './step';
 import { Note } from './note';
-import { FlowElement, FlowElementType } from './element';
+import { FlowElement, FlowElementStatus, FlowElementType } from './element';
 
 /**
  * Model for a flow diagram
@@ -23,13 +23,12 @@ export interface Subflow extends FlowElement {
     attributes?: {[key: string]: string};
 }
 
-export type FlowStatus = 'Pending' | 'In Progress' | 'Waiting' | 'Errored' | 'Completed' | 'Canceled'
 
 export interface FlowInstance {
     id: string;
     runId?: string;
     flowPath: string;
-    status: FlowStatus;
+    status: FlowElementStatus;
     stepInstances?: StepInstance[];
     subflowInstances?: SubflowInstance[];
     values?: Values;
@@ -51,13 +50,11 @@ export interface FlowEvent {
     instance: FlowInstance | SubflowInstance | StepInstance;
 }
 
-export type SubflowStatus = 'Pending' | 'In Progress' | 'Waiting' | 'Errored' | 'Completed' | 'Canceled'
-
 export interface SubflowInstance {
     id: string;
     flowInstanceId: string;
     subflowId: string;
-    status: SubflowStatus;
+    status: FlowElementStatus;
     stepInstances?: StepInstance[];
     start?: Date;
     end?: Date;
