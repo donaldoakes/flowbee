@@ -18,3 +18,4 @@ export { DrawingOptions } from './draw/options';
 export { MenuItem, ContextMenuProvider, DefaultMenuProvider, ContextMenuSelectEvent } from './menu';
 export { DialogMessage, DialogProvider, DefaultDialog } from './dialog';
 export { Configurator } from './config';
+export { Table, TableUpdateEvent } from './table';
