@@ -615,7 +615,8 @@ export class Diagram extends Shape {
     }
   }
 
-  addStep(descriptorName: string, x: number, y: number): Step {
+  addStep(descriptorName: string, xi: number, yi: number): Step {
+    const { x, y } = this.unscale(xi, yi);
     const descriptor = this.getDescriptor(descriptorName);
     let steps = this.steps.slice(0);
     if (this.subflows) {
@@ -674,7 +675,8 @@ export class Diagram extends Shape {
     }
   }
 
-  addSubflow(type: string, x: number, y: number): Subflow {
+  addSubflow(type: string, xi: number, yi: number): Subflow {
+    const { x, y } = this.unscale(xi, yi);
     const startStepId = this.genId(this.steps, 'step');
     const startLinkId = this.genId(this.links, 'link');
     const subprocId = this.genId(this.subflows, 'subflow');
@@ -690,7 +692,8 @@ export class Diagram extends Shape {
     return subflow;
   }
 
-  addNote(x: number, y: number): Note {
+  addNote(xi: number, yi: number): Note {
+    const { x, y } = this.unscale(xi, yi);
     const note = Note.create(this, this.genId(this.notes, 'note'), x, y);
     if (!this.flow.notes) {
       this.flow.notes = [];
@@ -1315,8 +1318,7 @@ export class Diagram extends Shape {
 
   onMouseDown(e: MouseEvent) {
     const rect = this.canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const { x, y } = this.unscale(e.clientX - rect.left, e.clientY - rect.top);
 
     // starting points for drag
     this.dragX = x;
@@ -1356,8 +1358,8 @@ export class Diagram extends Shape {
       const selObj = this.mode === 'connect' ? this.connectObj : this.selection.getSelectObj();
       if (selObj?.type === 'step') {
         const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const { x, y } = this.unscale(e.clientX - rect.left, e.clientY - rect.top);
+
         const destObj = this.getHoverObj(x, y);
         if (destObj && destObj.type === 'step') {
           const srcStep = selObj as Step;
@@ -1407,8 +1409,7 @@ export class Diagram extends Shape {
 
   onMouseMove(e: MouseEvent) {
     const rect = this.canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const { x, y } = this.unscale(e.clientX - rect.left, e.clientY - rect.top);
     this.anchor = -1;
 
     let hoverObj: SelectObj;
@@ -1459,8 +1460,7 @@ export class Diagram extends Shape {
     if (!this.readonly && this.dragX && this.dragY) {
       this.drag = true;
       const rect = this.canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const { x, y } = this.unscale(e.clientX - rect.left, e.clientY - rect.top);
       const deltaX = x - this.dragX;
       const deltaY = y - this.dragY;
 
@@ -1599,11 +1599,6 @@ export class Diagram extends Shape {
   }
 
   getHoverObj(x: number, y: number): SelectObj | undefined {
-    if (this.zoom !== 100) {
-      const scale = this.zoom / 100;
-      x = x / scale;
-      y = y / scale;
-    }
 
     if (this.label?.isHover(x, y)) {
       return this.label;
@@ -1660,6 +1655,15 @@ export class Diagram extends Shape {
       if (this.steps[i].isHover(x, y)) {
         return this.steps[i];
       }
+    }
+  }
+
+  unscale(x: number, y: number): { x: number, y: number } {
+    if (this.zoom !== 100) {
+      const scale = this.zoom / 100;
+      return { x: x / scale, y: y / scale };
+    } else {
+      return { x, y };
     }
   }
 

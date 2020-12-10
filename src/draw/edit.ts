@@ -22,6 +22,20 @@ export class Edit {
     render(text: string, display: Display, onchange: (text: string) => void, onkey?: (e: KeyboardEvent) => void) {
         this.diagram.context.clearRect(display.x, display.y, display.w, display.h);
 
+        let x = display.x;
+        let y = display.y;
+        let w = display.w;
+        let h = display.h;
+        let fontSize = this.font.size;
+        if (this.diagram.zoom !== 100) {
+            const scale = this.diagram.zoom / 100;
+            x = x * scale;
+            y = y * scale;
+            w = w * scale;
+            h = h * scale;
+            fontSize = fontSize * this.diagram.zoom / 100;
+        }
+
         // render contenteditable element
         const textedit = document.createElement('p');
         textedit.setAttribute('contenteditable', 'true');
@@ -29,11 +43,12 @@ export class Edit {
         textedit.style.color = this.color;
         textedit.style.position = 'absolute';
         const rect = this.diagram.canvas.getBoundingClientRect();
-        textedit.style.left = (rect.left + window.scrollX + display.x) + 'px';
-        textedit.style.top = (rect.top + window.scrollY + display.y - this.font.size) + 'px';
-        textedit.style.width = display.w + 'px';
-        textedit.style.height = display.h + 'px';
+        textedit.style.left = (rect.left + window.scrollX + x) + 'px';
+        textedit.style.top = (rect.top + window.scrollY + y - fontSize) + 'px';
+        textedit.style.width = w + 'px';
+        textedit.style.height = h + 'px';
         textedit.style.font = this.font.name;
+        textedit.style.fontSize = fontSize + 'px';
         textedit.style.outline = 'none';
         textedit.style.textAlign = this.textAlign;
         textedit.style.whiteSpace = 'pre';
