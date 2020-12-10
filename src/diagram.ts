@@ -191,7 +191,7 @@ export class FlowDiagram {
         const selObj = this.diagram.selectElement(elementId);
         if (selObj) {
             this.selectObj = selObj;
-            // this.diagram.scrollIntoView(selObj as any);
+            if (scrollIntoView) this.diagram.scrollIntoView(selObj as any);
         }
     }
 

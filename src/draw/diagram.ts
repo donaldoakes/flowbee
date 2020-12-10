@@ -33,7 +33,6 @@ export class Diagram extends Shape {
   zoom = 100;
   mode: 'select' | 'connect' | 'runtime' = 'select';
   container?: HTMLElement;
-  scrollContainerId?: string;
   stepId?: string;
   instance?: FlowInstance = null;
   stepInstanceId?: string;
@@ -1267,10 +1266,7 @@ export class Diagram extends Shape {
     const centerX = item.display.x + item.display.w / 2;
     const centerY = item.display.y + item.display.h / 2;
 
-    let container = document.body;
-    if (this.scrollContainerId) {
-      container = document.getElementById(this.scrollContainerId);
-    }
+    const container = this.container;
 
     const clientRect = this.canvas.getBoundingClientRect();
     const canvasLeftX = clientRect.left;
