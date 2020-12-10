@@ -187,6 +187,14 @@ export class FlowDiagram {
         return getFlowName(this.flow);
     }
 
+    select(elementId: string, scrollIntoView = false) {
+        const selObj = this.diagram.selectElement(elementId);
+        if (selObj) {
+            this.selectObj = selObj;
+            // this.diagram.scrollIntoView(selObj as any);
+        }
+    }
+
     // Events
 
     private _onFlowChange = new TypedEvent<FlowChangeEvent>();

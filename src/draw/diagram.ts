@@ -11,7 +11,7 @@ import { DiagramOptions } from '../options';
 import { Flow, FlowEvent, FlowInstance, SubflowInstance } from '../model/flow';
 import { StepInstance } from '../model/step';
 import { Display } from './display';
-import { FlowElementType, getFlowName } from '../model/element';
+import { FlowElement, FlowElementType, getFlowName } from '../model/element';
 import { DrawingOptions } from './options';
 import { Grid } from './grid';
 import { LinkStatus } from '../model/link';
@@ -1235,6 +1235,29 @@ export class Diagram extends Shape {
         }
       }
     });
+  }
+
+  selectElement(id: string): SelectObj | undefined {
+    if (this.mode === 'connect') return;
+    let selObj: SelectObj;
+    // TODO others besides steps
+    if (id.startsWith('s')) {
+      selObj = this.getStep(id);
+      if (!selObj && this.subflows) {
+        for (const subflow of this.subflows) {
+          selObj = subflow.getStep(id);
+          if (selObj) break;
+        }
+      }
+    }
+    if (selObj) {
+      this.selection.unselect();
+      this.draw();
+      this.selection.setSelectObj(selObj);
+      this.selection.reselect();
+      selObj.select();
+      return selObj;
+    }
   }
 
   /**

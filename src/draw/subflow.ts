@@ -68,28 +68,8 @@ export class Subflow extends Shape {
       w: 0,
       h: 0,
       isHover: function (x: number, y: number): boolean {
-        let hov = x >= this.x && x <= this.x + this.w &&
+        return x >= this.x && x <= this.x + this.w &&
           y >= this.y && y <= this.y + this.h;
-        if (!hov) {
-          const context = subflow.diagram.context;
-          context.lineWidth = subflow.diagram.options.subflow.hitWidth;
-          const display = this.subflow.display;
-          const r = this.subflow.diagram.options.subflow.roundingRadius;
-          context.beginPath();
-          context.moveTo(display.x + r, display.y);
-          context.lineTo(display.x + display.w - r, display.y);
-          context.quadraticCurveTo(display.x + display.w, display.y, x + display.w, display.y + r);
-          context.lineTo(display.x + display.w, display.y + display.h - r);
-          context.quadraticCurveTo(display.x + display.w, display.y + display.h, display.x + display.w - r, display.y + display.h);
-          context.lineTo(display.x + r, display.y + display.h);
-          context.quadraticCurveTo(display.x, display.y + display.h, display.x, display.y + display.h - r);
-          context.lineTo(display.x, display.y + r);
-          context.quadraticCurveTo(display.x, display.y, display.x + r, display.y);
-          context.closePath();
-          hov = context.isPointInStroke(x, y);
-          context.lineWidth = this.subflow.diagram.options.defaultLineWidth;
-        }
-        return hov;
       }
     };
 
