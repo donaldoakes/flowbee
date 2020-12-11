@@ -347,7 +347,7 @@ export class Diagram extends Shape {
     });
 
     let highlighted = null;
-    const sequence = this.getSequence(true);
+    const sequence = this.getSequence(animate); // strict runtime sequence only if animating
 
     if (sequence) {
       const update = function (it: (Step | Link | Subflow), slice: number) {
@@ -817,7 +817,10 @@ export class Diagram extends Shape {
       if (link) {
         const downstreamStepInsts = this.getStepInstances(link.to.step.id);
         if (downstreamStepInsts.length > 0) {
-          return 'Traversed';
+          const upstreamStepInsts = this.getStepInstances(link.from.step.id);
+          if (upstreamStepInsts.length > 0) {
+              return 'Traversed';
+          }
         }
       }
     }

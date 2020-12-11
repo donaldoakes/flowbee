@@ -219,7 +219,10 @@ export class Subflow extends Shape {
       if (link) {
         const downstreamStepInsts = this.getStepInstances(link.to.step.id);
         if (downstreamStepInsts.length > 0) {
-          return 'Traversed';
+          const upstreamStepInsts = this.getStepInstances(link.from.step.id);
+          if (upstreamStepInsts.length > 0) {
+            return 'Traversed';
+          }
         }
       }
     }
