@@ -23,11 +23,11 @@ export type FlowElementStatus =
  * Title for a flow element
  */
 export const getLabel = (element: FlowElement): string => {
-    if (element.type === 'flow') return getFlowName(element as Flow);
-    else if (element.type === 'step') return (element as Step).name.replace(/[\r\n]+/g," ");
+    if (element.type === 'step') return (element as Step).name.replace(/[\r\n]+/g," ");
     else if (element.type === 'subflow') return (element as Subflow).name;
     else if (element.type === 'note') return 'Note';
     else if (element.type === 'link') return 'Link';
+    else return getFlowName(element as Flow);
 };
 
 /**
