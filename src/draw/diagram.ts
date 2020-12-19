@@ -34,7 +34,7 @@ export class Diagram extends Shape {
   mode: 'select' | 'connect' | 'runtime' = 'select';
   container?: HTMLElement;
   stepId?: string;
-  instance?: FlowInstance = null;
+  _instance?: FlowInstance = null;
   stepInstanceId?: string;
   drawBoxes = true;
 
@@ -57,6 +57,17 @@ export class Diagram extends Shape {
   }
 
   get diagram(): Diagram { return this; }
+
+  get instance(): FlowInstance {
+    return this._instance;
+  }
+  set instance(instance: FlowInstance) {
+    const listen = this.options.webSocketUrl && this._instance?.id !== instance.id;
+    this._instance = instance;
+    if (listen) {
+      this.listenForInstanceUpdates();
+    }
+  }
 
   get instances(): FlowInstance[] | null {
     return this.instance ? [ this.instance ] : null;
@@ -222,10 +233,6 @@ export class Diagram extends Shape {
       if (highlighted) {
         this.scrollIntoView(highlighted, this.stepId ? 0 : 500);
       }
-    }
-
-    if (this.instance && this.options.webSocketUrl) {
-      this.listenForInstanceUpdates();
     }
 
     if (this.instance) {
