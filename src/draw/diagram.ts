@@ -11,7 +11,7 @@ import { DiagramOptions } from '../options';
 import { Flow, FlowEvent, FlowInstance, SubflowInstance } from '../model/flow';
 import { StepInstance } from '../model/step';
 import { Display } from './display';
-import { FlowElement, FlowElementType, getFlowName } from '../model/element';
+import { FlowElementType, getFlowName } from '../model/element';
 import { DrawingOptions } from './options';
 import { Grid } from './grid';
 import { LinkStatus } from '../model/link';
@@ -525,7 +525,7 @@ export class Diagram extends Shape {
    * Returns first step whose descriptor category is Start
    */
   getStart(): Step | undefined {
-    const startDescriptors = this.descriptors.filter(d => d.category === 'start');
+    const startDescriptors = this.descriptors.filter(d => d.category === 'start' || d.name === 'Start'); // TODO flowbiz
     return this.steps.find(step => {
       const desc = startDescriptors.find(d => d.path === step.step.path);
       if (desc) return desc;

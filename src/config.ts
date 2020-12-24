@@ -34,6 +34,34 @@ export class Configurator {
         this._onFlowElementUpdate.on(listener);
     }
 
+    get width(): number {
+        return this.div.offsetWidth;
+    }
+    set width(width: number) {
+        this.div.style.width = width + 'px';
+    }
+
+    get height(): number {
+        return this.div.offsetHeight;
+    }
+    set height(height: number) {
+        this.div.style.height = height + 'px';
+    }
+
+    get left(): number {
+        return this.div.offsetLeft;
+    }
+    set left(left: number) {
+        this.div.style.left = left + 'px';
+    }
+
+    get top(): number {
+        return this.div.offsetTop;
+    }
+    set top(top: number) {
+        this.div.style.top = top + 'px';
+    }
+
     constructor() {
         // build html
         this.div = document.createElement('div') as HTMLDivElement;
