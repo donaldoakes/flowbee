@@ -30,6 +30,7 @@ export class Configurator {
 
     private options: ConfiguratorOptions;
 
+    private isSized = false;
     private container: HTMLElement;
     private drag: { x: number, y: number } | null = null;
 
@@ -144,8 +145,11 @@ export class Configurator {
 
         this.div.style.display = 'flex';
 
-        this.container.style.minHeight = this.stylesObj['flowbee-configurator'].height;
-        this.size();
+        if (!this.isSized) {
+            this.size();
+            this.container.style.minHeight = this.stylesObj['flowbee-configurator'].height;
+            this.isSized = true;
+        }
 
         // calculate tab content height based on total
         this.tabContent.style.height = (this.div.clientHeight - 30) + 'px';
