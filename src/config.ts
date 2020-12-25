@@ -18,6 +18,7 @@ export class Configurator {
     private stylesObj: object;
 
     private div: HTMLDivElement;
+    private header: HTMLDivElement;
     private title: HTMLDivElement;
     private tabs: HTMLUListElement;
     private tabContent: HTMLDivElement;
@@ -29,23 +30,23 @@ export class Configurator {
 
     private options: ConfiguratorOptions;
 
+    private container: HTMLElement;
+    private drag: { x: number, y: number } | null = null;
+
     private _onFlowElementUpdate = new TypedEvent<FlowElementUpdateEvent>();
     onFlowElementUpdate(listener: Listener<FlowElementUpdateEvent>) {
         this._onFlowElementUpdate.on(listener);
     }
 
     get width(): number {
-        return this.div.offsetWidth;
+        return this.div.clientWidth;
     }
     set width(width: number) {
         this.div.style.width = width + 'px';
     }
 
     get height(): number {
-        return this.div.offsetHeight;
-    }
-    set height(height: number) {
-        this.div.style.height = height + 'px';
+        return this.div.clientHeight;
     }
 
     get left(): number {
@@ -62,14 +63,16 @@ export class Configurator {
         this.div.style.top = top + 'px';
     }
 
-    constructor() {
+    constructor(container?: HTMLElement) {
+        this.container = container || document.body;
+
         // build html
         this.div = document.createElement('div') as HTMLDivElement;
-        const header = document.createElement('div') as HTMLDivElement;
-        header.className = 'flowbee-config-header';
+        this.header = document.createElement('div') as HTMLDivElement;
+        this.header.className = 'flowbee-config-header';
         this.title = document.createElement('div') as HTMLDivElement;
         this.title.className = 'flowbee-config-title';
-        header.appendChild(this.title);
+        this.header.appendChild(this.title);
         const close = document.createElement('div') as HTMLDivElement;
         close.className = 'flowbee-config-close';
         close.onclick = _e => this.close();
@@ -78,8 +81,8 @@ export class Configurator {
         closeImg.alt = closeImg.title = 'Close Configurator';
         closeImg.setAttribute('data-icon', 'close.svg');
         close.appendChild(closeImg);
-        header.appendChild(close);
-        this.div.appendChild(header);
+        this.header.appendChild(close);
+        this.div.appendChild(this.header);
         const content = document.createElement('div') as HTMLDivElement;
         content.className = 'flowbee-config-content';
         const tabbedContent = document.createElement('div') as HTMLDivElement;
@@ -93,9 +96,20 @@ export class Configurator {
         content.appendChild(tabbedContent);
         this.div.appendChild(content);
         document.body.appendChild(this.div);
+
+        new ResizeObserver(() => {
+            if (this.isOpen) {
+                this.resize();
+            }
+        }).observe(this.container);
      }
 
-    render(flowElement: FlowElement, instances: FlowElementInstance[], template: ConfigTemplate | string, options: ConfiguratorOptions) {
+    render(
+        flowElement: FlowElement,
+        instances: FlowElementInstance[],
+        template: ConfigTemplate | string,
+        options: ConfiguratorOptions
+    ) {
 
         if (!flowElement) throw new Error('flowElement is required');
 
@@ -130,8 +144,35 @@ export class Configurator {
 
         this.div.style.display = 'flex';
 
+        this.container.style.minHeight = this.stylesObj['flowbee-configurator'].height;
+        this.size();
+
         // calculate tab content height based on total
         this.tabContent.style.height = (this.div.clientHeight - 30) + 'px';
+
+        this.drag = null;
+        if (this.options.movable) {
+            this.header.style.cursor = 'move';
+            this.header.onmousedown = e => {
+                e.preventDefault();
+                this.drag = { x: e.pageX, y: e.pageY };
+            };
+            document.onmouseup = _e => {
+                this.drag = null;
+            };
+            this.div.onmousemove = this.container.onmousemove = (e: MouseEvent) => {
+                if (this.drag) {
+                    this.div.style.position = 'absolute';
+                    const dx = e.pageX - this.drag.x;
+                    const dy = e.pageY - this.drag.y;
+                    this.move(dx, dy);
+                    this.drag = { x: this.drag.x + dx, y: this.drag.y + dy };
+                }
+            };
+            document.body.onmouseleave = _e => {
+                this.drag = null;
+            };
+        }
     }
 
     addTab(label: string): HTMLLIElement {
@@ -305,6 +346,72 @@ export class Configurator {
 
     close() {
         this.div.style.display = 'none';
+    }
+
+    size() {
+        const pad = 20;
+        this.width = this.container.clientWidth - pad * 2;
+        this.left = this.container.offsetLeft + pad;
+        this.top = this.container.offsetTop + this.container.clientHeight - this.height - pad;
+    }
+
+    get maxX() {
+        // TODO border width 1px hardcoded
+        return this.container.offsetLeft + this.container.clientWidth - 1;
+    }
+    get maxY() {
+        return this.container.offsetTop + this.container.clientHeight - 1;
+    }
+
+    /**
+     * Resize if needed to fit within container
+     */
+    resize() {
+        if (this.width > this.container.clientWidth) {
+            this.width = this.container.clientWidth;
+        }
+        if (this.left < this.container.offsetLeft + 3) {
+            this.left = this.container.offsetLeft + 3;
+        }
+        const maxX = this.maxX;
+        if (this.left + this.width > maxX - 2) {
+            this.left = maxX - this.width + 2;
+        }
+        if (this.top < this.container.offsetTop + 2) {
+            this.top = this.container.offsetTop + 2;
+        }
+        const maxY = this.maxY;
+        if (this.top + this.height > maxY - 1) {
+            this.top = maxY - this.height + 1;
+        }
+    }
+
+    /**
+     * Move configurator when dragged
+     */
+    move(dx: number, dy: number) {
+        let left = this.left + dx;
+        let top = this.top + dy;
+        if (this.container) {
+            if (dx < 0 && left < this.container.offsetLeft) {
+                left = this.container.offsetLeft;
+            } else if (dx > 0) {
+                const maxX = this.maxX;
+                if (left + this.width > maxX) {
+                    left = maxX - this.width;
+                }
+            }
+            if (dy < 0 && top < this.container.offsetTop) {
+                top = this.container.offsetTop;
+            } else if (dy > 0) {
+                const maxY = this.maxY;
+                if (top + this.height > maxY) {
+                    top = maxY - this.height;
+                }
+            }
+        }
+        this.left = left;
+        this.top = top;
     }
 
     /**
