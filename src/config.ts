@@ -483,9 +483,9 @@ export class Configurator {
         let height = this.height;
         if (loc.indexOf('w') >= 0) {
             width = Math.max(this.width - dx, this.minWidth);
-            dx = this.width - width;
-            left = this.left + dx;
+            left = this.left + this.width - width;
             if (left < this.container.offsetLeft) {
+                width = width - (this.container.offsetLeft - left);
                 left = this.container.offsetLeft;
             }
         } else if (loc.indexOf('e') >= 0) {
@@ -497,9 +497,9 @@ export class Configurator {
         }
         if (loc.startsWith('n')) {
             height = Math.max(this.height - dy, this.minHeight);
-            dy = this.height - height;
-            top = this.top + dy;
+            top = this.top + this.height - height;
             if (top < this.container.offsetTop) {
+                height = height - (this.container.offsetTop - top);
                 top = this.container.offsetTop;
             }
         } else if (loc.startsWith('s')) {
