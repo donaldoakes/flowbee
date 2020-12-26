@@ -20,6 +20,7 @@ export class Configurator {
     private div: HTMLDivElement;
     private header: HTMLDivElement;
     private title: HTMLDivElement;
+    private content: HTMLDivElement;
     private tabs: HTMLUListElement;
     private tabContent: HTMLDivElement;
     private activeTab?: { name: string, tab: HTMLLIElement };
@@ -32,7 +33,8 @@ export class Configurator {
 
     private isSized = false;
     private container: HTMLElement;
-    private drag: { x: number, y: number } | null = null;
+    private drag: Drag | null = null;
+    private edge: Edge | null;
 
     private _onFlowElementUpdate = new TypedEvent<FlowElementUpdateEvent>();
     onFlowElementUpdate(listener: Listener<FlowElementUpdateEvent>) {
@@ -40,14 +42,18 @@ export class Configurator {
     }
 
     get width(): number {
-        return this.div.clientWidth;
+        return this.div.offsetWidth;
     }
     set width(width: number) {
         this.div.style.width = width + 'px';
     }
 
     get height(): number {
-        return this.div.clientHeight;
+        return this.div.offsetHeight;
+    }
+    set height(height: number) {
+        this.div.style.height = height + 'px';
+        this.tabContent.style.height = (this.div.offsetHeight - this.header.offsetHeight - 2) + 'px';
     }
 
     get left(): number {
@@ -84,8 +90,8 @@ export class Configurator {
         close.appendChild(closeImg);
         this.header.appendChild(close);
         this.div.appendChild(this.header);
-        const content = document.createElement('div') as HTMLDivElement;
-        content.className = 'flowbee-config-content';
+        this.content = document.createElement('div') as HTMLDivElement;
+        this.content.className = 'flowbee-config-content';
         const tabbedContent = document.createElement('div') as HTMLDivElement;
         tabbedContent.className = 'flowbee-config-tabbed-content';
         this.tabs = document.createElement('ul') as HTMLUListElement;
@@ -94,13 +100,13 @@ export class Configurator {
         this.tabContent = document.createElement('div') as HTMLDivElement;
         this.tabContent.className = 'flowbee-config-tab-content';
         tabbedContent.appendChild(this.tabContent);
-        content.appendChild(tabbedContent);
-        this.div.appendChild(content);
+        this.content.appendChild(tabbedContent);
+        this.div.appendChild(this.content);
         document.body.appendChild(this.div);
 
         new ResizeObserver(() => {
             if (this.isOpen) {
-                this.resize();
+                this.fit();
             }
         }).observe(this.container);
      }
@@ -147,25 +153,51 @@ export class Configurator {
 
         if (!this.isSized) {
             this.size();
-            this.container.style.minHeight = this.stylesObj['flowbee-configurator'].height;
+            this.container.style.minHeight = this.minHeight + 'px';
             this.isSized = true;
         }
 
         // calculate tab content height based on total
-        this.tabContent.style.height = (this.div.clientHeight - 30) + 'px';
+        this.tabContent.style.height = (this.div.offsetHeight - this.header.offsetHeight - 2) + 'px';
 
         this.drag = null;
-        if (this.options.movable) {
+        if (this.options.moveAndResize) {
             this.header.style.cursor = 'move';
             this.header.onmousedown = e => {
-                e.preventDefault();
-                this.drag = { x: e.pageX, y: e.pageY };
+                if (this.edge) {
+                    e.preventDefault();
+                    this.edge.drag = { x: e.pageX, y: e.pageY };
+                } else {
+                    e.preventDefault();
+                    this.drag = { x: e.pageX, y: e.pageY };
+                }
+            };
+            this.container.onmousedown = this.div.onmousedown = e => {
+                if (this.edge) {
+                    e.preventDefault();
+                    this.edge.drag = { x: e.pageX, y: e.pageY };
+                }
             };
             document.onmouseup = _e => {
                 this.drag = null;
+                if (this.edge) this.edge.drag = null;
             };
-            this.div.onmousemove = this.container.onmousemove = (e: MouseEvent) => {
-                if (this.drag) {
+            this.div.onmousemove = this.container.onmousemove = this.content.onmousemove = (e: MouseEvent) => {
+                if (e.buttons === 0) {
+                    this.edge = this.findEdge(e.pageX, e.pageY);
+                    if (this.edge) {
+                        document.body.style.cursor = this.edge.cursor;
+                        this.header.style.cursor = this.edge.cursor;
+                    } else {
+                        document.body.style.cursor = 'default';
+                        this.header.style.cursor = 'move';
+                    }
+                } else if (this.edge?.drag) {
+                    const dx = e.pageX - this.edge.drag.x;
+                    const dy = e.pageY - this.edge.drag.y;
+                    this.resize(this.edge.loc, dx, dy);
+                    this.edge.drag = { x: this.edge.drag.x + dx, y: this.edge.drag.y + dy };
+                } else if (this.drag) {
                     this.div.style.position = 'absolute';
                     const dx = e.pageX - this.drag.x;
                     const dy = e.pageY - this.drag.y;
@@ -175,6 +207,8 @@ export class Configurator {
             };
             document.body.onmouseleave = _e => {
                 this.drag = null;
+                this.edge = null;
+                document.body.style.cursor = 'default';
             };
         }
     }
@@ -353,47 +387,71 @@ export class Configurator {
     }
 
     size() {
-        const pad = 20;
-        this.width = this.container.clientWidth - pad * 2;
-        this.left = this.container.offsetLeft + pad;
-        this.top = this.container.offsetTop + this.container.clientHeight - this.height - pad;
+        const leftRightPad = this.container.offsetWidth > 100 ? 50 : 0;
+        const bottomPad = 25;
+        this.width = this.container.offsetWidth - leftRightPad * 2;
+        this.height = this.minHeight;
+        this.left = this.container.offsetLeft + leftRightPad;
+        this.top = this.container.offsetTop + this.container.offsetHeight - this.height - bottomPad;
     }
 
-    get maxX() {
-        // TODO border width 1px hardcoded
-        return this.container.offsetLeft + this.container.clientWidth - 1;
+    private findEdge(x: number, y: number): Edge | null {
+        const hit = 8;
+        const north = Math.abs(this.top - y) <= hit;
+        const south = !north && Math.abs(this.top + this.height - y) <= hit;
+        const west = Math.abs(this.left - x) <= hit;
+        const east = !west && Math.abs(this.left + this.width - x) <= hit;
+        if (north && west) return new Edge('nw');
+        else if (north && east) return new Edge('ne');
+        else if (north) return new Edge('n');
+        else if (south && west) return new Edge('sw');
+        else if (south && east) return new Edge('se');
+        else if (south) return new Edge('s');
+        else if (west) return new Edge('w');
+        else if (east) return new Edge('e');
+        else return null;
     }
-    get maxY() {
-        return this.container.offsetTop + this.container.clientHeight - 1;
+
+    private get maxX() {
+        return this.container.offsetLeft + this.container.offsetWidth;
+    }
+    private get maxY() {
+        return this.container.offsetTop + this.container.offsetHeight;
+    }
+    private get minHeight() {
+        return this.styles.getSize(this.stylesObj['flowbee-configurator'].height);
+    }
+    private get minWidth() {
+        return 200;
     }
 
     /**
      * Resize if needed to fit within container
      */
-    resize() {
-        if (this.width > this.container.clientWidth) {
-            this.width = this.container.clientWidth;
+    private fit() {
+        if (this.width > this.container.offsetWidth) {
+            this.width = this.container.offsetWidth;
         }
-        if (this.left < this.container.offsetLeft + 3) {
-            this.left = this.container.offsetLeft + 3;
+        if (this.left < this.container.offsetLeft) {
+            this.left = this.container.offsetLeft;
         }
         const maxX = this.maxX;
-        if (this.left + this.width > maxX - 2) {
-            this.left = maxX - this.width + 2;
+        if (this.left + this.width > maxX) {
+            this.left = maxX - this.width;
         }
-        if (this.top < this.container.offsetTop + 2) {
-            this.top = this.container.offsetTop + 2;
+        if (this.top < this.container.offsetTop) {
+            this.top = this.container.offsetTop;
         }
         const maxY = this.maxY;
-        if (this.top + this.height > maxY - 1) {
-            this.top = maxY - this.height + 1;
+        if (this.top + this.height > maxY) {
+            this.top = maxY - this.height;
         }
     }
 
     /**
      * Move configurator when dragged
      */
-    move(dx: number, dy: number) {
+    private move(dx: number, dy: number) {
         let left = this.left + dx;
         let top = this.top + dy;
         if (this.container) {
@@ -418,6 +476,45 @@ export class Configurator {
         this.top = top;
     }
 
+    private resize(loc: Loc, dx: number, dy: number) {
+        let left = this.left;
+        let top = this.top;
+        let width = this.width;
+        let height = this.height;
+        if (loc.indexOf('w') >= 0) {
+            width = Math.max(this.width - dx, this.minWidth);
+            dx = this.width - width;
+            left = this.left + dx;
+            if (left < this.container.offsetLeft) {
+                left = this.container.offsetLeft;
+            }
+        } else if (loc.indexOf('e') >= 0) {
+            width = Math.max(this.width + dx, this.minWidth);
+            const maxX = this.maxX;
+            if (left + width > maxX) {
+                width = maxX - left;
+            }
+        }
+        if (loc.startsWith('n')) {
+            height = Math.max(this.height - dy, this.minHeight);
+            dy = this.height - height;
+            top = this.top + dy;
+            if (top < this.container.offsetTop) {
+                top = this.container.offsetTop;
+            }
+        } else if (loc.startsWith('s')) {
+            height = Math.max(this.height + dy, this.minHeight);
+            const maxY = this.maxY;
+            if (top + height > maxY) {
+                height = maxY - top;
+            }
+        }
+        this.left = left;
+        this.top = top;
+        this.width = width;
+        this.height = height;
+    }
+
     /**
      * TODO repeated in diagram.ts
      */
@@ -428,7 +525,7 @@ export class Configurator {
         return jsYaml.safeDump(this.template, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
     }
 
-    datetime(date: Date): string {
+    private datetime(date: Date): string {
         const millis = String(date.getMilliseconds()).padStart(3, '0');
         return `${date.toLocaleString(navigator.language, { hour12: false })}:${millis}`;
     }
@@ -446,4 +543,23 @@ export class Configurator {
     }
 }
 
+type Drag = { x: number, y: number };
+type Loc = 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se';
 
+class Edge {
+    drag: Drag | null;
+
+    constructor(readonly loc: Loc) {}
+
+    get cursor(): string {
+        if (this.loc === 'n' || this.loc === 's') {
+            return 'ns-resize';
+        } else if (this.loc === 'e' || this.loc === 'w') {
+            return 'ew-resize';
+        } else if (this.loc === 'nw' || this.loc === 'se') {
+            return 'nwse-resize';
+        } else if (this.loc === 'ne' || this.loc === 'sw') {
+            return 'nesw-resize';
+        }
+    }
+}

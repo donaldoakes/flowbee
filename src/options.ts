@@ -40,8 +40,7 @@ export const toolboxDefault: ToolboxOptions = {
 export interface ConfiguratorOptions {
     theme?: string;
     sourceTab?: 'json' | 'yaml';
-    resizable?: boolean;
-    movable?: boolean;
+    moveAndResize?: boolean;
 }
 export const configuratorDefault: ConfiguratorOptions = {
     theme: 'light',

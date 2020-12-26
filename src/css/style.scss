@@ -224,6 +224,7 @@
   box-shadow: 0 2px 8px #a8a8a8;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, "Helvetica Neue", sans-serif;
   font-size: 13px;
+  box-sizing: border-box;
 
   .flowbee-config-header {
     display: flex;
@@ -237,13 +238,16 @@
   }
   .flowbee-config-title {
     flex-grow: 1;
+    user-select: none;
   }
   .flowbee-config-close {
     cursor: pointer;
+    user-select: none;
   }
   .flowbee-config-content {
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
   }
   .flowbee-config-tabbed-content {
     display: flex;
@@ -255,6 +259,7 @@
     padding: 0;
     margin: 0;
     overflow: hidden;
+    user-select: none;
   }
   .flowbee-config-tab {
     background-color: #ececec;
