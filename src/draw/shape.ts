@@ -1,5 +1,5 @@
 import { FlowElement } from '../model/element';
-import { Display } from './display';
+import { Display, parseDisplay } from './display';
 import { DrawingOptions } from './options';
 
 /**
@@ -22,26 +22,7 @@ export class Shape {
 
   // get a display object from attribute value
   getDisplay(): Display {
-    const displayAttr = this.flowElement.attributes.display;
-    const display: Display = {};
-    if (displayAttr) {
-      const vals = displayAttr.split(',');
-      vals.forEach(function (val) {
-        if (val.startsWith('x=')) {
-          display.x = parseInt(val.substring(2));
-        }
-        else if (val.startsWith('y=')) {
-          display.y = parseInt(val.substring(2));
-        }
-        else if (val.startsWith('w=')) {
-          display.w = parseInt(val.substring(2));
-        }
-        else if (val.startsWith('h=')) {
-          display.h = parseInt(val.substring(2));
-        }
-      });
-    }
-    return display;
+    return parseDisplay(this.flowElement);
   }
 
   setDisplayAttr(

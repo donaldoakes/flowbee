@@ -47,6 +47,7 @@ export class FlowDiagram {
             diagramDefault,
             this.descriptors
         );
+        this.canvas.setAttribute('flowbee-canvas', this.flowName);
         this.selectObj = this.diagram;
     }
 

@@ -44,7 +44,8 @@ export interface ConfiguratorOptions {
 }
 export const configuratorDefault: ConfiguratorOptions = {
     theme: 'light',
-    sourceTab: null
+    sourceTab: null,
+    moveAndResize: true
 };
 
 export interface FlowTreeOptions {

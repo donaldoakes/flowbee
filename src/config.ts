@@ -7,6 +7,7 @@ import { configuratorDefault, ConfiguratorOptions } from './options';
 import { Styles } from './style/style';
 import { Theme } from './theme';
 import { Table } from './table';
+import { parseDisplay } from './draw/display';
 
 /**
  * TODO: make template optional, and then display all attributes
@@ -156,6 +157,7 @@ export class Configurator {
             this.container.style.minHeight = this.minHeight + 'px';
             this.isSized = true;
         }
+        this.position();
 
         // calculate tab content height based on total
         this.tabContent.style.height = (this.div.offsetHeight - this.header.offsetHeight - 2) + 'px';
@@ -396,6 +398,28 @@ export class Configurator {
         this.height = this.minHeight;
         this.left = this.container.offsetLeft + leftRightPad;
         this.top = this.container.offsetTop + this.container.offsetHeight - this.height - bottomPad;
+    }
+
+    private position() {
+        const display = parseDisplay(this.flowElement);
+        if (display && display.w) { // TODO links
+            const top = this.top - this.container.offsetTop + this.container.scrollTop || 0;
+            const left = this.left - this.container.offsetLeft + this.container.scrollLeft || 0;
+            const bottom = top + this.height;
+            const right = left + this.width;
+            const hidden = top < display.y + display.h && bottom > display.y && left < display.x + display.w && right > display.x;
+            if (hidden) {
+                const displayTop = display.y - this.container.scrollTop; // relative to scroll window
+                const displayBottom = displayTop + display.h;
+                if (this.container.offsetHeight - displayBottom > this.height + 5) {
+                    // there's room below
+                    this.top = displayBottom + this.container.offsetTop + 5;
+                } else if (displayTop > this.height) {
+                    // there's room up top
+                    this.top = displayTop - this.height + this.container.offsetTop;
+                }
+            }
+        }
     }
 
     private findEdge(x: number, y: number): Edge | null {
