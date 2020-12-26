@@ -179,19 +179,12 @@ export class Configurator {
                 }
             };
             document.onmouseup = _e => {
-                this.drag = null;
                 if (this.edge) this.edge.drag = null;
+                this.drag = null;
             };
             this.div.onmousemove = this.container.onmousemove = this.content.onmousemove = (e: MouseEvent) => {
                 if (e.buttons === 0) {
                     this.edge = this.findEdge(e.pageX, e.pageY);
-                    if (this.edge) {
-                        document.body.style.cursor = this.edge.cursor;
-                        this.header.style.cursor = this.edge.cursor;
-                    } else {
-                        document.body.style.cursor = 'default';
-                        this.header.style.cursor = 'move';
-                    }
                 } else if (this.edge?.drag) {
                     const dx = e.pageX - this.edge.drag.x;
                     const dy = e.pageY - this.edge.drag.y;
@@ -204,11 +197,21 @@ export class Configurator {
                     this.move(dx, dy);
                     this.drag = { x: this.drag.x + dx, y: this.drag.y + dy };
                 }
+                if (this.edge) {
+                    document.body.style.cursor = this.edge.cursor;
+                    this.header.style.cursor = this.edge.cursor;
+                    this.tabs.querySelectorAll('.flowbee-config-tab').forEach((t: HTMLElement) => t.style.cursor = this.edge.cursor);
+                } else {
+                    document.body.style.cursor = 'default';
+                    this.header.style.cursor = 'move';
+                    this.tabs.querySelectorAll('.flowbee-config-tab').forEach((t: HTMLElement) => t.style.cursor = 'pointer');
+                }
             };
             document.body.onmouseleave = _e => {
                 this.drag = null;
                 this.edge = null;
                 document.body.style.cursor = 'default';
+                this.header.style.cursor = 'move';
             };
         }
     }
@@ -413,10 +416,10 @@ export class Configurator {
     }
 
     private get maxX() {
-        return this.container.offsetLeft + this.container.offsetWidth;
+        return this.container.offsetLeft + this.container.offsetWidth - 15; // account for scrollbars
     }
     private get maxY() {
-        return this.container.offsetTop + this.container.offsetHeight;
+        return this.container.offsetTop + this.container.offsetHeight - 15; // account for scrollbars
     }
     private get minHeight() {
         return this.styles.getSize(this.stylesObj['flowbee-configurator'].height);
