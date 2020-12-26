@@ -101,8 +101,12 @@ export class ContextMenu {
         const left = x + 3;
         let top = y;
         const height = this.height;
-        if (y + height > this.container.offsetTop + this.container.offsetHeight) {
-            top -= height;
+        if (y + height + 5 > this.container.offsetTop + this.container.offsetHeight) {
+            if (y - height > this.container.offsetTop) {
+                top -= height;
+            } else {
+                top -= height / 2;
+            }
         }
         this.div.style.left = left + 'px';
         this.div.style.top = top + 'px';
