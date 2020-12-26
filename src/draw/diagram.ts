@@ -32,7 +32,7 @@ export class Diagram extends Shape {
   selection: Selection;
   zoom = 100;
   mode: 'select' | 'connect' | 'runtime' = 'select';
-  container?: HTMLElement;
+  container: HTMLElement;
   stepId?: string;
   _instance?: FlowInstance = null;
   stepInstanceId?: string;
@@ -115,7 +115,7 @@ export class Diagram extends Shape {
       this.flowElement = { ...flow, type: 'flow' };
       this.drawBoxes = flow.attributes.NodeStyle === 'BoxIcon';
 
-      if (this.container && this.options.resizeWithContainer) {
+      if (this.options.resizeWithContainer) {
         // may be redrawing on same canvas with a different flow: re-initialize canvas size (new flow may be smaller)
         this.resizeCanvas({
           w: Math.max(this.container.clientWidth, this.options.minWidth) - this.options.padding,
@@ -125,7 +125,7 @@ export class Diagram extends Shape {
       }
     }
 
-    if (this.container && this.options.resizeWithContainer) {
+    if (this.options.resizeWithContainer) {
       if (Diagram.containerResizeObserver) {
         Diagram.containerResizeObserver.unobserve(this.container);
         Diagram.containerResizeObserver.disconnect();

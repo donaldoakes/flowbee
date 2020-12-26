@@ -389,9 +389,9 @@ export class Configurator {
         this.div.style.display = 'none';
     }
 
-    size() {
+    private size() {
         const leftRightPad = this.container.offsetWidth > 100 ? 50 : 0;
-        const bottomPad = 25;
+        const bottomPad = 15;
         this.width = this.container.offsetWidth - leftRightPad * 2;
         this.height = this.minHeight;
         this.left = this.container.offsetLeft + leftRightPad;

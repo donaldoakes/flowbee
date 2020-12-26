@@ -305,12 +305,11 @@ export class FlowDiagram {
             };
             const items = provider.getItems(evt);
             if (items && items.length > 0) {
-                this.menu = new ContextMenu(items);
+                this.menu = new ContextMenu(this.diagram.container, items);
                 const options = {
                     theme: this.diagram.options.theme,
                     iconBase: this.diagram.options.iconBase
                 };
-                // TODO adjust menu position according to available space (or native menu)
                 this.menu.render(options, e.pageX + 3, e.pageY, item => {
                     provider.onSelectItem({ item, ...evt });
                     this.menu = null;

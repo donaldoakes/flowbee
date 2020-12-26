@@ -20,6 +20,7 @@ export class ContextMenu {
     private static stylesObj: object;
 
     constructor(
+        private container: HTMLElement,
         private items: (MenuItem | 'separator')[]
     ) { }
 
@@ -36,8 +37,6 @@ export class ContextMenu {
         const menuOptions = merge(menuDefault, options);
         this.div.className = `flowbee-menu flowbee-menu-${menuOptions.theme || ''}`;
         this.div.style.position = 'absolute';
-        this.div.style.left = x + 'px';
-        this.div.style.top = y + 'px';
 
         const iconWidth = ContextMenu.styles.getSize(ContextMenu.stylesObj['flowbee-menu ul li img'].width);
         const ul = document.createElement('ul') as HTMLUListElement;
@@ -76,7 +75,37 @@ export class ContextMenu {
             ul.appendChild(li);
         }
         this.div.appendChild(ul);
+
+        this.position(x, y);
         document.body.appendChild(this.div);
+    }
+
+    get height(): number {
+        const menuStyleObj = ContextMenu.stylesObj['flowbee-menu'];
+        let height = ContextMenu.styles.getSize(menuStyleObj['border-top-width']) + ContextMenu.styles.getSize(menuStyleObj['border-bottom-width']);
+        const ulStyleObj = ContextMenu.stylesObj['flowbee-menu ul'];
+        height += ContextMenu.styles.getSize(ulStyleObj['padding-top']) + ContextMenu.styles.getSize(ulStyleObj['padding-bottom']);
+        const liHeight = ContextMenu.styles.getSize(ContextMenu.stylesObj['flowbee-menu ul li'].height);
+        const sepHeight = ContextMenu.styles.getSize(ContextMenu.stylesObj['flowbee-menu ul .separator'].height);
+        for (const item of this.items) {
+            if (item === 'separator') {
+                height += sepHeight;
+            } else {
+                height += liHeight;
+            }
+        }
+        return height;
+    }
+
+    private position(x: number, y: number) {
+        const left = x + 3;
+        let top = y;
+        const height = this.height;
+        if (y + height > this.container.offsetTop + this.container.offsetHeight) {
+            top -= height;
+        }
+        this.div.style.left = left + 'px';
+        this.div.style.top = top + 'px';
     }
 
     close() {
