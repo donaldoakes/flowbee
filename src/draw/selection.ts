@@ -147,7 +147,6 @@ export class Selection {
   }
 
   move(startX: number, startY: number, deltaX: number, deltaY: number) {
-
     if (!this.isMulti() && this.getSelectObj().type === 'link') {
       // move link label
       const link = this.getSelectObj() as Link;
@@ -168,8 +167,9 @@ export class Selection {
                 links[j].recalc(step);
               }
             }
+            this.grow(selObj, deltaX, deltaY);
           } else {
-            // try subflows
+            // try subflow steps
             for (let j = 0; j < this.diagram.subflows.length; j++) {
               const subflow = this.diagram.subflows[j];
               const step = subflow.getStep((selObj as Step).step.id);
@@ -191,6 +191,7 @@ export class Selection {
           }
         } else {
           selObj.move(deltaX, deltaY);
+          this.grow(selObj, deltaX, deltaY);
         }
       }
     }
@@ -206,9 +207,35 @@ export class Selection {
     }
   }
 
+  /**
+   * Grow canvas to adjust to move (TODO: or resize)
+   */
+  grow(selObj: SelectObj, deltaX: number, deltaY: number) {
+    if (deltaX > 0) {
+      const right = selObj.display.x + deltaX + selObj.display.w - this.diagram.container.scrollLeft;
+      if (right > this.diagram.container.clientWidth) {
+        this.diagram.container.scrollLeft += 5;
+      }
+    }
+    if (deltaY > 0) {
+      const bottom = selObj.display.y + deltaY + selObj.display.h - this.diagram.container.scrollTop;
+      if (bottom > this.diagram.container.clientHeight) {
+        this.diagram.container.scrollTop += 5;
+      }
+    }
+  }
+
   snap(resize: boolean = false) {
     for (const selObj of this.selectObjs) {
       this.diagram.snap(selObj as Shape, resize);
+    }
+  }
+
+  syncDisplay() {
+    for (const selObj of this.selectObjs) {
+      const display = selObj.getDisplay();
+      selObj.display.x = display.x;
+      selObj.display.y = display.y;
     }
   }
 

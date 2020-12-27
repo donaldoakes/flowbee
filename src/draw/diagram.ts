@@ -1414,6 +1414,10 @@ export class Diagram extends Shape {
   }
 
   onMouseOut(_e: MouseEvent) {
+    if (this.drag) {
+      this.selection.syncDisplay();
+      this.drag = false;
+    }
     document.body.style.cursor = this.canvas.style.cursor = 'default';
   }
 
@@ -1494,6 +1498,7 @@ export class Diagram extends Shape {
         }
         if (y > rect.bottom - this.options.padding) {
           this.canvas.height = this.canvas.height + this.options.padding;
+          this.grid?.draw();
         }
 
         const selObj = this.mode === 'connect' ? this.connectObj : this.selection.getSelectObj();
