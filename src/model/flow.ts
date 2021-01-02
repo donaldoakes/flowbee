@@ -16,6 +16,7 @@ export interface Flow extends FlowElement {
 export type VariableType = 'string' | 'boolean' | 'number' | 'Date' | 'object';
 
 export interface Subflow extends FlowElement {
+    id: string;
     name: string;
     steps?: Step[];
 }
@@ -32,7 +33,9 @@ export interface FlowInstance {
     start?: Date;
     end?: Date;
 }
-export type Values = {[key: string]: string | boolean | number | Date | object};
+
+export type Value = string | boolean | number | Date | object;
+export type Values = {[key: string]: Value};
 
 /**
  * exec only applies to steps

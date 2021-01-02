@@ -122,6 +122,15 @@ export class DiagramStyle {
         const grid = stylesObj[`${this.prefix} .grid`];
         const title = stylesObj[`${this.prefix} .title`];
         const meta = stylesObj[`${this.prefix} .meta`];
+        const status = {
+            Pending: stylesObj[`${this.prefix} .status .pending`],
+            'In Progress': stylesObj[`${this.prefix} .status .in-progress`],
+            Waiting: stylesObj[`${this.prefix} .status .waiting`],
+            Failed: stylesObj[`${this.prefix} .status .failed`],
+            Errored: stylesObj[`${this.prefix} .status .errored`],
+            Completed: stylesObj[`${this.prefix} .status .completed`],
+            Canceled: stylesObj[`${this.prefix} .status .canceled`]
+        };
         const milestone = stylesObj[`${this.prefix} .milestone`];
         const label = stylesObj[`${this.prefix} .label`] || {};
         label.select = stylesObj[`${this.prefix} .label .select`];
@@ -134,9 +143,9 @@ export class DiagramStyle {
         const link = stylesObj[`${this.prefix} .link`];
         link.draw = stylesObj[`${this.prefix} .link .draw`];
         link.hit = stylesObj[`${this.prefix} .link .hit`];
-        link.state = {
-            initiated: stylesObj[`${this.prefix} .link .state .initiated`],
-            traversed: stylesObj[`${this.prefix} .link .state .traversed`]
+        link.status = {
+            initiated: stylesObj[`${this.prefix} .link .status .initiated`],
+            traversed: stylesObj[`${this.prefix} .link .status .traversed`]
         };
         const subflow = stylesObj[`${this.prefix} .subflow`];
         subflow.hit = stylesObj[`${this.prefix} .subflow .hit`];
@@ -170,6 +179,7 @@ export class DiagramStyle {
             meta: {
                 color: meta.color
             },
+            status,
             milestone: {
                 color: milestone['background-color']
             },
@@ -209,8 +219,8 @@ export class DiagramStyle {
                 hitWidth: styles.getSize(link.hit.width),
                 colors: {
                     default: link.color,
-                    initiated: link.state.initiated.color,
-                    traversed: link.state.traversed.color
+                    initiated: link.status.initiated.color,
+                    traversed: link.status.traversed.color
                 },
                 drawColor: link.draw.color
             },
@@ -247,18 +257,7 @@ export class DiagramStyle {
             },
             hyperlink: {
                 color: stylesObj[`${this.prefix} .hyperlink`].color
-            },
-            statuses: [
-                { name: 'Unknown', color: 'transparent' },
-                { name: 'Pending', color: 'blue' },
-                { name: 'In Progress', color: 'green' },
-                { name: 'Errored', color: 'red' },
-                { name: 'Failed', color: 'red' },
-                { name: 'Completed', color: 'black' },
-                { name: 'Canceled', color: 'darkgray' },
-                { name: 'Hold', color: 'cyan' },
-                { name: 'Waiting', color: 'yellow' }
-            ]
+            }
         };
 
         return drawingOptions;

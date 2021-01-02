@@ -139,12 +139,12 @@ export class Diagram extends Shape {
             if (entry.contentRect) {
               if (entry.contentRect.width > parseInt(this.canvas.style.width) + min
                   || entry.contentRect.height > parseInt(this.canvas.style.height) + min) {
-                    this.resizeCanvas({ w: entry.contentRect.width, h: entry.contentRect.height });
-                    this.draw();
+                this.resizeCanvas({ w: entry.contentRect.width, h: entry.contentRect.height });
+                this.draw();
+                this.selection.select();
               }
             }
           }
-          this.selection.select();
         });
       }
       Diagram.containerResizeObserver.observe(this.container);
@@ -922,7 +922,7 @@ export class Diagram extends Shape {
         const instance = instances[i];
         const rounding = this.options.step.roundingRadius;
         if (instance.status) {
-          const status = this.options.statuses.find(s => s.name === instance.status);
+          const status = this.options.status[instance.status];
           const statusColor = color ? color : status.color;
           const prevWidth = this.options.step.state.previous.width;
           const del = this.options.step.state.width - prevWidth;
@@ -1135,7 +1135,7 @@ export class Diagram extends Shape {
             segment.lineEnd(context);
             context.lineWidth = width;
             context.strokeStyle = color;
-            context.fillStyle = this.options.defaultColor;
+            context.fillStyle = diagram.options.defaultColor;
           }
         }
         context.stroke();

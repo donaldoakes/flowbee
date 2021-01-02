@@ -20,6 +20,11 @@
             "group": "none",
             "problemMatcher": [],
             "label": "npm: watch"
+        },
+        {
+            "type": "npm",
+            "script": "css",
+            "problemMatcher": []
         }
     ]
 }

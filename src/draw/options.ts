@@ -1,3 +1,4 @@
+import { FlowElementStatus } from '../model/element';
 import { Font } from '../style/font';
 
 export type Status = {
@@ -81,6 +82,7 @@ export interface DrawingOptions {
     minHeight?: number;
     padding?: number;
     meta?: { color: string };
+    status?: { [key in FlowElementStatus]: string };
     drag?: { min: number };
     title?: { color?: string, font?: Font };
     label?: LabelOptions;
@@ -94,6 +96,5 @@ export interface DrawingOptions {
     anchor?: AnchorOptions;
     highlight?: HighlightOptions;
     hyperlink?: { color?: string };
-    statuses?: Status[];
 }
 

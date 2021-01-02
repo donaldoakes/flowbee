@@ -31,10 +31,30 @@
     min-width: 3px;
   }
   .meta {
-    color: gray;
+    color: #808080;
   }
-  .state {
-    border-radius: 12px;
+  .status {
+    .pending {
+      color: #1a75ff;
+    }
+    .in-progress {
+      color: #009900;
+    }
+    .waiting {
+      color: #ffff00;
+    }
+    .failed {
+      color: #e60000;
+    }
+    .errored {
+      color: #e60000;
+    }
+    .completed {
+      color: #0d0d0d;
+    }
+    .canceled {
+      color: #a9a9a9;
+    }
   }
   .step {
     border-color: #000000;
@@ -69,7 +89,7 @@
     .hit {
       width: 8px;
     }
-    .state {
+    .status {
       .initiated {
         color: #0000ff;
       }
@@ -138,14 +158,40 @@
   .title {
     color: #d4d4d4;
   }
+  .status {
+    .pending {
+      color: #1a75ff;
+    }
+    .in-progress {
+      color: #00cc00;
+    }
+    .waiting {
+      color: #fff44f;
+    }
+    .failed {
+      color: #cc0000;
+    }
+    .errored {
+      color: #cc0000;
+    }
+    .completed {
+      color: #cccccc;
+    }
+    .canceled {
+      color: #595959;
+    }
+  }
   .step {
     border-color: #bbbbbb;
   }
   .link {
     color: #9e9e9e;
-    .state {
+    .status {
+      .initiated {
+        color: #0000ff;
+      }
       .traversed {
-        color: #ffffff;
+        color: #cccccc;
       }
     }
   }
