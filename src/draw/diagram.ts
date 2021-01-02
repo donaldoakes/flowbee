@@ -63,7 +63,7 @@ export class Diagram extends Shape {
     return this._instance;
   }
   set instance(instance: FlowInstance) {
-    const listen = this.options.webSocketUrl && this._instance?.id !== instance.id;
+    const listen = instance && this.options.webSocketUrl && this._instance?.id !== instance.id;
     this._instance = instance;
     if (listen) {
       this.listenForInstanceUpdates();

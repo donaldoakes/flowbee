@@ -429,6 +429,15 @@
   .flowbee-config-tab-content th, td {
     border: 1px solid #cccccc;
   }
+  .flowbee-config-footer {
+    background-color: #323232;
+    color: #c8c8c8;
+    border-bottom: 1px solid #454545;
+  }
+  .flowbee-config-footer input[type=button] {
+    margin-right: 10px;
+    background-color: #c8c8c8;
+  }
 }
 
 @mixin tree {
