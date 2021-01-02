@@ -314,7 +314,9 @@ export class FlowDiagram {
     private onMouseUp(e: MouseEvent) {
         this.down = false;
         this.dragging = false;
-        this.diagram.onMouseUp(e);
+        if (this.diagram.onMouseUp(e)) {
+            this.handleChange();
+        }
     }
 
     private onDrop(e: DragEvent) {

@@ -1421,6 +1421,7 @@ export class Diagram extends Shape {
   }
 
   onMouseUp(e: MouseEvent) {
+    let chg = false;
     if ((this.shiftDrag || this.mode === 'connect') && this.dragX && this.dragY) {
       const selObj = this.mode === 'connect' ? this.connectObj : this.selection.getSelectObj();
       if (selObj?.type === 'step') {
@@ -1428,16 +1429,19 @@ export class Diagram extends Shape {
         const { x, y } = this.unscale(e.clientX - rect.left, e.clientY - rect.top);
 
         const destObj = this.getHoverObj(x, y);
+
         if (destObj && destObj.type === 'step') {
           const srcStep = selObj as Step;
           if (this.getStep(srcStep.id) && this.getStep(destObj.id)) {
             this.addLink(srcStep, destObj as Step);
+            chg = true;
           } else {
             // src and dest must be in same subflow
             for (let i = 0; i < this.subflows.length; i++) {
               const subflow = this.subflows[i];
               if (subflow.getStep(srcStep.id) && subflow.getStep(destObj.id)) {
                 this.addLink(srcStep, destObj as Step);
+                chg = true;
                 break;
               }
             }
@@ -1464,6 +1468,7 @@ export class Diagram extends Shape {
     }
 
     this.drag = false;
+    return chg;
   }
 
   onMouseEnter(_e: MouseEvent) {
