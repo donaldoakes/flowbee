@@ -144,6 +144,7 @@ export class Diagram extends Shape {
               }
             }
           }
+          this.selection.select();
         });
       }
       Diagram.containerResizeObserver.observe(this.container);

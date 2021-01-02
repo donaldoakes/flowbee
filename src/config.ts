@@ -393,7 +393,7 @@ export class Configurator {
 
     private size() {
         const leftRightPad = this.container.offsetWidth > 100 ? 50 : 0;
-        const bottomPad = 15;
+        const bottomPad = 25; // TODO css or option
         this.width = this.container.offsetWidth - leftRightPad * 2;
         this.height = this.minHeight;
         this.left = this.container.offsetLeft + leftRightPad;
