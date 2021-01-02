@@ -10,17 +10,14 @@ export interface Flow extends FlowElement {
     steps?: Step[];
     subflows?: Subflow[];
     notes?: Note[];
-    attributes?: {[key: string]: string};
     variables?: {[key: string]: { type: VariableType }};
 }
 
 export type VariableType = 'string' | 'boolean' | 'number' | 'Date' | 'object';
 
 export interface Subflow extends FlowElement {
-    id: string;
     name: string;
     steps?: Step[];
-    attributes?: {[key: string]: string};
 }
 
 

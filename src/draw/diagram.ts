@@ -6,15 +6,16 @@ import { Link, LineSegment } from './link';
 import { Subflow } from './subflow';
 import { Note } from './note';
 import { Marquee } from './marquee';
-import { Descriptor } from '../model/descriptor';
-import { DiagramOptions } from '../options';
-import { Flow, FlowEvent, FlowInstance, SubflowInstance } from '../model/flow';
-import { StepInstance } from '../model/step';
 import { Display } from './display';
-import { FlowElementType, getFlowName } from '../model/element';
+import { DiagramOptions } from '../options';
+import { Descriptor } from '../model/descriptor';
+import { Flow, FlowEvent, FlowInstance, Subflow as SubflowElement, SubflowInstance } from '../model/flow';
+import { StepInstance, Step as StepElement } from '../model/step';
+import { LinkStatus, Link as LinkElement } from '../model/link';
+import { Note as NoteElement } from '../model/note';
+import { FlowElement, getFlowName } from '../model/element';
 import { DrawingOptions } from './options';
 import { Grid } from './grid';
-import { LinkStatus } from '../model/link';
 
 export class Diagram extends Shape {
 
@@ -594,11 +595,11 @@ export class Diagram extends Shape {
     }
   }
 
-  getDescriptor(name: string): Descriptor {
+  getDescriptor(path: string): Descriptor {
     if (this.descriptors) {
       for (let i = 0; i < this.descriptors.length; i++) {
         const descriptor = this.descriptors[i];
-        if (descriptor.path === name) {
+        if (descriptor.path === path) {
           return descriptor;
         }
       }
@@ -622,16 +623,66 @@ export class Diagram extends Shape {
     }
   }
 
+  insert(flowElements: FlowElement[]): SelectObj[] {
+    const dx = 20, dy = 20;
+    const selObjs: SelectObj[] = [];
+    // steps first so they're available when adding links
+    const origStepIdToNew = new Map<string,string>();
+    const stepElements = flowElements.filter(fe => fe.type === 'step') as StepElement[];
+    for (const stepElement of stepElements) {
+      const step = Step.copy(this, stepElement, dx, dy);
+      if (!this.flow.steps) this.flow.steps = [];
+      this.flow.steps.push(step.step);
+      this.steps.push(step);
+      selObjs.push(step);
+      origStepIdToNew.set(stepElement.id, step.id);
+    }
+    // links
+    for (const linkElement of flowElements.filter(fe => fe.type === 'link') as LinkElement[]) {
+      const origFrom = stepElements.find(stepElement => {
+        if (stepElement.links?.find(le => le.id === linkElement.id)) return true;
+      });
+      const fromStep = this.getStep(origStepIdToNew.get(origFrom.id));
+      const toStep = this.getStep(origStepIdToNew.get(linkElement.to));
+      const link = Link.copy(this, linkElement, dx, dy, fromStep, toStep);
+      fromStep.step.links.push(link.link);
+      this.links.push(link);
+      selObjs.push(link);
+    }
+    // subflows
+    for (const subflowElement of flowElements.filter(fe => fe.type === 'subflow') as SubflowElement[]) {
+      const subflow = Subflow.copy(this, subflowElement , dx, dy);
+      if (!this.flow.subflows) this.flow.subflows = [];
+      this.flow.subflows.push(subflow.subflow);
+      // this.subflows.push(subflow); push is performed in Subflow.copy() to increment genId result
+      selObjs.push(subflow);
+    }
+    // notes
+    for (const noteElement of flowElements.filter(fe => fe.type === 'note') as NoteElement[]) {
+      const note = Note.copy(this, noteElement, dx, dy);
+      if (!this.flow.notes) this.flow.notes = [];
+      this.flow.notes.push(note.note);
+      this.notes.push(note);
+      selObjs.push(note);
+    }
+    return selObjs;
+  }
+
+  /**
+   * Including subflows
+   */
+  allSteps(): Step[] {
+    let steps = this.steps.slice(0);
+    this.subflows?.forEach(subflow => {
+      steps = [ ...steps, ...subflow.steps ];
+    });
+    return steps;
+  }
+
   addStep(descriptorName: string, xi: number, yi: number): Step {
     const { x, y } = this.unscale(xi, yi);
     const descriptor = this.getDescriptor(descriptorName);
-    let steps = this.steps.slice(0);
-    if (this.subflows) {
-      for (let i = 0; i < this.subflows.length; i++) {
-        steps = steps.concat(this.subflows[i].steps);
-      }
-    }
-    const step = Step.create(this, this.genId(steps, 'step'), descriptor, x, y);
+    const step = Step.create(this, this.genId(this.allSteps()), descriptor, x, y);
     const hoverObj = this.getHoverObj(x, y);
     if (hoverObj && hoverObj.type === 'subflow') {
       (hoverObj as Subflow).subflow.steps.push(step.step);
@@ -654,16 +705,22 @@ export class Diagram extends Shape {
     return step;
   }
 
+    /**
+   * Including subflows
+   */
+  allLinks(): Link[] {
+    let links = this.links.slice(0);
+    this.subflows?.forEach(subflow => {
+      links = [ ...links, ...subflow.links ];
+    });
+    return links;
+  }
+
   addLink(from: Step, to: Step): Link {
     // TODO: support link to self?
     if (from.id !== to.id) {
-      let links = this.links.slice(0);
-      if (this.subflows) {
-        for (let i = 0; i < this.subflows.length; i++) {
-          links = links.concat(this.subflows[i].links);
-        }
-      }
-      const link = Link.create(this, this.genId(links, 'link'), from, to);
+      const links = this.allLinks();
+      const link = Link.create(this, this.genId(links), from, to);
       let destSubflow = null;
       if (this.subflows) {
         for (let i = 0; i < this.subflows.length; i++) {
@@ -684,9 +741,9 @@ export class Diagram extends Shape {
 
   addSubflow(type: string, xi: number, yi: number): Subflow {
     const { x, y } = this.unscale(xi, yi);
-    const startStepId = this.genId(this.steps, 'step');
-    const startLinkId = this.genId(this.links, 'link');
-    const subprocId = this.genId(this.subflows, 'subflow');
+    const startStepId = this.genId(this.allSteps());
+    const startLinkId = this.genId(this.allLinks());
+    const subprocId = this.genId(this.subflows);
     const subflow = Subflow.create(this, subprocId, startStepId, startLinkId, type, x, y);
     if (!this.flow.subflows) {
       this.flow.subflows = [];
@@ -701,7 +758,7 @@ export class Diagram extends Shape {
 
   addNote(xi: number, yi: number): Note {
     const { x, y } = this.unscale(xi, yi);
-    const note = Note.create(this, this.genId(this.notes, 'note'), x, y);
+    const note = Note.create(this, this.genId(this.notes), x, y);
     if (!this.flow.notes) {
       this.flow.notes = [];
     }
@@ -713,7 +770,7 @@ export class Diagram extends Shape {
     return note;
   }
 
-  genId(items: (Step | Link | Subflow | Note)[], type: FlowElementType): number {
+  genId(items: (Step | Link | Subflow | Note)[]): number {
     let maxId = 0;
     if (items) {
       items.forEach(function (item) {
@@ -1337,7 +1394,7 @@ export class Diagram extends Shape {
     const selObj = this.getHoverObj(x, y);
     if (this.mode !== 'connect') {
       if (selObj) {
-        if (!this.readonly && (e.shiftKey || e.metaKey || (!navigator.platform.startsWith('Mac') && e.ctrlKey))) {
+        if (!this.readonly && (e.shiftKey || e.metaKey || e.ctrlKey)) {
           if (this.selection.includes(selObj)) {
             this.selection.remove(selObj);
             this.diagram.draw(); // remove anchors

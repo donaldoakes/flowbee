@@ -38,14 +38,6 @@ export class Shape {
     this.flowElement.attributes.display = attr;
   }
 
-  getAttr(display: Display): string {
-    let attr = 'x=' + display.x + ',y=' + display.y;
-    if (display.w) {
-      attr += ',w=' + display.w + ',h=' + display.h;
-    }
-    return attr;
-  }
-
   isHover(x: number, y: number) {
     return x >= this.display.x && x <= this.display.x + this.display.w &&
       y >= this.display.y && y <= this.display.y + this.display.h;
@@ -149,5 +141,13 @@ export class Shape {
     }
 
     return display;
+  }
+
+  static getAttr(display: Display): string {
+    let attr = 'x=' + display.x + ',y=' + display.y;
+    if (display.w) {
+      attr += ',w=' + display.w + ',h=' + display.h;
+    }
+    return attr;
   }
 }

@@ -1,7 +1,7 @@
 import { Shape } from './shape';
 import { Diagram } from './diagram';
 import { Note as NoteElement } from '../model/note';
-import { Display } from './display';
+import { Display, parseDisplay } from './display';
 import { Edit } from './edit';
 
 export class Note extends Shape {
@@ -138,6 +138,21 @@ export class Note extends Shape {
     return note;
   }
 
+  static copy(diagram: Diagram, noteElement: NoteElement, dx: number, dy: number): Note {
+    const display = parseDisplay(noteElement);
+    display.x += dx;
+    display.y += dy;
+
+    const note = new Note(diagram, {
+      id: 'n' + diagram.genId(diagram.notes),
+      type: 'note',
+      text: noteElement.text,
+      attributes: { ...noteElement.attributes,  display: Shape.getAttr(display) }
+    });
+    note.display = display;
+    return note;
+  }
+
   static noteElement(diagram: Diagram, idNum: number, x: number, y: number): NoteElement {
     const w = diagram.options.note.minWidth;
     const h = diagram.options.note.minHeight;
@@ -145,9 +160,9 @@ export class Note extends Shape {
     const noteY = Math.max(1, y - h / 2);
     return {
       id: 'n' + idNum,
+      type: 'note',
       text: '',
       attributes: { display: 'x=' + noteX + ',y=' + noteY + ',w=' + w + ',h=' + h },
-      type: 'note'
     };
   }
 }

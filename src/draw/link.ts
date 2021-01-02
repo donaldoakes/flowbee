@@ -96,61 +96,14 @@ export class Link {
   }
 
   getDisplay(): LinkDisplay {
-    const display: LinkDisplay = {};
-    const displayAttr = this.link.attributes.display;
-    if (displayAttr) {
-      const vals = displayAttr.split(',');
-      display.xs = [];
-      display.ys = [];
-      vals.forEach(function (val) {
-        if (val.startsWith('x=')) {
-          display.x = parseInt(val.substring(2));
-        }
-        else if (val.startsWith('y=')) {
-          display.y = parseInt(val.substring(2));
-        }
-        else if (val.startsWith('xs=')) {
-          val.substring(3).split('&').forEach(function (x) {
-            display.xs.push(parseInt(x));
-          });
-        }
-        else if (val.startsWith('ys=')) {
-          val.substring(3).split('&').forEach(function (y) {
-            display.ys.push(parseInt(y));
-          });
-        }
-        else if (val.startsWith('type=')) {
-          display.type = val.substring(5);
-        }
-      });
-    }
-    return display;
+    return parseDisplay(this.link);
   }
 
   setDisplay(display: LinkDisplay) {
     if (!this.link.attributes) {
       this.link.attributes = {};
     }
-    this.link.attributes.display = this.getAttr(display);
-  }
-
-  getAttr(display: LinkDisplay): string {
-    let attr = 'type=' + display.type + ',x=' + Math.round(display.x) + ',y=' + Math.round(display.y);
-    attr += ',xs=';
-    for (let i = 0; i < display.xs.length; i++) {
-      if (i > 0) {
-        attr += '&';
-      }
-      attr += Math.round(display.xs[i]);
-    }
-    attr += ',ys=';
-    for (let i = 0; i < display.ys.length; i++) {
-      if (i > 0) {
-        attr += '&';
-      }
-      attr += Math.round(display.ys[i]);
-    }
-    return attr;
+    this.link.attributes.display = Link.getAttr(display);
   }
 
   /**
@@ -1137,7 +1090,7 @@ export class Link {
   }
 
   static create(diagram: Diagram, idNum: number, from: Step, to: Step) {
-    const linkElement = Link.LinkElement(idNum, to.step.id);
+    const linkElement = Link.linkElement(idNum, to.step.id);
     const link = new Link(diagram, linkElement, from, to);
     if (!from.step.links) {
       from.step.links = [];
@@ -1148,13 +1101,52 @@ export class Link {
     return link;
   }
 
-  static LinkElement(idNum: number, toId: string): LinkElement {
+  static copy(diagram: Diagram, linkElement: LinkElement, dx: number, dy: number, from: Step, to: Step): Link {
+    const display = parseDisplay(linkElement);
+    if (typeof display.x === 'number') display.x += dx;
+    if (typeof display.y === 'number') display.y += dy;
+    display.xs = display.xs.map(x => x + dx);
+    display.ys = display.ys.map(y => y + dy);
+
+    const link = new Link(diagram, {
+      id: 'l' + diagram.genId(diagram.allLinks()),
+      type: 'link',
+      to: to.id,
+      ...(linkElement.event) && { event: linkElement.event },
+      ...(linkElement.result) && { result: linkElement.result },
+      attributes: { ...linkElement.attributes,  display: Link.getAttr(display) }
+    }, from, to);
+    link.display = display;
+    return link;
+  }
+
+  static linkElement(idNum: number, toId: string): LinkElement {
     return {
       id: 'l' + idNum,
-      to: toId,
-      type: 'link'
+      type: 'link',
+      to: toId
     };
   }
+
+  static getAttr(display: LinkDisplay): string {
+    let attr = 'type=' + display.type + ',x=' + Math.round(display.x) + ',y=' + Math.round(display.y);
+    attr += ',xs=';
+    for (let i = 0; i < display.xs.length; i++) {
+      if (i > 0) {
+        attr += '&';
+      }
+      attr += Math.round(display.xs[i]);
+    }
+    attr += ',ys=';
+    for (let i = 0; i < display.ys.length; i++) {
+      if (i > 0) {
+        attr += '&';
+      }
+      attr += Math.round(display.ys[i]);
+    }
+    return attr;
+  }
+
 }
 
 export type LineSegment = {
@@ -1166,4 +1158,36 @@ export type LineSegment = {
     cpx: number,
     cpy: number
   } | ((context: CanvasRenderingContext2D) => void)
+}
+
+function parseDisplay(linkElement: LinkElement): LinkDisplay {
+  const display: LinkDisplay = {};
+  const displayAttr = linkElement.attributes.display;
+  if (displayAttr) {
+    const vals = displayAttr.split(',');
+    display.xs = [];
+    display.ys = [];
+    vals.forEach(function (val) {
+      if (val.startsWith('x=')) {
+        display.x = parseInt(val.substring(2));
+      }
+      else if (val.startsWith('y=')) {
+        display.y = parseInt(val.substring(2));
+      }
+      else if (val.startsWith('xs=')) {
+        val.substring(3).split('&').forEach(function (x) {
+          display.xs.push(parseInt(x));
+        });
+      }
+      else if (val.startsWith('ys=')) {
+        val.substring(3).split('&').forEach(function (y) {
+          display.ys.push(parseInt(y));
+        });
+      }
+      else if (val.startsWith('type=')) {
+        display.type = val.substring(5);
+      }
+    });
+  }
+  return display;
 }

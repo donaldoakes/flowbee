@@ -1,7 +1,9 @@
 import { FlowElement } from '../model/element';
 import { Diagram } from './diagram';
+import { Link } from './link';
 import { SelectObj } from './selection';
 import { Shape } from './shape';
+import { Step } from './step';
 
 export class Marquee extends Shape {
 
@@ -55,13 +57,24 @@ export class Marquee extends Shape {
   }
 
   getSelectObjs(): SelectObj[] {
-    const selObjs: SelectObj[] = [];
+    let selObjs: SelectObj[] = [];
     for (let i = 0; i < this.diagram.steps.length; i++) {
       const step = this.diagram.steps[i];
       if (this.isContained(step)) {
         selObjs.push(step);
       }
     }
+    // add contained links
+    const links: Link[] = [];
+    for (const step of (selObjs as Step[])) {
+      for (const outLink of this.diagram.getOutLinks(step)) {
+        if (selObjs.find(s => s.id === outLink.to.id)) {
+          links.push(outLink);
+        }
+      }
+    }
+    selObjs = [ ...selObjs, ...links ];
+
     for (let i = 0; i < this.diagram.subflows.length; i++) {
       const subflow = this.diagram.subflows[i];
       if (this.isContained(subflow)) {
@@ -74,6 +87,7 @@ export class Marquee extends Shape {
         selObjs.push(note);
       }
     }
+    // included links
     return selObjs;
   }
 

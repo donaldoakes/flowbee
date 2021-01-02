@@ -1,4 +1,5 @@
 import { merge } from 'merge-anything';
+import { Clipper } from './clip';
 import { FlowDiagram } from './diagram';
 import { FlowElementEvent } from './event';
 import { FlowElement } from './model/element';
@@ -134,15 +135,30 @@ export class DefaultMenuProvider implements ContextMenuProvider {
     constructor(readonly flowDiagram: FlowDiagram) { }
     getItems(flowElementEvent: FlowElementEvent): (MenuItem | 'separator')[] | undefined {
         if (!this.flowDiagram.readonly && flowElementEvent.element) {
+            const stroke = navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl';
             return [
+                { id: 'cut', label: 'Cut', key: stroke + ' X'},
+                { id: 'copy', label: 'Copy', key: stroke + ' C'},
+                { id: 'paste', label: 'Paste', key: stroke + ' V'},
                 { id: 'delete', label: 'Delete', key: 'Del' }
             ];
         }
     }
-    onSelectItem(selectEvent: ContextMenuSelectEvent): Promise<boolean> {
-        if (selectEvent.item.id === 'delete') {
-            this.flowDiagram.handleDelete();
-            return Promise.resolve(true);
+    async onSelectItem(selectEvent: ContextMenuSelectEvent): Promise<boolean> {
+        const clipper = new Clipper(this.flowDiagram);
+        if (selectEvent.item.id === 'cut') {
+            await clipper.cut();
+            return true;
+        } else if (selectEvent.item.id === 'copy') {
+            await clipper.copy();
+            return true;
+        } else if (selectEvent.item.id === 'paste') {
+            await clipper.paste();
+            return true;
+        } else if (selectEvent.item.id === 'delete') {
+            await clipper.delete();
+            return true;
         }
+        return false;
     }
 }

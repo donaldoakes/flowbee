@@ -1,7 +1,7 @@
 import { Flow, Subflow } from './flow';
 import { Step } from './step';
 
-export type FlowElementType = 'flow' | 'step' | 'subflow' | 'note' | 'link';
+export type FlowElementType = 'flow' | 'step' | 'link' | 'subflow' | 'note';
 
 export interface FlowElement {
     id?: string,

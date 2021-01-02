@@ -3,7 +3,7 @@ import { Diagram } from './diagram';
 import { Step as StepElement, StepInstance } from '../model/step';
 import { Descriptor } from '../model/descriptor';
 import { Milestone, MilestoneGroup } from '../model/milestone';
-import { Display, Title } from './display';
+import { Display, parseDisplay, Title } from './display';
 import { Edit } from './edit';
 
 export class Step extends Shape {
@@ -314,7 +314,7 @@ export class Step extends Shape {
   resize(x: number, y: number, deltaX: number, deltaY: number, limDisplay?: Display) {
     const display = this.resizeDisplay(x, y, deltaX, deltaY,
       this.diagram.options.step.minWidth, this.diagram.options.step.minHeight, limDisplay);
-    this.step.attributes.display = this.getAttr(display);
+    this.step.attributes.display = Shape.getAttr(display);
   }
 
   edit(onchange: (text: string) => void) {
@@ -325,12 +325,30 @@ export class Step extends Shape {
     });
   }
 
-  static create(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number) {
+  static create(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number): Step {
     const stepElement = Step.stepElement(diagram, idNum, descriptor, x, y);
     const step = new Step(diagram, stepElement);
     step.descriptor = descriptor;
     const disp = step.getDisplay();
     step.display = { x: disp.x, y: disp.y, w: disp.w, h: disp.h };
+    return step;
+  }
+
+  static copy(diagram: Diagram, stepElement: StepElement, dx: number, dy: number): Step {
+    const display = parseDisplay(stepElement);
+    display.x += dx;
+    display.y += dy;
+
+    const step = new Step(diagram, {
+      id: 's' + diagram.genId(diagram.allSteps()),
+      type: 'step',
+      name: stepElement.name,
+      path: stepElement.path,
+      links: [],
+      attributes: { ...stepElement.attributes,  display: Shape.getAttr(display) }
+    });
+    step.display = display;
+    step.descriptor = diagram.getDescriptor(stepElement.path);
     return step;
   }
 
@@ -364,11 +382,11 @@ export class Step extends Shape {
     const stepY = Math.max(1, y - h / 2);
     return {
       id: 's' + idNum,
+      type: 'step',
       name: name,
       path: descriptor.path,
-      attributes: { display: 'x=' + stepX + ',y=' + stepY + ',w=' + w + ',h=' + h },
       links: [],
-      type: 'step'
+      attributes: { display: 'x=' + stepX + ',y=' + stepY + ',w=' + w + ',h=' + h },
     };
   }
 }

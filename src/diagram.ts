@@ -11,7 +11,8 @@ import { TypedEvent, Listener, FlowElementSelectEvent, FlowChangeEvent, FlowElem
 import { SelectObj } from './draw/selection';
 import { ContextMenu, ContextMenuProvider, DefaultMenuProvider } from './menu';
 import { DefaultDialog, DialogProvider } from './dialog';
-import { getFlowName } from './model/element';
+import { FlowElement, getFlowName } from './model/element';
+import { Clipper } from './clip';
 
 export class FlowDiagram {
 
@@ -21,6 +22,7 @@ export class FlowDiagram {
     flow: Flow;
     contextMenuProvider: ContextMenuProvider;
     dialogProvider: DialogProvider;
+    private clipper: Clipper;
 
     readonly = false;
     step?: string;
@@ -49,6 +51,7 @@ export class FlowDiagram {
         );
         this.canvas.setAttribute('flowbee-canvas', this.flowName);
         this.selectObj = this.diagram;
+        this.clipper = new Clipper(this);
     }
 
     /**
@@ -102,7 +105,7 @@ export class FlowDiagram {
 
     toYaml(indent = 2): string {
         const { id: _id, type: _type, path: _path, ...flow } = this.flow;
-        return jsYaml.safeDump(flow, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+        return jsYaml.safeDump(flow, { sortKeys: true, noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
     }
 
     get zoom(): number {
@@ -176,10 +179,22 @@ export class FlowDiagram {
             }
         };
         this.canvas.onkeydown = e => {
-            if (!this.readonly &&
-              (e.key === 'Delete' || ((e.metaKey || navigator.platform.startsWith('Mac')) && e.key === 'Backspace'))) {
-                e.preventDefault();
-                this.handleDelete();
+            if (!this.readonly) {
+                const macCmd = navigator.platform.startsWith('Mac') && e.metaKey;
+                const ctrlCmd = macCmd || e.ctrlKey;
+                if (ctrlCmd && e.key === 'x') {
+                    e.preventDefault();
+                    this.clipper.cut();
+                } else if (ctrlCmd && e.key === 'c') {
+                    e.preventDefault();
+                    this.clipper.copy();
+                } else if (ctrlCmd && e.key === 'v') {
+                    e.preventDefault();
+                    this.clipper.paste();
+                } else if (e.key === 'Delete' || (macCmd && e.key === 'Backspace')) {
+                    e.preventDefault();
+                    this.clipper.delete();
+                }
             }
         };
     }
@@ -193,6 +208,46 @@ export class FlowDiagram {
         if (selObj) {
             this.selectObj = selObj;
             if (scrollIntoView) this.diagram.scrollIntoView(selObj as any);
+        }
+    }
+
+    get selected(): FlowElement[] {
+        const selected: FlowElement[] = [];
+        this.diagram.selection.selectObjs.forEach(selObj => {
+          if (selObj.flowElement) selected.push(selObj.flowElement);
+        });
+        return selected;
+    }
+
+    async handleInsert(flowElements: FlowElement[]) {
+        const selObjs = this.diagram.insert(flowElements);
+        this.diagram.selection.selectObjs = selObjs;
+        this.diagram.draw();
+        this.diagram.selection.select();
+        this.selectObj = this.diagram.selection.getSelectObj() || this.diagram;
+        this._onFlowElementSelect.emit( { element: this.selectObj.flowElement } );
+        this.handleChange();
+    }
+
+    async handleDelete() {
+        const selection = this.diagram.selection;
+        const selObj = selection?.getSelectObj();
+        if (selObj) {
+            let isDelete = false;
+            if (this.diagram.options.promptToDelete) {
+                const text = selection.isMulti() ? 'Delete selected elements?' : 'Delete ' + selObj.type + '?';
+                const dialog = this.dialogProvider || new DefaultDialog();
+                isDelete = await dialog.confirm({ title: 'Confirm Delete', text, level: 'warn' });
+            } else {
+                isDelete = true;
+            }
+            if (isDelete) {
+                selection.doDelete();
+                this.diagram.draw();
+                this.selectObj = this.diagram;
+                this._onFlowElementSelect.emit( { element: this.diagram.flow } );
+                this.handleChange();
+            }
         }
     }
 
@@ -331,26 +386,5 @@ export class FlowDiagram {
             selObj = (selObj as Label).owner;
         }
         return selObj;
-    }
-
-    async handleDelete() {
-        const selection = this.diagram.selection;
-        const selObj = selection?.getSelectObj();
-        if (selObj) {
-            let isDelete = false;
-            if (this.diagram.options.promptToDelete) {
-                const text = selection.isMulti() ? 'Delete selected elements?' : 'Delete ' + selObj.type + '?';
-                const dialog = this.dialogProvider || new DefaultDialog();
-                isDelete = await dialog.confirm({ title: 'Confirm Delete', text, level: 'warn' });
-            } else {
-                isDelete = true;
-            }
-            if (isDelete) {
-                selection.doDelete();
-                this.diagram.draw();
-                this._onFlowElementSelect.emit( { element: undefined } );
-                this.handleChange();
-            }
-        }
     }
 }

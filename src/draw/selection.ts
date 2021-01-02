@@ -208,19 +208,19 @@ export class Selection {
   }
 
   /**
-   * Grow canvas to adjust to move (TODO: or resize)
+   * Grow canvas to adjust to move or (TODO) resize
    */
   grow(selObj: SelectObj, deltaX: number, deltaY: number) {
     if (deltaX > 0) {
       const right = selObj.display.x + deltaX + selObj.display.w - this.diagram.container.scrollLeft;
       if (right > this.diagram.container.clientWidth) {
-        this.diagram.container.scrollLeft += 5;
+        this.diagram.container.scrollLeft += 10;
       }
     }
     if (deltaY > 0) {
       const bottom = selObj.display.y + deltaY + selObj.display.h - this.diagram.container.scrollTop;
       if (bottom > this.diagram.container.clientHeight) {
-        this.diagram.container.scrollTop += 5;
+        this.diagram.container.scrollTop += 10;
       }
     }
   }

@@ -5,11 +5,9 @@ import { Link } from './link';
  * Model for a diagram step.
  */
 export interface Step extends FlowElement {
-    id: string;
     name: string;
     path: string;  // module path
     links?: Link[];
-    attributes?: {[key: string]: string};
 }
 
 export interface StepInstance {

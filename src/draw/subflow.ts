@@ -3,7 +3,7 @@ import { Shape } from './shape';
 import { Step } from './step';
 import { Link } from './link';
 import { Diagram } from './diagram';
-import { Title } from './display';
+import { parseDisplay, Title } from './display';
 import { Edit } from './edit';
 import { StepInstance } from '../model/step';
 import { LinkStatus } from '../model/link';
@@ -294,21 +294,62 @@ export class Subflow extends Shape {
     return subflow;
   }
 
+  static copy(diagram: Diagram, subflowElement: SubflowElement, dx: number, dy: number): Subflow {
+    const display = parseDisplay(subflowElement);
+    display.x += dx;
+    display.y += dy;
+
+    const subflow = new Subflow(diagram, {
+      id: 'f' + diagram.genId(diagram.subflows || []),
+      type: 'subflow',
+      name: subflowElement.name,
+      steps: [],
+      attributes: { ...subflowElement.attributes,  display: Shape.getAttr(display) }
+    });
+    subflow.display = display;
+    diagram.subflows.push(subflow);
+    const origStepIdToNew = new Map<string,string>();
+    if (subflowElement.steps) {
+      subflow.steps = [];
+      for (const stepElement of subflowElement.steps) {
+        const step = Step.copy(diagram, stepElement, dx, dy);
+        subflow.subflow.steps.push(step.step);
+        subflow.steps.push(step);
+        origStepIdToNew.set(stepElement.id, step.id);
+      }
+      // add links
+      for (const stepElement of subflowElement.steps) {
+        if (stepElement.links) {
+          if (!subflow.links) subflow.links = [];
+          for (const linkElement of stepElement.links) {
+            const from = subflow.steps.find(s => s.id === origStepIdToNew.get(stepElement.id));
+            const to = subflow.steps.find(s => s.id === origStepIdToNew.get(linkElement.to));
+            const link = Link.copy(diagram, linkElement, dx, dy, from, to);
+            from.step.links.push(link.link);
+            subflow.links.push(link);
+          }
+        }
+      }
+    }
+
+    return subflow;
+  }
+
   static subflowElement(_diagram: Diagram, idNum: number, type: string, x: number, y: number): SubflowElement {
     const w = 400;
     const h = 120;
     const subflowX = Math.max(1, x - w / 2);
     const subflowY = Math.max(1, y - h / 2);
     return {
+      id: 'f' + idNum,
+      type: 'subflow',
+      name: type,
       steps: [],
       attributes: {
         embeddedFlowType: type,
         visibility: 'EMBEDDED',
         display: 'x=' + subflowX + ',y=' + subflowY + ',w=' + w + ',h=' + h
       },
-      id: 'f' + idNum,
-      name: type,
-      type: 'subflow'
     };
   }
 }
