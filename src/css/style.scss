@@ -373,6 +373,7 @@
     box-sizing: border-box;
   }
   .flowbee-config-footer input[type=button] {
+    border-width: 1px;
     margin-right: 10px;
   }
 }
@@ -435,7 +436,6 @@
     border-bottom: 1px solid #454545;
   }
   .flowbee-config-footer input[type=button] {
-    margin-right: 10px;
     background-color: #c8c8c8;
   }
 }

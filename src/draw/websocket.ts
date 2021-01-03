@@ -19,7 +19,6 @@ export class WebSocketListener {
     });
     this.websocket.addEventListener('message', event => {
       const flowEvent = JSON.parse(event.data) as FlowEvent;
-      console.log("RECEIVED: " + JSON.stringify(flowEvent, null, 2));
       if (flowEvent.elementType === 'subflow') {
         const subInstance = flowEvent.instance as SubflowInstance;
         const subflow = this.diagram.getSubflow(subInstance.subflowId);
