@@ -38,7 +38,8 @@ export class FlowDiagram {
         flow: string | Flow,
         readonly canvas: HTMLCanvasElement,
         readonly filepath: string,
-        readonly descriptors: Descriptor[] = StandardDescriptors
+        readonly descriptors: Descriptor[] = StandardDescriptors,
+        options?: DiagramOptions
     ) {
         this.flow = typeof flow === 'string' ? FlowDiagram.parse(flow, filepath) : flow;
         canvas.tabIndex = 100000; // allow key events
@@ -46,8 +47,8 @@ export class FlowDiagram {
 
         this.diagram = new Diagram(
             this.canvas,
-            diagramDefault,
-            this.descriptors
+            this.descriptors,
+            merge(diagramDefault, options || {}),
         );
         this.canvas.setAttribute('flowbee-canvas', this.flowName);
         this.selectObj = this.diagram;

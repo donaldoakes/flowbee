@@ -16,6 +16,7 @@ import { Note as NoteElement } from '../model/note';
 import { FlowElement, getFlowName } from '../model/element';
 import { DrawingOptions } from './options';
 import { Grid } from './grid';
+import { WebSocketListener } from './websocket';
 
 export class Diagram extends Shape {
 
@@ -39,14 +40,16 @@ export class Diagram extends Shape {
   stepInstanceId?: string;
   drawBoxes = true;
 
+  private webSocketListener?: WebSocketListener;
+
   images?: {[key: string]: HTMLImageElement};
 
   static containerResizeObserver: ResizeObserver;
 
   constructor(
     readonly canvas: HTMLCanvasElement,
-    public options: DiagramOptions & DrawingOptions,
-    public descriptors: Descriptor[]
+    public descriptors: Descriptor[],
+    public options: DiagramOptions & DrawingOptions
   ) {
     super(canvas.getContext("2d"), options);
     this.canvas.style.transform = null; // forget zoom
@@ -66,7 +69,9 @@ export class Diagram extends Shape {
     const listen = instance && this.options.webSocketUrl && this._instance?.id !== instance.id;
     this._instance = instance;
     if (listen) {
-      this.listenForInstanceUpdates();
+      this.webSocketListener?.stop();
+      this.webSocketListener = new WebSocketListener(this);
+      this.webSocketListener.listen();
     }
   }
 
@@ -1225,86 +1230,6 @@ export class Diagram extends Shape {
         note.setDisplayAttr();
       }
     }
-  }
-
-  // TODO: values
-  listenForInstanceUpdates() {
-    if (!this.options.webSocketUrl) return; // not configured
-    if (!this.instance) return; // no instance to listen on
-
-    const websocket = new WebSocket(this.options.webSocketUrl);
-    websocket.addEventListener('open', () => {
-      websocket.send(`{ "topic": "flowInstance-${this.instance.id}" }`);
-    });
-    websocket.addEventListener('message', event => {
-      const flowEvent = JSON.parse(event.data) as FlowEvent;
-      if (flowEvent.elementType === 'subflow') {
-        const subInstance = flowEvent.instance as SubflowInstance;
-        const subflow = this.getSubflow(subInstance.subflowId);
-        if (subflow) {
-          if (!subflow.instances) subflow.instances = [];
-          if (!this.instance.subflowInstances) this.instance.subflowInstances = [];
-          const subIdx = subflow.instances.findIndex(inst => inst.id === subInstance.id);
-          if (subIdx === -1) {
-            subflow.instances.push(subInstance);
-            this.instance.subflowInstances.push(subInstance);
-          } else {
-            subflow.instances[subIdx] = subInstance;
-            this.instance.subflowInstances[subIdx] = subInstance;
-          }
-          subflow.draw();
-        }
-      } else if (flowEvent.elementType === 'step') {
-        const stepInstance = flowEvent.instance as StepInstance;
-        let step = this.getStep(stepInstance.stepId);
-        if (step) {
-          if (!step.instances) step.instances = [];
-          if (!this.instance.stepInstances) this.instance.stepInstances = [];
-          let stepIdx = step.instances.findIndex(inst => inst.id === stepInstance.id);
-          if (stepIdx === -1) {
-            step.instances.push(stepInstance);
-          } else {
-            step.instances[stepIdx] = stepInstance;
-          }
-          stepIdx = this.instance.stepInstances.findIndex(inst => inst.id === stepInstance.id);
-          if (stepIdx === -1) {
-            this.instance.stepInstances.push(stepInstance);
-          } else {
-            this.instance.stepInstances[stepIdx] = stepInstance;
-          }
-        } else {
-          for (const subflow of this.subflows) {
-            step = subflow.getStep(stepInstance.stepId);
-            if (step) {
-              if (!step.instances) step.instances = [];
-              const subflowInst = subflow.instances?.length ? subflow.instances[subflow.instances.length - 1] : null;
-              if (subflowInst) {
-                if (!subflowInst.stepInstances) subflowInst.stepInstances = [];
-                const stepIdx = step.instances.findIndex(inst => inst.id === stepInstance.id);
-                if (stepIdx === -1) {
-                  step.instances.push(stepInstance);
-                  subflowInst.stepInstances.push(stepInstance);
-                } else {
-                  step.instances[stepIdx] = stepInstance;
-                  subflowInst.stepInstances[stepIdx] = stepInstance;
-                }
-              }
-              break;
-            }
-          }
-        }
-        if (step) {
-          if (flowEvent.eventType === 'start') {
-            for (const inLink of this.getInLinks(step)) {
-              inLink.status = this.getLinkStatus(inLink.link.id);
-              inLink.draw();
-            }
-          }
-          step.draw();
-          this.scrollIntoView(step);
-        }
-      }
-    });
   }
 
   selectElement(id: string): SelectObj | undefined {
