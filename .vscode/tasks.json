@@ -1,30 +1,30 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "type": "npm",
-            "script": "build",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": []
-        },
-        {
-            "type": "npm",
-            "script": "watch",
-            "isBackground": true,
-            "presentation": {
-              "reveal": "always"
-            },
-            "group": "none",
-            "problemMatcher": [],
-            "label": "npm: watch"
-        },
-        {
-            "type": "npm",
-            "script": "css",
-            "problemMatcher": []
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "type": "npm",
+      "script": "watch",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always"
+      },
+      "group": "none",
+      "problemMatcher": [],
+      "label": "npm: watch"
+    },
+    {
+      "type": "npm",
+      "script": "css",
+      "problemMatcher": []
+    }
+  ]
 }
