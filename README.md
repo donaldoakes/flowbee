@@ -1,4 +1,6 @@
 # flowbee (alpha)
+Simple, flexible, open flow diagraming.
+
 Docs are coming. In the meantime see [flowbee-demo](https://github.com/donaldoakes/flowbee-demo).
 
 ## Install
