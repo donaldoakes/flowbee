@@ -7,6 +7,7 @@ export class WebSocketListener {
   private websocket: WebSocket;
 
   constructor(private diagram: Diagram) {
+    console.log(`websocket binding to: ${this.diagram.options.webSocketUrl}`);
     this.websocket = new WebSocket(this.diagram.options.webSocketUrl);
   }
 
@@ -14,8 +15,10 @@ export class WebSocketListener {
    * TODO: values
    */
   listen() {
+    const topic = `{ "topic": "flowInstance-${this.diagram.instance.id}" }`;
+    console.log(`websocket listening on: ${topic}`);
     this.websocket.addEventListener('open', () => {
-        this.websocket.send(`{ "topic": "flowInstance-${this.diagram.instance.id}" }`);
+        this.websocket.send(topic);
     });
     this.websocket.addEventListener('message', event => {
       const flowEvent = JSON.parse(event.data) as FlowEvent;
