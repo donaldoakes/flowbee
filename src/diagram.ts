@@ -269,6 +269,11 @@ export class FlowDiagram {
         this._onFlowElementUpdate.on(listener);
     }
 
+    private _onFlowElementDrill = new TypedEvent<FlowElementSelectEvent>();
+    onFlowElementDrill(listener: Listener<FlowElementSelectEvent>) {
+        this._onFlowElementDrill.on(listener);
+    }
+
     private down = false;
     private dragging = false;
     private selectObj: SelectObj;
@@ -337,6 +342,12 @@ export class FlowDiagram {
     }
 
     private onDoubleClick(e: MouseEvent) {
+
+        this._onFlowElementDrill.emit( {
+            element: this.selObj.flowElement,
+            instances: this.selObj.instances
+        });
+
         if (!this.readonly) {
             const selObj = this.selObj;
             if (selObj.type === 'step' || selObj.type === 'link'
