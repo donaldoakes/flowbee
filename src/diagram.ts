@@ -13,6 +13,7 @@ import { ContextMenu, ContextMenuProvider, DefaultMenuProvider } from './menu';
 import { DefaultDialog, DialogProvider } from './dialog';
 import { FlowElement, getFlowName } from './model/element';
 import { Clipper } from './clip';
+import { Title } from './draw/display';
 
 export class FlowDiagram {
 
@@ -342,20 +343,33 @@ export class FlowDiagram {
     }
 
     private onDoubleClick(e: MouseEvent) {
-
-        this._onFlowElementDrill.emit( {
-            element: this.selObj.flowElement,
-            instances: this.selObj.instances
-        });
-
-        if (!this.readonly) {
+        if (this.readonly) {
+            this._onFlowElementDrill.emit( {
+                element: this.selObj.flowElement,
+                instances: this.selObj.instances
+            });
+        } else {
             const selObj = this.selObj;
-            if (selObj.type === 'step' || selObj.type === 'link'
-                  || selObj.type === 'subflow' || selObj.type === 'note') {
-                (selObj as any).edit(text => {
-                    if (selObj.type === 'step' || selObj.type === 'subflow') {
+            if (selObj.type === 'step' || selObj.type === 'subflow') {
+                const title = (selObj as any).title as Title;
+                const rect = this.canvas.getBoundingClientRect();
+                const { x, y } = this.diagram.unscale(e.clientX - rect.left, e.clientY - rect.top);
+                const onTitle = x >= title.x && x <= title.x + title.w && y >= title.y && y <= title.y + title.h;
+                if (onTitle) {
+                    (selObj as any).edit(text => {
                         (selObj.flowElement as any).name = text;
-                    }
+                        this._onFlowElementUpdate.emit({ element: selObj.flowElement });
+                        this.handleChange();
+                    });
+                } else {
+                    this._onFlowElementDrill.emit( {
+                        element: this.selObj.flowElement,
+                        instances: this.selObj.instances
+                    });
+                }
+            }
+            else if (selObj.type === 'link' || selObj.type === 'note') {
+                (selObj as any).edit(text => {
                     this._onFlowElementUpdate.emit({ element: selObj.flowElement });
                     this.handleChange();
                 });
