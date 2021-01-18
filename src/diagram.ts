@@ -343,11 +343,15 @@ export class FlowDiagram {
     }
 
     private onDoubleClick(e: MouseEvent) {
-        if (this.readonly) {
+        const emitDrill = () => {
             this._onFlowElementDrill.emit( {
                 element: this.selObj.flowElement,
                 instances: this.selObj.instances
             });
+        };
+
+        if (this.readonly) {
+            emitDrill();
         } else {
             const selObj = this.selObj;
             if (selObj.type === 'step' || selObj.type === 'subflow') {
@@ -362,17 +366,15 @@ export class FlowDiagram {
                         this.handleChange();
                     });
                 } else {
-                    this._onFlowElementDrill.emit( {
-                        element: this.selObj.flowElement,
-                        instances: this.selObj.instances
-                    });
+                    emitDrill();
                 }
-            }
-            else if (selObj.type === 'link' || selObj.type === 'note') {
+            } else if (selObj.type === 'link' || selObj.type === 'note') {
                 (selObj as any).edit(text => {
                     this._onFlowElementUpdate.emit({ element: selObj.flowElement });
                     this.handleChange();
                 });
+            } else if (selObj.type === 'flow') {
+                emitDrill();
             }
         }
     }
