@@ -16,7 +16,7 @@ export class Table {
         this._onTableUpdate.on(listener);
     }
 
-    constructor(readonly widgets: Widget[], value: string, private readonly: boolean) {
+    constructor(readonly widgets: Widget[], value: string, readonly readonly: boolean, readonly fixedRows = false ) {
         this.tableElement = document.createElement('table') as HTMLTableElement;
         // header
         const headRow = document.createElement('tr') as HTMLTableRowElement;
@@ -43,7 +43,7 @@ export class Table {
 
         // add rows from value (extra row for entry)
         let tabIndex = 100;
-        const rowCount = this.readonly ? this.rows.length : this.rows.length + 1;
+        const rowCount = this.readonly || this.fixedRows ? this.rows.length : this.rows.length + 1;
         for (let i = 0; i < rowCount; i++) {
             const row = this.rows[i];
             const rowElement = document.createElement('tr') as HTMLTableRowElement;
