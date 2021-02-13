@@ -3,7 +3,7 @@ import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
 import { Flow, FlowInstance } from './model/flow';
 import { Descriptor, StandardDescriptors } from './model/descriptor';
-import { DiagramOptions, diagramDefault } from './options';
+import { DiagramOptions, diagramDefault, Mode } from './options';
 import { DiagramStyle } from './style/style';
 import { DrawingOptions } from './draw/options';
 import { Label } from './draw/label';
@@ -117,10 +117,10 @@ export class FlowDiagram {
         this.diagram.zoomCanvas(zoom);
     }
 
-    get mode(): 'select' | 'connect' | 'runtime' {
+    get mode(): Mode {
         return this.diagram.mode;
     }
-    set mode(mode: 'select' | 'connect' | 'runtime') {
+    set mode(mode: Mode) {
         this.diagram.mode = mode;
         if (mode !== 'runtime') {
             this.instance = null;

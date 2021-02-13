@@ -13,7 +13,7 @@ export { FlowElement as FlowItem, FlowElementType as FlowItemType, getFlowName }
 export { Toolbox } from './toolbox';
 export { FlowTree, FileTree, FileItemType, FlowTreeSelectEvent } from './tree';
 export { TypedEvent, Listener, Disposable, FlowChangeEvent, FlowElementEvent, FlowElementSelectEvent, FlowElementInstance } from './event';
-export { DiagramOptions, ToolboxOptions, FlowTreeOptions, ConfiguratorOptions } from './options';
+export { DiagramOptions, ToolboxOptions, FlowTreeOptions, ConfiguratorOptions, Mode } from './options';
 export { DrawingOptions } from './draw/options';
 export { MenuItem, ContextMenuProvider, DefaultMenuProvider, ContextMenuSelectEvent } from './menu';
 export { DialogMessage, DialogProvider, DefaultDialog } from './dialog';

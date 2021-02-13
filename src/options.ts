@@ -1,5 +1,7 @@
 import { Icon } from './style/icon';
 
+export type Mode = 'select' | 'connect' | 'runtime';
+
 export interface DiagramOptions {
     theme?: string;
     iconBase?: string;
