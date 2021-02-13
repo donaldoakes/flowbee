@@ -1,4 +1,4 @@
-import { Listener, TypedEvent } from './event';
+import { Disposable, Listener, TypedEvent } from './event';
 import { Widget } from './model/template';
 
 export interface TableUpdateEvent {
@@ -12,8 +12,8 @@ export class Table {
     rows = [];
 
     private _onTableUpdate = new TypedEvent<TableUpdateEvent>();
-    onTableUpdate(listener: Listener<TableUpdateEvent>) {
-        this._onTableUpdate.on(listener);
+    onTableUpdate(listener: Listener<TableUpdateEvent>): Disposable {
+        return this._onTableUpdate.on(listener);
     }
 
     constructor(readonly widgets: Widget[], value: string, readonly readonly: boolean, readonly fixedRows = false ) {

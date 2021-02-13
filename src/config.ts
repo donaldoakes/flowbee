@@ -1,6 +1,6 @@
 import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
-import { FlowElementInstance, FlowElementUpdateEvent, Listener, TypedEvent } from './event';
+import { Disposable, FlowElementInstance, FlowElementUpdateEvent, Listener, TypedEvent } from './event';
 import { FlowElement, getLabel } from './model/element';
 import { ConfigTemplate } from './model/template';
 import { configuratorDefault, ConfiguratorOptions } from './options';
@@ -38,8 +38,8 @@ export class Configurator {
     private edge: Edge | null;
 
     private _onFlowElementUpdate = new TypedEvent<FlowElementUpdateEvent>();
-    onFlowElementUpdate(listener: Listener<FlowElementUpdateEvent>) {
-        this._onFlowElementUpdate.on(listener);
+    onFlowElementUpdate(listener: Listener<FlowElementUpdateEvent>): Disposable {
+        return this._onFlowElementUpdate.on(listener);
     }
 
     get width(): number {

@@ -7,7 +7,7 @@ import { DiagramOptions, diagramDefault } from './options';
 import { DiagramStyle } from './style/style';
 import { DrawingOptions } from './draw/options';
 import { Label } from './draw/label';
-import { TypedEvent, Listener, FlowElementSelectEvent, FlowChangeEvent, FlowElementUpdateEvent } from './event';
+import { TypedEvent, Listener, FlowElementSelectEvent, FlowChangeEvent, FlowElementUpdateEvent, Disposable } from './event';
 import { SelectObj } from './draw/selection';
 import { ContextMenu, ContextMenuProvider, DefaultMenuProvider } from './menu';
 import { DefaultDialog, DialogProvider } from './dialog';
@@ -256,23 +256,23 @@ export class FlowDiagram {
     // Events
 
     private _onFlowChange = new TypedEvent<FlowChangeEvent>();
-    onFlowChange(listener: Listener<FlowChangeEvent>) {
-        this._onFlowChange.on(listener);
+    onFlowChange(listener: Listener<FlowChangeEvent>): Disposable {
+        return this._onFlowChange.on(listener);
     }
 
     private _onFlowElementSelect = new TypedEvent<FlowElementSelectEvent>();
-    onFlowElementSelect(listener: Listener<FlowElementSelectEvent>) {
-        this._onFlowElementSelect.on(listener);
+    onFlowElementSelect(listener: Listener<FlowElementSelectEvent>): Disposable {
+        return this._onFlowElementSelect.on(listener);
     }
 
     private _onFlowElementUpdate = new TypedEvent<FlowElementUpdateEvent>();
-    onFlowElementUpdate(listener: Listener<FlowElementUpdateEvent>) {
-        this._onFlowElementUpdate.on(listener);
+    onFlowElementUpdate(listener: Listener<FlowElementUpdateEvent>): Disposable {
+        return this._onFlowElementUpdate.on(listener);
     }
 
     private _onFlowElementDrill = new TypedEvent<FlowElementSelectEvent>();
-    onFlowElementDrill(listener: Listener<FlowElementSelectEvent>) {
-        this._onFlowElementDrill.on(listener);
+    onFlowElementDrill(listener: Listener<FlowElementSelectEvent>): Disposable {
+        return this._onFlowElementDrill.on(listener);
     }
 
     private down = false;

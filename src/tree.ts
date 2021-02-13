@@ -1,7 +1,7 @@
 import { merge } from 'merge-anything';
 import { FlowTreeOptions, flowTreeDefault} from './options';
 import { Theme } from './theme';
-import { TypedEvent, Listener } from './event';
+import { TypedEvent, Listener, Disposable } from './event';
 
 export type FileItemType = 'file' | 'directory';
 
@@ -33,8 +33,8 @@ export class FlowTree {
     private tabIndex = 1;
 
     private _onFlowSelect = new TypedEvent<FlowTreeSelectEvent>();
-    onFlowSelect(listener: Listener<FlowTreeSelectEvent>) {
-        this._onFlowSelect.on(listener);
+    onFlowSelect(listener: Listener<FlowTreeSelectEvent>): Disposable {
+        return this._onFlowSelect.on(listener);
     }
 
     constructor(
