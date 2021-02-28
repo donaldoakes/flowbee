@@ -62,7 +62,7 @@ export class Step extends Shape {
       this.diagram.drawState(this.display, this.instances, !this.diagram.drawBoxes, adj, animationTimeSlice, color, fill, opacity);
       if (shape === 'start' || shape === 'stop' || shape === 'pause') {
         // clear background so opacity doesn't cause issues
-          this.diagram.oval(
+        this.diagram.oval(
           this.display.x,
           this.display.y,
           this.display.w,
@@ -177,11 +177,7 @@ export class Step extends Shape {
 
     // logical id
     this.diagram.context.fillStyle = this.diagram.options.meta.color;
-    if (shape === 'start' || shape === 'stop' || shape === 'pause') {
-      this.diagram.context.fillText(step.id, this.display.x + 2, this.display.y - 4);
-    } else {
-      this.diagram.context.fillText(step.id, this.display.x + 2, this.display.y - 2);
-    }
+    this.diagram.context.fillText(step.id, this.display.x + 2, this.display.y - 4);
     this.diagram.context.fillStyle = this.diagram.options.defaultColor;
   }
 

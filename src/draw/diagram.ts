@@ -205,7 +205,9 @@ export class Diagram extends Shape {
           it.highlight();
           highlighted = it;
         }
-        this.scrollIntoView(it, timeSlice);
+        if (this.diagram.options.scrollIntoView) {
+          this.scrollIntoView(it, timeSlice);
+        }
         i++;
         if (i < sequence.length) {
           const nextSlice = sequence[i] instanceof Link ? linkSlice : nonLinkSlice;
@@ -367,7 +369,7 @@ export class Diagram extends Shape {
       const update = function (it: (Step | Link | Subflow), slice: number) {
         let highlight = false;
         if (it.flowElement.type === 'step') {
-          if (animate) {
+          if (animate && diagram.options.scrollIntoView) {
             // TODO: more sensible live scrolling based on ultimate endpoint (esp highlight)
             diagram.scrollIntoView(it, slice);
           }

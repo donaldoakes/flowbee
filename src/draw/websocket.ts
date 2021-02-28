@@ -85,7 +85,9 @@ export class WebSocketListener {
             }
           }
           step.draw();
-          this.diagram.scrollIntoView(step);
+          if (this.diagram.options.scrollIntoView) {
+            this.diagram.scrollIntoView(step);
+          }
         }
       }
     });

@@ -13,7 +13,8 @@ export interface DiagramOptions {
     promptToDelete?: boolean;
     animationSpeed?: number; // segments/s;
     animationLinkFactor?: number; // relative link slice
-    maxInstances?: number
+    maxInstances?: number;
+    scrollIntoView?: boolean;
 }
 
 export const diagramDefault: DiagramOptions = {
