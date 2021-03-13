@@ -1,6 +1,6 @@
 import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
-import { Disposable, FlowElementInstance, FlowElementUpdateEvent, Listener, TypedEvent } from './event';
+import { ConfiguratorPositionEvent, Disposable, FlowElementInstance, FlowElementUpdateEvent, Listener, TypedEvent } from './event';
 import { FlowElement, getLabel } from './model/element';
 import { ConfigTemplate } from './model/template';
 import { configuratorDefault, ConfiguratorOptions } from './options';
@@ -40,6 +40,11 @@ export class Configurator {
     private _onFlowElementUpdate = new TypedEvent<FlowElementUpdateEvent>();
     onFlowElementUpdate(listener: Listener<FlowElementUpdateEvent>): Disposable {
         return this._onFlowElementUpdate.on(listener);
+    }
+
+    private _onReposition = new TypedEvent<ConfiguratorPositionEvent>();
+    onReposition(listener: Listener<ConfiguratorPositionEvent>): Disposable {
+        return this._onReposition.on(listener);
     }
 
     get width(): number {
@@ -116,7 +121,8 @@ export class Configurator {
         flowElement: FlowElement,
         instances: FlowElementInstance[],
         template: ConfigTemplate | string,
-        options: ConfiguratorOptions
+        options: ConfiguratorOptions,
+        position?: { left: number, top: number, width: number, height: number }
     ) {
 
         if (!flowElement) throw new Error('flowElement is required');
@@ -152,12 +158,21 @@ export class Configurator {
 
         this.div.style.display = 'flex';
 
-        if (!this.isSized) {
-            this.size();
-            this.container.style.minHeight = this.minHeight + 'px';
+        if (position) {
+            this.left = position.left;
+            this.top = position.top;
+            this.width = position.width;
+            this.height = position.height;
             this.isSized = true;
+
+        } else {
+            if (!this.isSized) {
+                this.size();
+                this.container.style.minHeight = this.minHeight + 'px';
+                this.isSized = true;
+            }
+            this.position();
         }
-        this.position();
 
         // calculate tab content height based on total
         this.tabContent.style.height = (this.div.offsetHeight - this.header.offsetHeight - 2) + 'px';
@@ -181,6 +196,9 @@ export class Configurator {
                 }
             };
             document.onmouseup = _e => {
+                if (this.edge?.drag || this.drag) {
+                    this._onReposition.emit({ position: { left: this.left, top: this.top, width: this.width, height: this.height } });
+                }
                 if (this.edge) this.edge.drag = null;
                 this.drag = null;
             };
@@ -265,7 +283,9 @@ export class Configurator {
             if (widget.type === 'text' || widget.type === 'datetime') {
                 const text = document.createElement('input') as HTMLInputElement;
                 text.type = 'text';
-                text.value = value && widget.type === 'datetime' ? this.datetime(new Date(value)) : value;
+                if (value) {
+                    text.value = widget.type === 'datetime' ? this.datetime(new Date(value)) : value;
+                }
                 if (readonly) {
                     text.readOnly = true;
                     text.style.borderColor = 'transparent';
@@ -384,11 +404,12 @@ export class Configurator {
     }
 
     get isOpen(): boolean {
-        return this.div.style.display && this.div.style.display !== 'none';
+        return this.div.style.display?.length > 0 && this.div.style.display !== 'none';
     }
 
     close() {
         this.div.style.display = 'none';
+        this._onReposition.emit({ });
     }
 
     private size() {
@@ -501,6 +522,7 @@ export class Configurator {
         }
         this.left = left;
         this.top = top;
+
     }
 
     private resize(loc: Loc, dx: number, dy: number) {

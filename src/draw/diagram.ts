@@ -1237,16 +1237,24 @@ export class Diagram extends Shape {
   selectElement(id: string): SelectObj | undefined {
     if (this.mode === 'connect') return;
     let selObj: SelectObj;
-    // TODO others besides steps
-    if (id.startsWith('s')) {
-      selObj = this.getStep(id);
+    if (id.startsWith('f')) {
+      selObj = this.getSubflow(id);
+    } else {
+      if (id.startsWith('s')) {
+        selObj = this.getStep(id);
+      } else if (id.startsWith('l')) {
+        selObj = this.getLink(id);
+      } else if (id.startsWith('n')) {
+        selObj = this.getNote(id);
+      }
       if (!selObj && this.subflows) {
         for (const subflow of this.subflows) {
-          selObj = subflow.getStep(id);
+          selObj = subflow.get(id);
           if (selObj) break;
         }
       }
     }
+
     if (selObj) {
       this.selection.unselect();
       this.draw();

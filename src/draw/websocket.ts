@@ -1,4 +1,4 @@
-import { FlowEvent, SubflowInstance } from '../model/flow';
+import { FlowEvent, FlowInstance, SubflowInstance } from '../model/flow';
 import { StepInstance } from '../model/step';
 import { Diagram } from './diagram';
 
@@ -22,6 +22,9 @@ export class WebSocketListener {
     });
     this.websocket.addEventListener('message', event => {
       const flowEvent = JSON.parse(event.data) as FlowEvent;
+      if (flowEvent.elementType === 'flow') {
+        this.diagram.instance = flowEvent.instance as FlowInstance;
+      }
       if (flowEvent.elementType === 'subflow') {
         const subInstance = flowEvent.instance as SubflowInstance;
         const subflow = this.diagram.getSubflow(subInstance.subflowId);

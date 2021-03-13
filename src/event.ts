@@ -10,10 +10,17 @@ export interface FlowElementEvent {
 }
 export interface FlowElementSelectEvent extends FlowElementEvent { }
 export interface FlowChangeEvent {
-    flow: Flow
+    flow: Flow;
 }
 export interface FlowElementUpdateEvent {
-    element: FlowElement
+    element: FlowElement;
+}
+
+/**
+ * Undefined position means configurator has been closed.
+ */
+export interface ConfiguratorPositionEvent {
+    position?: { left: number, top: number, width: number, height: number };
 }
 
 export interface Listener<T> {
