@@ -292,6 +292,7 @@ export class Diagram extends Shape {
       if (step.step.links) {
         step.step.links.forEach(function (flowLink) {
           const link = new Link(diagram, flowLink, step, diagram.getStep(flowLink.to));
+          link.count = diagram.countLinks(link);
           diagram.makeRoom(canvasDisplay, link.prepareDisplay());
           diagram.links.push(link);
         });
@@ -722,6 +723,16 @@ export class Diagram extends Shape {
       links = [ ...links, ...subflow.links ];
     });
     return links;
+  }
+
+  /**
+   * Count matching links (including passed orig)
+   */
+  countLinks(orig: Link): number {
+    return this.allLinks().reduce((count, link) => {
+      if (link.isDup(orig)) count++;
+      return count;
+    }, 1);
   }
 
   addLink(from: Step, to: Step): Link {

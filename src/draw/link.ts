@@ -48,6 +48,11 @@ export class Link {
   status?: LinkStatus;
   instances?; // SelectObj interface
 
+  /**
+   * @param count duplicate, overlapping links (1 = no dups)
+   */
+  count = 1;
+
   constructor(readonly diagram: Diagram, readonly link: LinkElement, public from: Step, public to: Step) {
     this.flowElement = { ...link, type: 'link' };
     if (window.devicePixelRatio) {
@@ -152,7 +157,7 @@ export class Link {
       context.strokeStyle = 'rgba(0, 0, 0, 0)'; // transparent
     }
     else {
-      context.lineWidth = this.diagram.options.link.lineWidth;
+      context.lineWidth = this.count * this.diagram.options.link.lineWidth;
     }
 
     if (!type || type.startsWith('Elbow')) {
@@ -204,7 +209,7 @@ export class Link {
           linkThis.drawConnectorArrow.call(linkThis, context);
           context.strokeStyle = linkThis.diagram.options.defaultColor;
         };
-        this.diagram.animateLine(segments, this.getColor(), linkThis.diagram.options.link.lineWidth, animationTimeSlice);
+        this.diagram.animateLine(segments, this.getColor(), this.count * linkThis.diagram.options.link.lineWidth, animationTimeSlice);
       }
       else {
         if (hitX) {
@@ -219,7 +224,7 @@ export class Link {
           });
         }
         else {
-          this.diagram.drawLine(segments, this.getColor(), this.diagram.options.link.lineWidth);
+          this.diagram.drawLine(segments, this.getColor(), this.count * this.diagram.options.link.lineWidth);
         }
       }
     }
@@ -261,7 +266,7 @@ export class Link {
             to: { x: xs[1], y: ys[1] },
             lineEnd: drawArrow
           });
-          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), this.count * options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0] - xcorr, ys[0]);
@@ -275,7 +280,7 @@ export class Link {
             to: { x: xs[1], y: ys[1] },
             lineEnd: drawArrow
           });
-          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), this.count * options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0], ys[0] - ycorr);
@@ -298,7 +303,7 @@ export class Link {
           from = curveTo;
           to = { x: xs[1], y: ys[1] };
           segments.push({ from: from, to: to, lineEnd: drawArrow });
-          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), this.count * options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0] - xcorr, ys[0]);
@@ -325,7 +330,7 @@ export class Link {
           from = curveTo;
           to = { x: xs[1], y: ys[1] };
           segments.push({ from: from, to: to, lineEnd: drawArrow });
-          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), this.count * options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0], ys[0] - ycorr);
@@ -346,7 +351,7 @@ export class Link {
           from = curveTo;
           to = { x: xs[1], y: ys[1] };
           segments.push({ from: from, to: to, lineEnd: drawArrow });
-          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), this.count * options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0] - xcorr, ys[0]);
@@ -365,7 +370,7 @@ export class Link {
           from = curveTo;
           to = { x: xs[1], y: ys[1] };
           segments.push({ from: from, to: to, lineEnd: drawArrow });
-          this.diagram.animateLine(segments, this.getColor(), options.link.lineWidth, animationTimeSlice);
+          this.diagram.animateLine(segments, this.getColor(), this.count * options.link.lineWidth, animationTimeSlice);
         }
         else {
           context.moveTo(xs[0], ys[0] - ycorr);
@@ -391,7 +396,14 @@ export class Link {
     const type = this.display.type;
     const xs = this.display.xs;
     const ys = this.display.ys;
-    const p = 12;
+    let p = 12;
+    let gap = Link.GAP;
+    if (this.count > 1) {
+      const f = 1 + (this.count - 1) * .5;
+      p = p * f;
+      gap = gap * f;
+    }
+
     let slope;
     let x, y;
     if (type === Link.LINK_TYPES.STRAIGHT) {
@@ -408,13 +420,13 @@ export class Link {
         case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_VHV:
         case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_HV:
           x = xs[1];
-          y = ys[1] > ys[0] ? ys[1] + Link.GAP : ys[1] - Link.GAP;
+          y = ys[1] > ys[0] ? ys[1] + gap : ys[1] - gap;
           slope = ys[1] > ys[0] ? Math.PI / 2 : Math.PI * 1.5;
           break;
         case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_H:
         case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_HVH:
         case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_VH:
-          x = xs[1] > xs[0] ? xs[1] + Link.GAP : xs[1] - Link.GAP;
+          x = xs[1] > xs[0] ? xs[1] + gap : xs[1] - gap;
           y = ys[1];
           slope = xs[1] > xs[0] ? 0 : Math.PI;
           break;
@@ -426,11 +438,11 @@ export class Link {
       if (xs[k] === xs[k - 1] && (ys[k] !== ys[k - 1] || ys[k - 1] === ys[k - 2])) {
         // verticle arrow
         x = xs[k];
-        y = ys[k] > ys[k - 1] ? ys[k] + Link.GAP : ys[k] - Link.GAP;
+        y = ys[k] > ys[k - 1] ? ys[k] + gap : ys[k] - gap;
         slope = ys[k] > ys[k - 1] ? Math.PI / 2 : Math.PI * 1.5;
       }
       else {
-        x = xs[k] > xs[k - 1] ? xs[k] + Link.GAP : xs[k] - Link.GAP;
+        x = xs[k] > xs[k - 1] ? xs[k] + gap : xs[k] - gap;
         y = ys[k];
         slope = xs[k] > xs[k - 1] ? 0 : Math.PI;
       }
@@ -960,6 +972,38 @@ export class Link {
     return (this.label && this.label.isHover(x, y)) || this.drawConnector(x, y);
   }
 
+  /**
+   * True means other completely overlaps this
+   */
+  isDup(other: Link): boolean {
+    if (other.id === this.id) return false; // it's me
+
+    if (other.from.id !== this.from.id || other.to.id !== this.to.id) return false;
+
+    if (!other.display) other.prepareDisplay();
+
+    if (other.display.type !== this.display.type) return false;
+
+    if (other.display.xs?.length) {
+      if (this.display.xs?.length !== other.display.xs.length) return false;
+      for (let i = 0; i < other.display.xs.length; i++) {
+        if (other.display.xs[i] !== this.display.xs[i]) return false;
+      }
+    } else if (this.display.xs?.length) {
+      return false;
+    }
+    if (other.display.ys) {
+      if (this.display.ys?.length !== other.display.ys.length) return false;
+      for (let i = 0; i < other.display.ys.length; i++) {
+        if (other.display.ys[i] !== this.display.ys[i]) return false;
+      }
+    } else if (this.display.ys?.length) {
+      return false;
+    }
+
+    return true;
+  }
+
   getAnchor(x: number, y: number): number {
     for (let i = 0; i < this.display.xs.length; i++) {
       const cx = this.display.xs[i];
@@ -1098,6 +1142,7 @@ export class Link {
     from.step.links.push(linkElement);
     link.display = { type: Link.LINK_TYPES.ELBOW, x: 0, y: 0, xs: [0, 0], ys: [0, 0] };
     link.calc();
+    link.count = diagram.countLinks(link);
     return link;
   }
 

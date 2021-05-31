@@ -108,6 +108,7 @@ export class Subflow extends Shape {
       if (step.step.links) {
         step.step.links.forEach(function (flowLink) {
           const link = new Link(subflow.diagram, flowLink, step, subflow.getStep(flowLink.to));
+          link.count = subflow.countLinks(link);
           link.prepareDisplay();
           subflow.links.push(link);
         });
@@ -144,6 +145,16 @@ export class Subflow extends Shape {
     return this.links.filter(link => {
       return link.to.step.id === step.step.id || link.from.step.id === step.step.id;
     });
+  }
+
+  /**
+   * Count matching links (including passed orig)
+   */
+  countLinks(orig: Link): number {
+    return this.links.reduce((count, link) => {
+      if (link.isDup(orig)) count++;
+      return count;
+    }, 1);
   }
 
   get(id: string): Step | Link {
