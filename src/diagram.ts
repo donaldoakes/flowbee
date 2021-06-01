@@ -289,9 +289,7 @@ export class FlowDiagram {
             this.dragging = true;
         }
         if (this.dragging) {
-            if (this.diagram.onMouseDrag(e)) {
-                this.handleChange();
-            }
+            this.diagram.onMouseDrag(e);
         }
         else {
             this.diagram.onMouseMove(e);

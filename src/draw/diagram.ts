@@ -1370,6 +1370,7 @@ export class Diagram extends Shape {
   onMouseUp(e: MouseEvent) {
     let chg = false;
     if ((this.shiftDrag || this.mode === 'connect') && this.dragX && this.dragY) {
+      // dragging a link
       const selObj = this.mode === 'connect' ? this.connectObj : this.selection.getSelectObj();
       if (selObj?.type === 'step') {
         const rect = this.canvas.getBoundingClientRect();
@@ -1407,9 +1408,12 @@ export class Diagram extends Shape {
       this.selection.select();
     } else if (!e.shiftKey && this.mode !== 'connect') {
       this.selection.reselect();
-      if (this.drag && this.grid?.snap) {
-        this.selection.snap(this.anchor >= 0);
-        this.draw();
+      if (this.drag) {
+        if (this.grid?.snap) {
+          this.selection.snap(this.anchor >= 0);
+          this.draw();
+        }
+        chg = true;
       }
       this.selection.select();
     }
