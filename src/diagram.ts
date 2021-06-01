@@ -213,6 +213,10 @@ export class FlowDiagram {
         }
     }
 
+    focus() {
+        this.canvas.focus();
+    }
+
     get selected(): FlowElement[] {
         const selected: FlowElement[] = [];
         this.diagram.selection.selectObjs.forEach(selObj => {
