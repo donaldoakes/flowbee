@@ -14,6 +14,7 @@ export interface FlowChangeEvent {
 }
 export interface FlowElementUpdateEvent {
     element: FlowElement;
+    action?: string;
 }
 
 /**

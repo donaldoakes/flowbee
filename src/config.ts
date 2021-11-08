@@ -259,12 +259,14 @@ export class Configurator {
 
         const widgets = this.template[tabName].widgets;
         for (const widget of widgets) {
-            if (widget.label && (widgets.length > 1 || widget.type !== 'textarea')) {
+            if (widget.type === 'link' || widget.type === 'note') {
+                const span = document.createElement('span');
+                span.innerText = '';
+                this.tabContent.appendChild(span);
+            } else if (widget.label && (widgets.length > 1 || widget.type !== 'textarea')) {
                 const label = document.createElement('label');
-                label.innerHTML = widget.type === 'note' ? '' : widget.label;
+                label.innerHTML = widget.label;
                 this.tabContent.appendChild(label);
-            } else {
-                // todo span
             }
 
             this.tabContent.style.gridAutoRows = '25px';
@@ -373,6 +375,18 @@ export class Configurator {
                 const span = document.createElement('span');
                 span.innerText = widget.label;
                 this.tabContent.appendChild(span);
+            } else if (widget.type === 'link') {
+                const isHttp = value.startsWith('http://') || value.startsWith('https://');
+                const anchor = document.createElement('a');
+                anchor.setAttribute('href', isHttp ? value : '');
+                anchor.innerText = widget.label;
+                this.tabContent.appendChild(anchor);
+                anchor.onclick = e => {
+                    if (isHttp) {
+                        e.preventDefault();
+                    }
+                    this._onFlowElementUpdate.emit({ element: this.flowElement, action: value });
+                };
             } else if (widget.type === 'source') {
                 const pre = document.createElement('pre') as HTMLPreElement;
                 const indent = 2; // TODO config

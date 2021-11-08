@@ -17,6 +17,7 @@ export class Table {
     }
 
     constructor(readonly widgets: Widget[], value: string, readonly readonly: boolean, readonly fixedRows = false ) {
+        console.log("NEW TABLE NEW TABLE NEW TABLE");
         this.tableElement = document.createElement('table') as HTMLTableElement;
         // header
         const headRow = document.createElement('tr') as HTMLTableRowElement;

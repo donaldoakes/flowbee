@@ -14,6 +14,7 @@ export type WidgetType =
     'datetime' |
     'table' |
     'note' |
+    'link' |
     'source';
 
 export interface Widget {
