@@ -325,8 +325,8 @@ export class Step extends Shape {
     });
   }
 
-  static create(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number): Step {
-    const stepElement = Step.stepElement(diagram, idNum, descriptor, x, y);
+  static create(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number, name?: string): Step {
+    const stepElement = Step.stepElement(diagram, idNum, descriptor, x, y, name);
     const step = new Step(diagram, stepElement);
     step.descriptor = descriptor;
     const disp = step.getDisplay();
@@ -352,7 +352,7 @@ export class Step extends Shape {
     return step;
   }
 
-  static stepElement(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number): StepElement {
+  static stepElement(diagram: Diagram, idNum: number, descriptor: Descriptor, x: number, y: number, name?: string): StepElement {
     let w = 24;
     let h = 24;
     if (diagram.drawBoxes) {
@@ -365,25 +365,27 @@ export class Step extends Shape {
         h = 80;
       }
     }
-    let name = descriptor.name;
-    if (descriptor.category === 'start') {
-      name = 'Start';
-    }
-    else if (descriptor.category === 'stop') {
-      name = 'Stop';
-    }
-    else if (descriptor.category === 'pause') {
-      name = 'Pause';
-    }
-    else {
-      name = 'New ' + name;
+    if (!name) {
+      name = descriptor.name;
+      if (descriptor.category === 'start') {
+        name = 'Start';
+      }
+      else if (descriptor.category === 'stop') {
+        name = 'Stop';
+      }
+      else if (descriptor.category === 'pause') {
+        name = 'Pause';
+      }
+      else {
+        name = 'New ' + name;
+      }
     }
     const stepX = Math.max(1, x - w / 2);
     const stepY = Math.max(1, y - h / 2);
     return {
       id: 's' + idNum,
       type: 'step',
-      name: name,
+      name,
       path: descriptor.path,
       links: [],
       attributes: { display: 'x=' + stepX + ',y=' + stepY + ',w=' + w + ',h=' + h },

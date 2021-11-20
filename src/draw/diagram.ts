@@ -688,10 +688,10 @@ export class Diagram extends Shape {
     return steps;
   }
 
-  addStep(descriptorName: string, xi: number, yi: number): Step {
+  addStep(descriptorName: string, xi: number, yi: number, name?: string): Step {
     const { x, y } = this.unscale(xi, yi);
     const descriptor = this.getDescriptor(descriptorName);
-    const step = Step.create(this, this.genId(this.allSteps()), descriptor, x, y);
+    const step = Step.create(this, this.genId(this.allSteps()), descriptor, x, y, name);
     const hoverObj = this.getHoverObj(x, y);
     if (hoverObj && hoverObj.type === 'subflow') {
       (hoverObj as Subflow).subflow.steps.push(step.step);
@@ -1605,19 +1605,18 @@ export class Diagram extends Shape {
     }
   }
 
-  onDrop(e: DragEvent, descriptorName: string): boolean {
+  onDrop(e: DragEvent, descriptor: Descriptor): boolean {
     const rect = this.canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const descriptor = this.getDescriptor(descriptorName);
-    if (descriptor?.type === 'subflow') {
+    if (descriptor.type === 'subflow') {
       this.selection.setSelectObj(this.addSubflow(descriptor.path, x, y));
     }
-    else if (descriptor?.type === 'note') {
+    else if (descriptor.type === 'note') {
       this.selection.setSelectObj(this.addNote(x, y));
     }
     else {
-      this.selection.setSelectObj(this.addStep(descriptor?.path, x, y));
+      this.selection.setSelectObj(this.addStep(descriptor.path, x, y, descriptor.name));
     }
     this.draw();
     if (this.mode !== 'connect') {

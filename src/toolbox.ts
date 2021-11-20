@@ -3,12 +3,17 @@ import { ToolboxOptions, toolboxDefault } from './options';
 import { Descriptor, StandardDescriptors } from './model/descriptor';
 import { Styles } from './style/style';
 import { Theme } from './theme';
+import { ItemOpenEvent, Listener, TypedEvent, Disposable } from './event';
 
 export class Toolbox {
 
     private div: HTMLDivElement;
     private styles: Styles;
     private stylesObj: object;
+    private _onItemOpen = new TypedEvent<ItemOpenEvent>();
+    onItemOpen(listener: Listener<ItemOpenEvent>): Disposable {
+        return this._onItemOpen.on(listener);
+    }
 
     constructor(
         readonly descriptors: Descriptor[] | undefined,
@@ -64,7 +69,11 @@ export class Toolbox {
                 iconDiv.appendChild(iconImg);
                 li.appendChild(iconDiv);
                 li.ondragstart = (e: DragEvent) => {
-                    e.dataTransfer.setData('text/plain', descriptor.path);
+                    let data = descriptor.path;
+                    if (descriptor.link) {
+                        data += `#${descriptor.link.url}`;
+                    }
+                    e.dataTransfer.setData('application/json', JSON.stringify(descriptor));
                     e.dataTransfer.setDragImage(iconImg, iconWidth, iconWidth);
                     e.dataTransfer.dropEffect = 'copy';
                 };
@@ -72,6 +81,18 @@ export class Toolbox {
             const label = document.createElement('label') as HTMLLabelElement;
             label.appendChild(document.createTextNode(descriptor.name));
             li.appendChild(label);
+            if (descriptor.link) {
+                const a = document.createElement('a') as HTMLAnchorElement;
+                a.href = descriptor.link.url;
+                const t = document.createTextNode(descriptor.link.label);
+                a.appendChild(t);
+                if (this._onItemOpen) {
+                    a.onclick = (e: MouseEvent) => {
+                        this._onItemOpen.emit({ url: descriptor.link.url });
+                    };
+                }
+                li.appendChild(a);
+            }
             ul.appendChild(li);
         }
         this.div.appendChild(ul);

@@ -1,3 +1,4 @@
+import { Descriptor } from './model/descriptor';
 import { FlowElement } from './model/element';
 import { Flow, FlowInstance, SubflowInstance } from './model/flow';
 import { StepInstance } from './model/step';
@@ -8,6 +9,9 @@ export interface FlowElementEvent {
     element: FlowElement;
     instances?: FlowElementInstance[];
 }
+export interface FlowElementAddEvent extends FlowElementEvent {
+    descriptor: Descriptor
+}
 export interface FlowElementSelectEvent extends FlowElementEvent { }
 export interface FlowChangeEvent {
     flow: Flow;
@@ -15,6 +19,9 @@ export interface FlowChangeEvent {
 export interface FlowElementUpdateEvent {
     element: FlowElement;
     action?: string;
+}
+export interface ItemOpenEvent {
+    url: string;
 }
 
 /**

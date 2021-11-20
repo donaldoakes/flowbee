@@ -7,7 +7,7 @@ import { DiagramOptions, diagramDefault, Mode } from './options';
 import { DiagramStyle } from './style/style';
 import { DrawingOptions } from './draw/options';
 import { Label } from './draw/label';
-import { TypedEvent, Listener, FlowElementSelectEvent, FlowChangeEvent, FlowElementUpdateEvent, Disposable } from './event';
+import { TypedEvent, Listener, FlowElementSelectEvent, FlowChangeEvent, FlowElementUpdateEvent, Disposable, FlowElementAddEvent } from './event';
 import { SelectObj } from './draw/selection';
 import { ContextMenu, ContextMenuProvider, DefaultMenuProvider } from './menu';
 import { DefaultDialog, DialogProvider } from './dialog';
@@ -264,6 +264,11 @@ export class FlowDiagram {
         return this._onFlowChange.on(listener);
     }
 
+    private _onFlowElementAdd = new TypedEvent<FlowElementAddEvent>();
+    onFlowElementAdd(listener: Listener<FlowElementAddEvent>): Disposable {
+        return this._onFlowElementAdd.on(listener);
+    }
+
     private _onFlowElementSelect = new TypedEvent<FlowElementSelectEvent>();
     onFlowElementSelect(listener: Listener<FlowElementSelectEvent>): Disposable {
         return this._onFlowElementSelect.on(listener);
@@ -331,9 +336,15 @@ export class FlowDiagram {
     private onDrop(e: DragEvent) {
         e.preventDefault();
         if (!this.readonly) {
-            if (this.diagram.onDrop(e, e.dataTransfer.getData('text/plain'))) {
+            const data = e.dataTransfer.getData('application/json');
+            const descriptor = JSON.parse(data);
+            if (this.diagram.onDrop(e, descriptor)) {
                 this.diagram.canvas.focus();
                 this.handleChange();
+                this._onFlowElementAdd.emit({
+                    element: this.diagram.selection.getSelectObj().flowElement,
+                    descriptor
+                });
             }
         }
     }

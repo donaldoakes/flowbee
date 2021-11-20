@@ -22,6 +22,11 @@ export interface Descriptor {
      */
     category?: string; // design and run time
     template?: object; // design time -- translates to attributes
+    // design time link (optional)
+    link?: {
+        label: string;
+        url: string;
+    }
 }
 
 /**
