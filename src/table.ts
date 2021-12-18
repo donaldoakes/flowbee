@@ -17,7 +17,6 @@ export class Table {
     }
 
     constructor(readonly widgets: Widget[], value: string, readonly readonly: boolean, readonly fixedRows = false ) {
-        console.log("NEW TABLE NEW TABLE NEW TABLE");
         this.tableElement = document.createElement('table') as HTMLTableElement;
         // header
         const headRow = document.createElement('tr') as HTMLTableRowElement;
@@ -85,6 +84,7 @@ export class Table {
      * Consolidates empty rows and populates value
      */
     update(rowIndex?: number, colIndex?: number) {
+        const oldVal = this.value;
         this.rows = [];
         for (const rowElement of this.rowElements) {
             const tds = rowElement.querySelectorAll('td');
@@ -109,7 +109,10 @@ export class Table {
             const focusRow = this.rowElements[rowIndex];
             (focusRow.childNodes[colIndex] as HTMLTableCellElement).focus();
         }
-        this._onTableUpdate.emit({ value: this.value });
+        const newVal = this.value;
+        if (oldVal !== newVal) {
+            this._onTableUpdate.emit({ value: newVal });
+        }
     }
 
     get value(): string {
