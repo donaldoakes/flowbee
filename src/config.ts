@@ -392,7 +392,7 @@ export class Configurator {
                 const indent = 2; // TODO config
                 const sourceObj = this.instance || this.flowElement;
                 if (this.options.sourceTab === 'yaml') {
-                    pre.textContent = jsYaml.safeDump(sourceObj, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+                    pre.textContent = jsYaml.dump(sourceObj, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
                 } else {
                     pre.textContent = JSON.stringify(sourceObj, null, indent);
                 }
@@ -585,7 +585,7 @@ export class Configurator {
         return JSON.stringify(this.template, null, indent);
     }
     toYaml(indent = 2): string {
-        return jsYaml.safeDump(this.template, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+        return jsYaml.dump(this.template, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
     }
 
     private datetime(date: Date): string {
@@ -601,7 +601,7 @@ export class Configurator {
                 throw new Error(`Failed to parse ${file}: ${err.message}`);
             }
         } else {
-            return jsYaml.safeLoad(text, { filename: file });
+            return jsYaml.load(text, { filename: file }) as ConfigTemplate;
         }
     }
 }

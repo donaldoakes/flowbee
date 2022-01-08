@@ -70,7 +70,7 @@ export class FlowDiagram {
                 throw new Error(`Failed to parse ${file}: ${err.message}`);
             }
         } else {
-            flow = jsYaml.safeLoad(text, { filename: file });
+            flow = jsYaml.load(text, { filename: file }) as Flow;
         }
         flow.type = 'flow';
         flow.path = file.replace(/\\/g, '/');
@@ -107,7 +107,7 @@ export class FlowDiagram {
 
     toYaml(indent = 2): string {
         const { id: _id, type: _type, path: _path, ...flow } = this.flow;
-        return jsYaml.safeDump(flow, { sortKeys: true, noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+        return jsYaml.dump(flow, { sortKeys: true, noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
     }
 
     get zoom(): number {
