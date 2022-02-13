@@ -9,6 +9,7 @@ export type WidgetType =
     'checkbox' |
     'radio' |
     'textarea' |
+    'code' |
     'select' |
     'date' |
     'datetime' |

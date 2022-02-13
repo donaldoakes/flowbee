@@ -263,7 +263,7 @@ export class Configurator {
                 const span = document.createElement('span');
                 span.innerText = '';
                 this.tabContent.appendChild(span);
-            } else if (widget.label && (widgets.length > 1 || widget.type !== 'textarea')) {
+            } else if (widget.label && (widgets.length > 1 || (widget.type !== 'textarea' && widget.type !== 'code'))) {
                 const label = document.createElement('label');
                 label.innerHTML = widget.label;
                 this.tabContent.appendChild(label);
@@ -346,6 +346,18 @@ export class Configurator {
                     textarea.onchange = e => this.update(widget.attribute, textarea.value);
                     this.tabContent.appendChild(textarea);
                 }
+            } else if (widget.type === 'code') {
+                if (widgets.length === 1) {
+                    this.tabContent.style.gridAutoRows = ''; // fill entire tab
+                }
+                const code = document.createElement('code') as HTMLElement;
+                code.textContent = value;
+                code.style.margin = '0';
+                if (!readonly) {
+                    code.setAttribute('contenteditable', 'true');
+                    code.oninput = e => this.update(widget.attribute, code.innerText);
+                }
+                this.tabContent.appendChild(code);
             } else if (widget.type === 'select') {
                 const select = document.createElement('select') as HTMLSelectElement;
                 if (widget.options) {
