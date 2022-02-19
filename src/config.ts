@@ -259,13 +259,13 @@ export class Configurator {
 
         const widgets = this.template[tabName].widgets;
         for (const widget of widgets) {
-            if (widget.type === 'link' || widget.type === 'note') {
+            if (widget.type === 'button' || widget.type === 'link' || widget.type === 'note') {
                 const span = document.createElement('span');
                 span.innerText = '';
                 this.tabContent.appendChild(span);
             } else if (widget.label && (widgets.length > 1 || (widget.type !== 'textarea' && widget.type !== 'code'))) {
                 const label = document.createElement('label');
-                label.innerHTML = widget.label;
+                label.innerHTML = widget.type === 'file' ? 'File' : widget.label;
                 this.tabContent.appendChild(label);
             }
 
@@ -275,7 +275,7 @@ export class Configurator {
                 value = this.instance[widget.instanceProp];
             } else if (this.flowElement.attributes && this.flowElement.attributes[widget.attribute]) {
                 value = this.flowElement.attributes[widget.attribute];
-            } else if (widget.default) {
+            } else if (widget.default && widget.type !== 'file') {
                 value = widget.default;
                 this.update(widget.attribute, value);
             }
@@ -296,6 +296,13 @@ export class Configurator {
                     text.onchange = e => this.update(widget.attribute, text.value);
                 }
                 this.tabContent.appendChild(text);
+            } else if (widget.type === 'button') {
+                const button = document.createElement('button') as HTMLButtonElement;
+                button.innerText = widget.label;
+                button.onclick = e => {
+                    this._onFlowElementUpdate.emit({ element: this.flowElement, action: value });
+                };
+                this.tabContent.appendChild(button);
             } else if (widget.type === 'checkbox') {
                 const checkbox = document.createElement('input') as HTMLInputElement;
                 checkbox.type = 'checkbox';
@@ -399,6 +406,36 @@ export class Configurator {
                     }
                     this._onFlowElementUpdate.emit({ element: this.flowElement, action: value });
                 };
+            } else if (widget.type === 'file') {
+                const anchor = document.createElement('a');
+                anchor.setAttribute('href', '');
+                anchor.innerText = value;
+                anchor.onclick = e => {
+                    this._onFlowElementUpdate.emit({ element: this.flowElement, action: value });
+                };
+                anchor.style.visibility = value ? 'visible' : 'hidden';
+                this.tabContent.appendChild(anchor);
+
+                const spacer = document.createElement('span');
+                spacer.innerText = '';
+                this.tabContent.appendChild(spacer);
+
+                const span = document.createElement('span');
+                if (widget.default) {
+                    const createBtn = document.createElement('button') as HTMLButtonElement;
+                    createBtn.innerText = widget.default;
+                    createBtn.onclick = e => {
+                        this._onFlowElementUpdate.emit({ element: this.flowElement, action: widget.default });
+                    };
+                    span.appendChild(createBtn);
+                }
+                const selectBtn = document.createElement('button') as HTMLButtonElement;
+                selectBtn.innerText = widget.label;
+                selectBtn.onclick = e => {
+                    this._onFlowElementUpdate.emit({ element: this.flowElement, action: widget.label });
+                };
+                span.appendChild(selectBtn);
+                this.tabContent.appendChild(span);
             } else if (widget.type === 'source') {
                 const pre = document.createElement('pre') as HTMLPreElement;
                 const indent = 2; // TODO config

@@ -6,6 +6,7 @@ export type ConfigTemplate = {[key: string]: { widgets: Widget[] }};
 
 export type WidgetType =
     'text' |
+    'button' |
     'checkbox' |
     'radio' |
     'textarea' |
@@ -16,6 +17,7 @@ export type WidgetType =
     'table' |
     'note' |
     'link' |
+    'file' |
     'source';
 
 export interface Widget {

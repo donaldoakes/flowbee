@@ -349,8 +349,26 @@
   .flowbee-config-tab-content input {
     background-color: #ffffff;
   }
+  .flowbee-config-tab-content input[type=text] {
+    border-width: 1px;
+    border-style: solid;
+  }
   .flowbee-config-tab-content input[type=checkbox] {
     margin-top: 5px;
+  }
+  .flowbee-config-tab-content button {
+    background-color: #007acc;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 13px;
+    border: none;
+    border-radius: 0;
+    padding: 4px 10px;
+    margin-right: 10px;
+    width: fit-content;
+  }
+  .flowbee-config-tab-content button:hover {
+    background-color: #0062a3;
   }
   .flowbee-config-tab-content select {
     width: fit-content;
@@ -454,6 +472,12 @@
   }
   .flowbee-config-tab-content input[type=radio] {
     opacity: .8;
+  }
+  .flowbee-config-tab-content button {
+    background-color: #0e639c;
+  }
+  .flowbee-config-tab-content button:hover {
+    background-color: #1177bb;
   }
   .flowbee-config-tab-content select {
     background-color: #3c3c3c;
