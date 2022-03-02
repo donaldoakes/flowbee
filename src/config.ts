@@ -258,7 +258,7 @@ export class Configurator {
         this.tabContent.innerHTML = '';
 
         const widgets = this.template[tabName].widgets;
-        for (const widget of widgets) {
+        for (const [i, widget] of widgets.entries()) {
             if (widget.type === 'button' || widget.type === 'link' || widget.type === 'note') {
                 const span = document.createElement('span');
                 span.innerText = '';
@@ -269,7 +269,8 @@ export class Configurator {
                 this.tabContent.appendChild(label);
             }
 
-            this.tabContent.style.gridAutoRows = '25px';
+            this.tabContent.style.gridAutoRows = 'max-content';
+
             let value = '';
             if (widget.instanceProp && this.instance) {
                 value = this.instance[widget.instanceProp];
