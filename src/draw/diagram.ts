@@ -20,7 +20,7 @@ import { WebSocketListener } from './websocket';
 
 export class Diagram extends Shape {
 
-  context: CanvasRenderingContext2D
+  context: CanvasRenderingContext2D;
   flow: Flow;
   grid: Grid;
   label: Label;
@@ -1183,7 +1183,7 @@ export class Diagram extends Shape {
     this.context.stroke();
   }
 
-  drawIcon(src: string, x: number, y: number) {
+  drawIcon(src: string, x: number, y: number, w?: number, h?: number) {
     src = this.options.iconBase ? this.options.iconBase + '/' + src : src;
     if (!this.images) {
       this.images = {};
@@ -1195,12 +1195,14 @@ export class Diagram extends Shape {
       const context = this.context;
       const images = this.images;
       img.onload = function () {
-        context.drawImage(img, x, y);
+        if (w && h) context.drawImage(img, x, y, w, h);
+        else context.drawImage(img, x, y);
         images[src] = img;
       };
     }
     else {
-      this.context.drawImage(img, x, y);
+      if (w && h) this.context.drawImage(img, x, y, w, h);
+      else this.context.drawImage(img, x, y);
     }
   }
 

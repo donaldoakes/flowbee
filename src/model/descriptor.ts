@@ -16,7 +16,11 @@ export interface Descriptor {
     /**
      * Icon for the toolbox -- design time
      */
-    icon?: string;
+    icon?: string | {
+        src: string,
+        width?: number,
+        height?: number
+    };
     /**
      * Categorization.
      */
@@ -36,7 +40,11 @@ export class FlowItemDescriptor implements Descriptor {
 
     path: string;
     name: string;
-    icon?: string;
+    icon?: string | {
+        src: string,
+        width?: number,
+        height?: number
+    };
     type: FlowItemDescriptorType;
     category?: string;
     template?: object;

@@ -50,7 +50,7 @@ export class Toolbox {
                 const iconDiv = document.createElement('div') as HTMLDivElement;
                 const iconImg = document.createElement('img') as HTMLImageElement;
                 const iconBase = toolboxOptions.iconBase ? toolboxOptions.iconBase : '';
-                let icon = descriptor.icon;
+                let icon = typeof descriptor.icon === 'string' ? descriptor.icon : descriptor.icon.src;
                 switch (icon) {
                     case 'shape:start':
                         icon = 'start.png';

@@ -20,7 +20,7 @@ export class Step extends Shape {
   }
 
   get shape(): string | undefined {
-    if (this.descriptor.icon && this.descriptor.icon.startsWith('shape:')) {
+    if (typeof this.descriptor.icon === 'string' && this.descriptor.icon.startsWith('shape:')) {
       return this.descriptor.icon.substring(6);
     }
   }
@@ -142,10 +142,13 @@ export class Step extends Shape {
             opacity
           );
         }
-        const iconSrc = this.descriptor.icon;
         const iconX = this.display.x + this.display.w / 2 - 12;
         const iconY = this.display.y + 12;
-        this.diagram.drawIcon(iconSrc, iconX, iconY);
+        if (typeof this.descriptor.icon === 'string') {
+          this.diagram.drawIcon(this.descriptor.icon, iconX, iconY);
+        } else {
+          this.diagram.drawIcon(this.descriptor.icon.src, iconX, iconY, this.descriptor.icon.width, this.descriptor.icon.height);
+        }
       }
     }
     else {
@@ -356,7 +359,7 @@ export class Step extends Shape {
     let w = 24;
     let h = 24;
     if (diagram.drawBoxes) {
-      if (descriptor.icon && descriptor.icon.startsWith('shape:')) {
+      if (typeof descriptor.icon === 'string' && descriptor.icon.startsWith('shape:')) {
         w = 60;
         h = 40;
       }
