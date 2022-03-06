@@ -328,8 +328,15 @@ export class FlowDiagram {
     private onMouseUp(e: MouseEvent) {
         this.down = false;
         this.dragging = false;
-        if (this.diagram.onMouseUp(e)) {
+        const chg = this.diagram.onMouseUp(e);
+        if (chg) {
             this.handleChange();
+            if (typeof chg === 'object') {
+                // link added
+                this._onFlowElementAdd.emit({
+                    element: chg
+                });
+            }
         }
     }
 

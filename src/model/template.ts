@@ -2,7 +2,9 @@
  * Configurator template for displaying and editing
  * attributes.
  */
-export type ConfigTemplate = {[key: string]: { widgets: Widget[] }};
+export type ConfigTemplate = {
+    [key: string]: { widgets: Widget[] }
+};
 
 export type WidgetType =
     'text' |

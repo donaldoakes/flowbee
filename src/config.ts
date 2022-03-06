@@ -147,7 +147,21 @@ export class Configurator {
         this.tabs.innerHTML = '';
 
         // title
-        this.title.innerText = getLabel(flowElement);
+        if ((this.flowElement as any).path?.endsWith('.ts')) { // TODO this is fragile
+            this.title.innerHTML = '';
+            const span = document.createElement('span') as HTMLSpanElement;
+            span.innerText = getLabel(flowElement);
+            this.title.appendChild(span);
+            const anchor = document.createElement('a');
+            anchor.setAttribute('href', '');
+            anchor.innerText = (this.flowElement as any).path;
+            anchor.onclick = e => {
+                this._onFlowElementUpdate.emit({ element: this.flowElement, action: (this.flowElement as any).path });
+            };
+            this.title.appendChild(anchor);
+        } else {
+            this.title.innerText = getLabel(flowElement);
+        }
 
         const keys = Object.keys(this.template);
         for (let i = 0; i < keys.length; i++) {

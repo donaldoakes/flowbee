@@ -1380,7 +1380,7 @@ export class Diagram extends Shape {
   }
 
   onMouseUp(e: MouseEvent) {
-    let chg = false;
+    let chg: boolean | FlowElement = false;
     if ((this.shiftDrag || this.mode === 'connect') && this.dragX && this.dragY) {
       // dragging a link
       const selObj = this.mode === 'connect' ? this.connectObj : this.selection.getSelectObj();
@@ -1393,15 +1393,13 @@ export class Diagram extends Shape {
         if (destObj && destObj.type === 'step') {
           const srcStep = selObj as Step;
           if (this.getStep(srcStep.id) && this.getStep(destObj.id)) {
-            this.addLink(srcStep, destObj as Step);
-            chg = true;
+            chg = this.addLink(srcStep, destObj as Step).flowElement;
           } else {
             // src and dest must be in same subflow
             for (let i = 0; i < this.subflows.length; i++) {
               const subflow = this.subflows[i];
               if (subflow.getStep(srcStep.id) && subflow.getStep(destObj.id)) {
-                this.addLink(srcStep, destObj as Step);
-                chg = true;
+                chg = this.addLink(srcStep, destObj as Step).flowElement;
                 break;
               }
             }

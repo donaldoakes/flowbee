@@ -305,6 +305,12 @@
     flex-grow: 1;
     user-select: none;
   }
+  .flowbee-config-title a {
+    text-decoration: none;
+    margin-left: 5px;
+    font-size: 12px;
+    font-weight: normal;
+  }
   .flowbee-config-close {
     cursor: pointer;
     user-select: none;

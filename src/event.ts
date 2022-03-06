@@ -10,7 +10,7 @@ export interface FlowElementEvent {
     instances?: FlowElementInstance[];
 }
 export interface FlowElementAddEvent extends FlowElementEvent {
-    descriptor: Descriptor
+    descriptor?: Descriptor
 }
 export interface FlowElementSelectEvent extends FlowElementEvent { }
 export interface FlowChangeEvent {
