@@ -1184,14 +1184,24 @@ export class Diagram extends Shape {
   }
 
   drawIcon(src: string, x: number, y: number, w?: number, h?: number) {
-    src = this.options.iconBase ? this.options.iconBase + '/' + src : src;
+
+    const isInlineSvg = src.startsWith('<svg') || src.startsWith('<?xml');
+    if (!isInlineSvg) {
+      src = this.options.iconBase ? this.options.iconBase + '/' + src : src;
+    }
+
     if (!this.images) {
       this.images = {};
     }
     let img = this.images[src];
     if (!img) {
       img = new Image();
-      img.src = src;
+      if (isInlineSvg) {
+        const svg = new Blob([src], { type: 'image/svg+xml;charset=utf-8' });
+        img.src = URL.createObjectURL(svg);
+      } else {
+        img.src = src;
+      }
       const context = this.context;
       const images = this.images;
       img.onload = function () {

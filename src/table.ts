@@ -107,7 +107,7 @@ export class Table {
         this.setRows();
         if (typeof rowIndex === 'number' && typeof colIndex === 'number') {
             const focusRow = this.rowElements[rowIndex];
-            (focusRow.childNodes[colIndex] as HTMLTableCellElement).focus();
+            (focusRow?.childNodes[colIndex] as HTMLTableCellElement).focus();
         }
         const newVal = this.value;
         if (oldVal !== newVal) {

@@ -48,7 +48,6 @@ export class Toolbox {
             li.tabIndex = tabIndex++;
             if (descriptor.icon) {
                 const iconDiv = document.createElement('div') as HTMLDivElement;
-                const iconImg = document.createElement('img') as HTMLImageElement;
                 const iconBase = toolboxOptions.iconBase ? toolboxOptions.iconBase : '';
                 let icon = typeof descriptor.icon === 'string' ? descriptor.icon : descriptor.icon.src;
                 switch (icon) {
@@ -65,8 +64,18 @@ export class Toolbox {
                         icon = 'decision.png';
                         break;
                 }
-                iconImg.src = `${iconBase}/${icon}`;
-                iconDiv.appendChild(iconImg);
+                let iconElem: HTMLElement;
+                if (icon.startsWith('<svg') || icon.startsWith('<?xml')) {
+                    if (icon.startsWith('<?xml')) {
+                        icon = icon.substring(icon.indexOf('>') + 1).trim();
+                    }
+                    iconDiv.innerHTML = icon;
+                    iconElem = iconDiv.firstChild as HTMLElement;
+                } else {
+                    iconElem = document.createElement('img');
+                    (iconElem as HTMLImageElement).src = `${iconBase}/${icon}`;
+                    iconDiv.appendChild(iconElem);
+                }
                 li.appendChild(iconDiv);
                 li.ondragstart = (e: DragEvent) => {
                     let data = descriptor.path;
@@ -74,7 +83,7 @@ export class Toolbox {
                         data += `#${descriptor.link.url}`;
                     }
                     e.dataTransfer.setData('application/json', JSON.stringify(descriptor));
-                    e.dataTransfer.setDragImage(iconImg, iconWidth, iconWidth);
+                    e.dataTransfer.setDragImage(iconElem, iconWidth, iconWidth);
                     e.dataTransfer.dropEffect = 'copy';
                 };
             }
