@@ -147,7 +147,8 @@ export class Configurator {
         this.tabs.innerHTML = '';
 
         // title
-        if ((this.flowElement as any).path?.endsWith('.ts')) { // TODO this is fragile
+        if ((this.flowElement as any).path?.endsWith('.ts')) {
+            // path is to a module (custom step)
             this.title.innerHTML = '';
             const span = document.createElement('span') as HTMLSpanElement;
             span.innerText = getLabel(flowElement);

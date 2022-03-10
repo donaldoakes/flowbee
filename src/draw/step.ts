@@ -370,13 +370,13 @@ export class Step extends Shape {
     }
     if (!name) {
       name = descriptor.name;
-      if (descriptor.category === 'start') {
+      if (descriptor.path === 'start') {
         name = 'Start';
       }
-      else if (descriptor.category === 'stop') {
+      else if (descriptor.path === 'stop') {
         name = 'Stop';
       }
-      else if (descriptor.category === 'pause') {
+      else if (descriptor.path === 'pause') {
         name = 'Pause';
       }
       else {

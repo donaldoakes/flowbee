@@ -535,7 +535,7 @@ export class Diagram extends Shape {
    * Returns first step whose descriptor category is Start
    */
   getStart(): Step | undefined {
-    const startDescriptors = this.descriptors.filter(d => d.category === 'start' || d.name === 'Start'); // TODO flowbiz
+    const startDescriptors = this.descriptors.filter(d => d.path === 'start');
     return this.steps.find(step => {
       const desc = startDescriptors.find(d => d.path === step.step.path);
       if (desc) return desc;

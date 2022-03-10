@@ -7,7 +7,11 @@ import { Link } from './link';
 export interface Step extends FlowElement {
     id: string;
     name: string;
-    path: string;  // module path
+    /**
+     * Logical path for descriptor, or for custom steps
+     * this is the module path to ts file.
+     */
+    path: string;
     links?: Link[];
 }
 

@@ -118,7 +118,7 @@ export class Subflow extends Shape {
   }
 
   getStart() {
-    const startDescriptors = this.diagram.descriptors.filter(d => d.category === 'start');
+    const startDescriptors = this.diagram.descriptors.filter(d => d.path === 'start');
     return this.steps.find(step => {
       const desc = startDescriptors.find(d => d.path === step.step.path);
       if (desc) return desc;
@@ -283,7 +283,7 @@ export class Subflow extends Shape {
     let stepY = y;
     const linkId = startLinkId;
 
-    const startDescriptor = diagram.descriptors.find(d => d.category === 'start');
+    const startDescriptor = diagram.descriptors.find(d => d.path === 'start');
     const start = Step.create(diagram, stepId, startDescriptor, stepX, stepY);
     subflowElement.steps.push(start.step);
     subflow.steps.push(start);
@@ -292,7 +292,7 @@ export class Subflow extends Shape {
 
     stepX = x + 120;
     stepY = y;
-    const stopDescriptor = diagram.descriptors.find(d => d.category === 'stop');
+    const stopDescriptor = diagram.descriptors.find(d => d.path === 'stop');
     const stop = Step.create(diagram, stepId, stopDescriptor, stepX, stepY);
     subflowElement.steps.push(stop.step);
     subflow.steps.push(stop);

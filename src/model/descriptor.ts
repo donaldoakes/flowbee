@@ -1,8 +1,13 @@
-export type FlowItemDescriptorType = 'step' | 'subflow' | 'note';
+import { ConfigTemplate } from './template';
+
+export type DescriptorType = 'step' | 'subflow' | 'note';
 
 export interface Descriptor {
     /**
      * Relative to assetRoot. Always forward slashes.
+     * Paths with special meaning: 'start', 'stop', 'pause'.
+     * If path endsWith '.ts', it's treated as a module path
+     * (ie: custom step).
      */
     path: string;
     /**
@@ -10,11 +15,11 @@ export interface Descriptor {
      */
     name: string;
     /**
-     * Item type ('step', 'subflow', 'note') -- design time
+     * Item type ('step', 'subflow', 'note')
      */
-    type: FlowItemDescriptorType;
+    type: DescriptorType;
     /**
-     * Icon for the toolbox -- design time
+     * Icon for the toolbox
      */
     icon?: string | {
         src: string,
@@ -22,20 +27,18 @@ export interface Descriptor {
         height?: number
     };
     /**
-     * Categorization.
+     * Embedded config template or externalized via file path
      */
-    category?: string; // design and run time
-    template?: object; // design time -- translates to attributes
-    // design time link (optional)
+    template?: ConfigTemplate | string; // translates to attributes
+    /**
+     * Documentation/info link
+     */
     link?: {
         label: string;
         url: string;
     }
 }
 
-/**
- * TODO: below here to be removed?
- */
 export class FlowItemDescriptor implements Descriptor {
 
     path: string;
@@ -45,24 +48,19 @@ export class FlowItemDescriptor implements Descriptor {
         width?: number,
         height?: number
     };
-    type: FlowItemDescriptorType;
+    type: DescriptorType;
     category?: string;
-    template?: object;
 
     constructor({
         path,
         name: label,
         icon,
-        type = 'step',
-        category,
-        template: layout
+        type = 'step'
     }: Descriptor) {
         this.path = path;
         this.name = label;
         this.icon = icon;
         this.type = type;
-        this.category = category;
-        this.template = layout;
     }
 }
 
@@ -70,48 +68,42 @@ export const start = new FlowItemDescriptor({
     path: 'start',
     name: 'Start',
     type: 'step',
-    icon: 'shape:start',
-    category: 'start'
+    icon: 'shape:start'
 });
 
 export const stop = new FlowItemDescriptor({
     path: 'stop',
     name: 'Stop',
     type: 'step',
-    icon: 'shape:stop',
-    category: 'stop'
+    icon: 'shape:stop'
 });
 
 export const pause = new FlowItemDescriptor({
     path: 'pause',
     name: 'Pause',
     type: 'step',
-    icon: 'shape:pause',
-    category: 'pause'
+    icon: 'shape:pause'
 });
 
 export const decide = new FlowItemDescriptor({
     path: 'decide',
     name: 'Decide',
     type: 'step',
-    icon: 'shape:decision',
-    category: 'decision'
+    icon: 'shape:decision'
 });
 
 export const embedded = new FlowItemDescriptor({
     path: 'subflow',
     name: 'Subflow',
     type: 'subflow',
-    icon: 'embedded.png',
-    category: 'embedded'
+    icon: 'embedded.png'
 });
 
 export const note = new FlowItemDescriptor({
     path: 'note',
     name: 'Note',
     type: 'note',
-    icon: 'note.svg',
-    category: 'note'
+    icon: 'note.svg'
 });
 
 export const StandardDescriptors: Descriptor[] = [
