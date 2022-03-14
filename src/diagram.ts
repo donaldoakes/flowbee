@@ -97,7 +97,6 @@ export class FlowDiagram {
 
     /**
      * Serialize to JSON string
-     * @param flow
      * @param indent
      */
     toJson(indent = 2): string {

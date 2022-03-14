@@ -9,6 +9,12 @@ import { Theme } from './theme';
 import { Table } from './table';
 import { parseDisplay } from './draw/display';
 
+export interface SourceLink {
+    path: string;
+    label?: string;
+    action?: string;
+}
+
 /**
  * TODO: make template optional, and then display all attributes
  * as text widgets on one tab
@@ -122,6 +128,7 @@ export class Configurator {
         instances: FlowElementInstance[],
         template: ConfigTemplate | string,
         options: ConfiguratorOptions,
+        source?: SourceLink,
         position?: { left: number, top: number, width: number, height: number }
     ) {
 
@@ -147,7 +154,7 @@ export class Configurator {
         this.tabs.innerHTML = '';
 
         // title
-        if ((this.flowElement as any).path?.endsWith('.ts')) {
+        if (source) {
             // path is to a module (custom step)
             this.title.innerHTML = '';
             const span = document.createElement('span') as HTMLSpanElement;
@@ -155,9 +162,9 @@ export class Configurator {
             this.title.appendChild(span);
             const anchor = document.createElement('a');
             anchor.setAttribute('href', '');
-            anchor.innerText = (this.flowElement as any).path;
+            anchor.innerText = source.label || source.path;
             anchor.onclick = e => {
-                this._onFlowElementUpdate.emit({ element: this.flowElement, action: (this.flowElement as any).path });
+                this._onFlowElementUpdate.emit({ element: this.flowElement, action: source.action || source.path });
             };
             this.title.appendChild(anchor);
         } else {

@@ -5,6 +5,7 @@ export type FlowElementType = 'flow' | 'step' | 'link' | 'subflow' | 'note';
 
 export interface FlowElement {
     id?: string,
+    path?: string,
     attributes?: {[key: string]: string};
     type?: FlowElementType; // TODO: optional because of marquee
     readonly?: boolean;
