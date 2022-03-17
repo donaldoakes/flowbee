@@ -172,10 +172,15 @@ export class Configurator {
         }
 
         const keys = Object.keys(this.template);
-        for (let i = 0; i < keys.length; i++) {
-            const tabName = keys[i];
-            const tab = this.addTab(tabName);
-            if (i === 0) this.activate(tabName, tab);
+        if (keys.length > 0) {
+            for (let i = 0; i < keys.length; i++) {
+                const tabName = keys[i];
+                const tab = this.addTab(tabName);
+                if (i === 0) this.activate(tabName, tab);
+            }
+        } else {
+            this.tabContent.innerHTML = '';
+            this.activeTab = undefined;
         }
 
         this.div.style.display = 'flex';
