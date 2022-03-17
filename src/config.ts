@@ -444,26 +444,28 @@ export class Configurator {
                 anchor.style.visibility = value ? 'visible' : 'hidden';
                 this.tabContent.appendChild(anchor);
 
-                const spacer = document.createElement('span');
-                spacer.innerText = '';
-                this.tabContent.appendChild(spacer);
+                if (!readonly) {
+                    const spacer = document.createElement('span');
+                    spacer.innerText = '';
+                    this.tabContent.appendChild(spacer);
 
-                const span = document.createElement('span');
-                if (widget.default) {
-                    const createBtn = document.createElement('button') as HTMLButtonElement;
-                    createBtn.innerText = widget.default;
-                    createBtn.onclick = e => {
-                        this._onFlowElementUpdate.emit({ element: this.flowElement, action: widget.default });
+                    const span = document.createElement('span');
+                    if (widget.default) {
+                        const createBtn = document.createElement('button') as HTMLButtonElement;
+                        createBtn.innerText = widget.default;
+                        createBtn.onclick = e => {
+                            this._onFlowElementUpdate.emit({ element: this.flowElement, action: widget.default });
+                        };
+                        span.appendChild(createBtn);
+                    }
+                    const selectBtn = document.createElement('button') as HTMLButtonElement;
+                    selectBtn.innerText = widget.label;
+                    selectBtn.onclick = e => {
+                        this._onFlowElementUpdate.emit({ element: this.flowElement, action: widget.label });
                     };
-                    span.appendChild(createBtn);
+                    span.appendChild(selectBtn);
+                    this.tabContent.appendChild(span);
                 }
-                const selectBtn = document.createElement('button') as HTMLButtonElement;
-                selectBtn.innerText = widget.label;
-                selectBtn.onclick = e => {
-                    this._onFlowElementUpdate.emit({ element: this.flowElement, action: widget.label });
-                };
-                span.appendChild(selectBtn);
-                this.tabContent.appendChild(span);
             } else if (widget.type === 'source') {
                 const pre = document.createElement('pre') as HTMLPreElement;
                 const indent = 2; // TODO config
