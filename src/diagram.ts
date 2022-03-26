@@ -1,7 +1,10 @@
 import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
-import { Flow, FlowInstance } from './model/flow';
+import { Flow, Subflow, FlowInstance } from './model/flow';
+import { Step } from './model/step';
+import { Link } from './model/link';
+import { Note } from './model/note';
 import { Descriptor, StandardDescriptors } from './model/descriptor';
 import { DiagramOptions, diagramDefault, Mode } from './options';
 import { DiagramStyle } from './style/style';
@@ -100,13 +103,48 @@ export class FlowDiagram {
      * @param indent
      */
     toJson(indent = 2): string {
-        const { id: _id, type: _type, path: _path, ...flow } = this.flow;
-        return JSON.stringify(flow, null, indent);
+        return JSON.stringify(this.cleanedUp, null, indent);
     }
 
     toYaml(indent = 2): string {
-        const { id: _id, type: _type, path: _path, ...flow } = this.flow;
-        return jsYaml.dump(flow, { sortKeys: true, noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+        return jsYaml.dump(this.cleanedUp, { sortKeys: true, noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+    }
+
+    private cleanup(element: FlowElement): FlowElement {
+        const { type: _type, ...clean } = element;
+        return clean;
+    }
+
+    private get cleanedUp(): Flow {
+        const { id: _id, type: _type, path: _path, readonly: _readonly, ...flow } = this.flow;
+        if (flow.subflows) {
+            flow.subflows = flow.subflows.map(sf => {
+                const subflow = this.cleanup(sf) as Subflow;
+                if (subflow.steps) {
+                    subflow.steps = subflow.steps.map(s => {
+                        const step = this.cleanup(s) as Step;
+                        if (step.links) {
+                            step.links = step.links.map(l => this.cleanup(l) as Link);
+                        }
+                        return step;
+                    });
+                }
+                return subflow;
+            });
+        }
+        if (flow.steps) {
+            flow.steps = flow.steps.map(s => {
+                const step = this.cleanup(s) as Step;
+                if (step.links) {
+                    step.links = step.links.map(l => this.cleanup(l) as Link);
+                }
+                return step;
+            });
+        }
+        if (flow.notes) {
+            flow.notes = flow.notes.map(n => this.cleanup(n) as Note);
+        }
+        return flow as Flow;
     }
 
     get zoom(): number {
