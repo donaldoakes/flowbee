@@ -8,6 +8,7 @@ import { Styles } from './style/style';
 import { Theme } from './theme';
 import { Table } from './table';
 import { parseDisplay } from './draw/display';
+import { dateTime } from './format';
 
 export interface SourceLink {
     path: string;
@@ -292,7 +293,7 @@ export class Configurator {
                 this.tabContent.appendChild(span);
             } else if (widget.label && (widgets.length > 1 || (widget.type !== 'textarea' && widget.type !== 'code'))) {
                 const label = document.createElement('label');
-                label.innerHTML = widget.type === 'file' ? 'File' : widget.label;
+                label.innerHTML = widget.label;
                 this.tabContent.appendChild(label);
             }
 
@@ -303,7 +304,7 @@ export class Configurator {
                 value = this.instance[widget.instanceProp];
             } else if (this.flowElement.attributes && this.flowElement.attributes[widget.attribute]) {
                 value = this.flowElement.attributes[widget.attribute];
-            } else if (widget.default && widget.type !== 'file') {
+            } else if (widget.default) {
                 value = widget.default;
                 this.update(widget.attribute, value);
             }
@@ -314,7 +315,7 @@ export class Configurator {
                 const text = document.createElement('input') as HTMLInputElement;
                 text.type = 'text';
                 if (value) {
-                    text.value = widget.type === 'datetime' ? this.datetime(new Date(value)) : value;
+                    text.value = widget.type === 'datetime' ? dateTime(new Date(value)) : value;
                 }
                 if (readonly) {
                     text.readOnly = true;
@@ -435,21 +436,30 @@ export class Configurator {
                     this._onFlowElementUpdate.emit({ element: this.flowElement, action: value });
                 };
             } else if (widget.type === 'file') {
-                const anchor = document.createElement('a');
-                anchor.setAttribute('href', '');
-                anchor.innerText = value;
-                anchor.onclick = e => {
-                    this._onFlowElementUpdate.emit({ element: this.flowElement, action: value });
-                };
-                anchor.style.visibility = value ? 'visible' : 'hidden';
-                this.tabContent.appendChild(anchor);
+                if (widget.label) {
+                    // label means display link to open file
+                    const anchor = document.createElement('a');
+                    anchor.setAttribute('href', '');
+                    anchor.innerText = value;
+                    anchor.onclick = e => {
+                        this._onFlowElementUpdate.emit({ element: this.flowElement, action: value });
+                    };
+                    anchor.style.visibility = value ? 'visible' : 'hidden';
+                    this.tabContent.appendChild(anchor);
+                }
 
-                if (!readonly) {
+                if (!readonly && (widget.default || widget.action)) {
                     const spacer = document.createElement('span');
                     spacer.innerText = '';
                     this.tabContent.appendChild(spacer);
 
                     const span = document.createElement('span');
+                    if (!widget.label && i === 0) {
+                        span.style.position = 'relative';
+                        span.style.top = '1px';
+                        span.style.left = '-85px';
+                    }
+
                     if (widget.default) {
                         const createBtn = document.createElement('button') as HTMLButtonElement;
                         createBtn.innerText = widget.default;
@@ -458,12 +468,16 @@ export class Configurator {
                         };
                         span.appendChild(createBtn);
                     }
-                    const selectBtn = document.createElement('button') as HTMLButtonElement;
-                    selectBtn.innerText = widget.label;
-                    selectBtn.onclick = e => {
-                        this._onFlowElementUpdate.emit({ element: this.flowElement, action: widget.label });
-                    };
-                    span.appendChild(selectBtn);
+
+                    if (widget.action) {
+                        const selectBtn = document.createElement('button') as HTMLButtonElement;
+                        selectBtn.innerText = widget.action;
+                        selectBtn.onclick = e => {
+                            this._onFlowElementUpdate.emit({ element: this.flowElement, action: widget.action });
+                        };
+                        span.appendChild(selectBtn);
+                    }
+
                     this.tabContent.appendChild(span);
                 }
             } else if (widget.type === 'source') {
@@ -665,11 +679,6 @@ export class Configurator {
     }
     toYaml(indent = 2): string {
         return jsYaml.dump(this.template, { noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
-    }
-
-    private datetime(date: Date): string {
-        const millis = String(date.getMilliseconds()).padStart(3, '0');
-        return `${date.toLocaleString(navigator.language, { hour12: false })}:${millis}`;
     }
 
     static parseTemplate(text: string, file: string): ConfigTemplate {

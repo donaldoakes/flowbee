@@ -24,6 +24,7 @@ export class WebSocketListener {
       const flowEvent = JSON.parse(event.data) as FlowEvent;
       if (flowEvent.elementType === 'flow') {
         this.diagram.instance = flowEvent.instance as FlowInstance;
+        // this.diagram.draw(this.diagram.flow, this.diagram.instance);
       }
       if (flowEvent.elementType === 'subflow') {
         const subInstance = flowEvent.instance as SubflowInstance;

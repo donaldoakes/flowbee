@@ -58,4 +58,6 @@ export interface Widget {
      * be populated with first value.
      */
     default?: string;
+
+    action?: string;
 }

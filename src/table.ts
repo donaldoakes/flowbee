@@ -1,4 +1,5 @@
 import { Disposable, Listener, TypedEvent } from './event';
+import { dateTime } from './format';
 import { Widget } from './model/template';
 
 export interface TableUpdateEvent {
@@ -51,6 +52,7 @@ export class Table {
                 rowElement.style.height = '24px';
             }
             for (let j = 0; j < this.widgets.length; j++) {
+                const widget = this.widgets[j];
                 const td = document.createElement('td') as HTMLTableCellElement;
                 td.tabIndex = tabIndex++;
                 td.setAttribute('data-row', '' + i);
@@ -68,7 +70,13 @@ export class Table {
                     };
                 }
                 if (i < this.rows.length) {
-                    td.textContent = row[j];
+                    let cellVal = row[j];
+                    if (cellVal) {
+                        if (widget.type === 'datetime') {
+                            cellVal = dateTime(new Date(cellVal));
+                        }
+                    }
+                    td.textContent = cellVal;
                 }
                 rowElement.appendChild(td);
             }
