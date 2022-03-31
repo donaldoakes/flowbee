@@ -345,6 +345,9 @@ export class Configurator {
             } else if (widget.type === 'radio') {
                 const div = document.createElement('div') as HTMLDivElement;
                 if (widget.options) {
+                    if (typeof widget.options === 'function') {
+                        widget.options = widget.options(widget.attribute);
+                    }
                     for (const opt of widget.options) {
                         const radio = document.createElement('input') as HTMLInputElement;
                         radio.type = 'radio';
@@ -396,7 +399,13 @@ export class Configurator {
                 this.tabContent.appendChild(code);
             } else if (widget.type === 'select') {
                 const select = document.createElement('select') as HTMLSelectElement;
+                if (widget.multi) {
+                    select.setAttribute('multiple', 'true');
+                }
                 if (widget.options) {
+                    if (typeof widget.options === 'function') {
+                        widget.options = widget.options(widget.attribute);
+                    }
                     for (const opt of widget.options) {
                         const option = document.createElement('option') as HTMLOptionElement;
                         option.innerHTML = opt;
@@ -404,7 +413,7 @@ export class Configurator {
                     }
                 }
                 if (value) {
-                    select.selectedIndex = widget.options.indexOf(value);
+                    select.selectedIndex = (widget.options as string[]).indexOf(value);
                 } else {
                     select.selectedIndex = 0;
                 }

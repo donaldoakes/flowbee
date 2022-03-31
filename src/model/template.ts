@@ -43,7 +43,7 @@ export interface Widget {
     /**
      * Options for select or list widgets.
      */
-    options?: string[];
+    options?: string[] | ((attribute?: string) => string[]);
     /**
      * Sub-widgets for tables.
      */
@@ -58,6 +58,8 @@ export interface Widget {
      * be populated with first value.
      */
     default?: string;
+
+    multi?: boolean;
 
     action?: string;
 }
