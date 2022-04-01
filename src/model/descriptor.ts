@@ -28,6 +28,8 @@ export interface Descriptor {
     };
     /**
      * Embedded config template or externalized via file path
+     * For tooling only (not used by flowbee unless passed separately
+     * to configurator).
      */
     template?: ConfigTemplate | string; // translates to attributes
     /**

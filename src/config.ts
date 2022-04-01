@@ -127,7 +127,7 @@ export class Configurator {
     render(
         flowElement: FlowElement,
         instances: FlowElementInstance[],
-        template: ConfigTemplate | string,
+        template: ConfigTemplate,
         options: ConfiguratorOptions,
         source?: SourceLink,
         position?: { left: number, top: number, width: number, height: number }
@@ -146,7 +146,7 @@ export class Configurator {
 
         this.flowElement = flowElement;
         this.instance = instances.length > 0 ? instances[instances.length - 1] : null;
-        this.template = typeof template === 'string' ? Configurator.parseTemplate(template, getLabel(flowElement)) : template;
+        this.template = template;
         if (this.options.sourceTab) {
             this.template['Source'] = { widgets: [{ type: 'source' }] };
         }
