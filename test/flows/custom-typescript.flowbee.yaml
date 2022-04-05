@@ -1,0 +1,37 @@
+attributes:
+  NodeStyle: BoxIcon
+  version: '1.0'
+steps:
+  - attributes:
+      display: x=220,y=50,w=60,h=40
+    id: s1
+    links:
+      - id: l1
+        type: link
+        to: s5
+        attributes:
+          display: type=Elbow,x=250,y=115,xs=250&250,ys=94&136
+    name: Start
+    path: start
+  - attributes:
+      display: x=220,y=270,w=60,h=40
+    id: s3
+    name: Stop
+    path: stop
+  - attributes:
+      display: x=200,y=140,w=100,h=80
+      tsFile: test/custom/custom-state.ts
+    id: s5
+    links:
+      - id: l2
+        type: link
+        to: s3
+        attributes:
+          display: type=Elbow,x=250,y=245,xs=250&250,ys=224&266
+    name: |-
+      Custom
+      TypeScript
+    path: typescript
+    type: step
+type: flow
+path: /Users/donoakes/workspaces/scorch/scorch/test/workflows/custom-typescript.flow.yaml

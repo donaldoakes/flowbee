@@ -19,3 +19,6 @@ export { MenuItem, ContextMenuProvider, DefaultMenuProvider, ContextMenuSelectEv
 export { DialogMessage, DialogProvider, DefaultDialog } from './dialog';
 export { Configurator, SourceLink } from './config';
 export { Table, TableUpdateEvent } from './table';
+export * from './swf/translate/translate';
+export * from './swf/translate/options';
+export * from './swf/util';

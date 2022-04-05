@@ -1,0 +1,30 @@
+id: greeting-event
+version: '1.0'
+# specVersion: '0.8'
+name: Greeting based on event
+description: Event Based Greeting
+start: Greet
+events:
+  - name: PersonEvent
+    type: WorkflowEvent
+functions:
+  - name: greetingFunction
+    operation: test/openapi/greetings.yaml#getGreeting
+states:
+  - name: Greet
+    type: event
+    onEvents:
+      - eventRefs:
+          - PersonEvent
+          - AnotherEvent
+        eventDataFilter:
+          data: '${ .person }'
+          toStateData: '${ .person }'
+        actions:
+          - functionRef:
+              refName: greetingFunction
+              arguments:
+                name: '${ .person.name }'
+    stateDataFilter:
+      output: '${ {greeting: .greeting} }'
+    end: true

@@ -1,0 +1,42 @@
+id: greeting-event
+path: /Users/donoakes/workspaces/scorch/scorch/test/workflows/greeting-event.flow.yaml
+attributes:
+  version: '1.0'
+  name: Greeting based on event
+  description: Event Based Greeting
+  functions: '[["greetingFunction",null,"test/openapi/greetings.yaml#getGreeting"]]'
+  events: '[["PersonEvent","WorkflowEvent","","","",""]]'
+  NodeStyle: BoxIcon
+steps:
+  - id: s1
+    name: Start
+    path: start
+    links:
+      - id: l1
+        to: s2
+        attributes:
+          display: type=Elbow,xs=250&250,ys=94&136
+    attributes:
+      display: x=220,y=50,w=60,h=40
+  - id: s2
+    name: Greet
+    path: event
+    attributes:
+      eventRefs: '[["PersonEvent"],["AnotherEvent"]]'
+      eventDataFilterData: ${ .person }
+      eventDataFilterUseData: 'true'
+      eventDataFilterToStateData: ${ .person }
+      functionRef: greetingFunction
+      functionArgs: '[["name","${ .person.name }"]]'
+      display: x=200,y=140,w=100,h=80
+    links:
+      - id: l2
+        to: s3
+        attributes:
+          display: type=Elbow,xs=250&250,ys=224&266
+  - id: s3
+    name: Stop
+    path: stop
+    attributes:
+      display: x=220,y=270,w=60,h=40
+type: flow

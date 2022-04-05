@@ -1,0 +1,77 @@
+# configurator template for flow
+Workflow:
+  widgets:
+    - type: text
+      attribute: version
+      label: Version
+      swf: version
+    - type: textarea
+      attribute: description
+      label: Description
+      swf: description
+
+Functions:
+  widgets:
+    - type: table
+      attribute: functions
+      swf: functions
+      widgets:
+        - type: text
+          label: Name
+          swf: name
+        - type: select
+          label: Type
+          options:
+            - rest
+            - asyncapi
+            - rpc
+            - graphql
+            - odata
+            - expression
+            - custom
+          default: rest
+          swf: type
+        - type: text
+          label: Operation
+          swf: operation
+
+Events:
+  widgets:
+    - type: table
+      attribute: events
+      swf: events
+      widgets:
+        - type: text
+          label: Name
+          swf: name
+        - type: test
+          label: Type
+          swf: type
+        - type: text
+          label: Source
+          swf: source
+        - type: text
+          label: Correlation
+          swf: correlation[0].contextAttributeName
+        - type: text
+          label: Due Interval
+          swf: metadata.dueInterval
+        - type: text
+          label: Alert Interval
+          swf: metadata.alertInterval
+
+Retries:
+  widgets:
+    - type: table
+      attribute: retries
+      swf: retries
+      widgets:
+        - type: text
+          label: Name
+          swf: name
+        - type: text
+          label: Delay
+          swf: delay
+        - type: text
+          label: Attempts
+          swf: maxAttempts

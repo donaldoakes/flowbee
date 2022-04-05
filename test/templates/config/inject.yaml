@@ -1,0 +1,6 @@
+Data:
+  widgets:
+    - type: code
+      attribute: injectData
+      label: Data
+      swf: data

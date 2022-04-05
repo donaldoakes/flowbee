@@ -1,0 +1,6 @@
+TypeScript:
+  widgets:
+    - type: file
+      attribute: tsFile
+      default: Create File
+      action: Select File
