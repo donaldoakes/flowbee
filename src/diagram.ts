@@ -1,4 +1,3 @@
-import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
 import { Diagram } from './draw/diagram';
 import { Flow, Subflow, FlowInstance } from './model/flow';
@@ -6,7 +5,7 @@ import { Step } from './model/step';
 import { Link } from './model/link';
 import { Note } from './model/note';
 import { Descriptor, StandardDescriptors } from './model/descriptor';
-import { DiagramOptions, diagramDefault, Mode } from './options';
+import { DiagramOptions, diagramDefault, Mode, FlowDumpOptions } from './options';
 import { DiagramStyle } from './style/style';
 import { DrawingOptions } from './draw/options';
 import { Label } from './draw/label';
@@ -17,6 +16,9 @@ import { DefaultDialog, DialogProvider } from './dialog';
 import { FlowElement, getFlowName } from './model/element';
 import { Clipper } from './clip';
 import { Title } from './draw/display';
+import { SwfTranslator } from './swf/translate/swf';
+import * as yaml from './yaml';
+import { TranslatorOptions } from './main';
 
 export class FlowDiagram {
 
@@ -73,7 +75,7 @@ export class FlowDiagram {
                 throw new Error(`Failed to parse ${file}: ${err.message}`);
             }
         } else {
-            flow = jsYaml.load(text, { filename: file }) as Flow;
+            flow = yaml.load(file, text) as Flow;
         }
         flow.type = 'flow';
         flow.path = file.replace(/\\/g, '/');
@@ -100,14 +102,23 @@ export class FlowDiagram {
 
     /**
      * Serialize to JSON string
-     * @param indent
      */
-    toJson(indent = 2): string {
-        return JSON.stringify(this.cleanedUp, null, indent);
+    toJson(options?: FlowDumpOptions): string {
+        return JSON.stringify(this.cleanedUp, null, options?.indent || 0);
     }
 
-    toYaml(indent = 2): string {
-        return jsYaml.dump(this.cleanedUp, { sortKeys: true, noCompatMode: true, skipInvalid: true, indent, lineWidth: -1 });
+    toYaml(options?: FlowDumpOptions): string {
+        return yaml.dump(this.cleanedUp, options?.indent || 2);
+    }
+
+    async toSwf(options: TranslatorOptions): Promise<string> {
+        const translator = new SwfTranslator(this.flow.path, this.cleanedUp, options);
+        const swf = await translator.getWorkflow();
+        if (options.output === 'JSON') {
+            return JSON.stringify(swf, null, options.indent || 0);
+        } else {
+            return yaml.dump(swf, options.indent || 2);
+        }
     }
 
     private cleanup(element: FlowElement): FlowElement {

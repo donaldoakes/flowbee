@@ -9,8 +9,13 @@ export class SwfTranslator {
     private  workflow: swf.SwfWorkflow;
     private readonly attrs: Attrs;
 
+    /**
+     * @param path used as id unless flow.id
+     * @param flow
+     * @param options
+     */
     constructor(
-        readonly filePath: string,
+        readonly path: string,
         readonly flow: Flow,
         readonly options: TranslatorOptions
     ) {
@@ -19,7 +24,7 @@ export class SwfTranslator {
 
     async getWorkflow(): Promise<swf.SwfWorkflow> {
         const startStep = this.flow.steps?.find((s) => s.path === 'start');
-        if (!startStep) throw new Error(`No start step found in ${this.filePath}`);
+        if (!startStep) throw new Error(`No start step found in ${this.path}`);
         if (startStep.links?.length !== 1) {
             throw new Error('Start should have 1 out link');
         }
@@ -27,7 +32,7 @@ export class SwfTranslator {
         if (!firstStep) throw new Error(`Step not found: ${startStep.links![0].to}`);
 
         this.workflow = {
-            id: this.flow.id || this.filePath,
+            id: this.flow.id || this.path,
             start: firstStep.name,
             states: []
         };
@@ -88,7 +93,7 @@ export class SwfTranslator {
                         }
                     } else {
                         state.transition = { nextState: next.name };
-                        this.addStates([next]);
+                        await this.addStates([next]);
                     }
                 }
             }

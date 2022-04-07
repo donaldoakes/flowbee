@@ -11,6 +11,11 @@ export class FlowbeeTranslator {
     private startStep: Step;
     private readonly attrs: Attrs;
 
+    /**
+     * @param path used as the id unless swf.id
+     * @param swf
+     * @param options
+     */
     constructor(
         readonly path: string,
         readonly swf: swf.SwfWorkflow,
@@ -22,7 +27,7 @@ export class FlowbeeTranslator {
     async getFlow(): Promise<Flow> {
         const attributes: Attributes = {};
         this.flow = {
-            id: this.swf.id,
+            id: this.swf.id || this.path,
             path: this.path,
             attributes
         };
@@ -90,7 +95,7 @@ export class FlowbeeTranslator {
                 }
             }
             this.addLinks(step, nexts);
-            this.addSteps(nexts);
+            await this.addSteps(nexts);
         }
     }
 

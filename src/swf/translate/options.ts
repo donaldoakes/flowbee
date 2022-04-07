@@ -13,5 +13,6 @@ export interface TranslatorOptions {
      * Throws if template not found
      */
     loadTemplate: (source: string) => Promise<string>;
+    output: 'JSON' | 'YAML';
     indent: number;
 }
