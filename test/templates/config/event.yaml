@@ -1,0 +1,54 @@
+Events:
+  widgets:
+    - type: table
+      attribute: eventRefs
+      swf: onEvents[0].eventRefs
+      widgets:
+        - type: text
+          label: Name
+    - type: text
+      attribute: dueInterval
+      label: Due Interval
+    - type: text
+      attribute: alertInterval
+      label: Alert Interval
+
+Data Filter:
+  widgets:
+    - type: text
+      attribute: eventDataFilterData
+      label: Results
+      swf: onEvents[0].eventDataFilter.data
+    - type: checkbox
+      attribute: eventDataFilterUseData
+      label: Use Data
+      swf: onEvents[0].eventDataFilter.useData
+    - type: text
+      attribute: eventDataFilterToStateData
+      label: To State Data
+      swf: onEvents[0].eventDataFilter.toStateData
+
+Actions:
+  widgets:
+    - type: select
+      attribute: functionRef
+      label: Function
+      swf: onEvents[0].actions[0].functionRef.refName
+      options: functions
+    - type: table
+      attribute: functionArgs
+      label: Arguments
+      swf: onEvents[0].actions[0].functionRef.arguments
+      widgets:
+        - type: text
+          label: Name
+        - type: test
+          label: Value
+
+Retry:
+  widgets:
+    - type: select
+      attribute: retryRef
+      label: Retry Ref
+      swf: onEvents[0].actions[0].retryRef
+      options: retries

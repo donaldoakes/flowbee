@@ -1,0 +1,42 @@
+# TODO general attributes like stateDataFilter
+Function:
+  widgets:
+    - type: select
+      attribute: functionRef
+      label: Name
+      swf: actions[0].functionRef.refName
+      options: functions
+    - type: table
+      attribute: functionArgs
+      label: Arguments
+      swf: actions[0].functionRef.arguments
+      widgets:
+        - type: text
+          label: Name
+        - type: test
+          label: Value
+
+Data Filter:
+  widgets:
+    - type: checkbox
+      attribute: actionDataFilterUseResults
+      label: Use Results
+      swf: actions[0].actionDataFilter.useResults
+    - type: text
+      attribute: actionDataFilterResults
+      label: Results
+      swf: actions[0].actionDataFilter.results
+    - type: text
+      attribute: actionDataFilterFromStateData
+      label: From State
+    - type: text
+      attribute: actionDataFilterToStateData
+      label: To State
+
+Retry:
+  widgets:
+    - type: select
+      attribute: retryRef
+      label: Retry Ref
+      swf: actions[0].retryRef.refName
+      options: retries

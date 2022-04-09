@@ -1,0 +1,118 @@
+id: Order Notifications
+path: file:///Users/donoakes/workspaces/eis/eis-wfm/workflows/Order%20Notifications.flow.yaml
+attributes:
+  name: Order Notifications
+  version: '1.0'
+  functions: '[["createTask","rest","openapi/azure-tasks.yaml#createTask"],["updateTask","rest","openapi/azure-tasks.yaml#updateTask"]]'
+  events: '[["ServiceOrderAcknowledgment","order.notifications","eis.lumen.com","orderId","",""],["ServiceOrderConfirmation","order.notifications","eis.lumen.com","orderId","",""],["SOCN","order.notifications","eis.lumen.com","orderId","30 business days","48 hours"]]'
+  NodeStyle: BoxIcon
+steps:
+  - id: s1
+    name: Start
+    path: start
+    links:
+      - id: l1
+        to: s2
+        attributes:
+          display: type=Elbow,x=NaN,y=NaN,xs=124&196,ys=90&90
+    attributes:
+      display: x=60,y=70,w=60,h=40
+  - id: s2
+    name: |-
+      Create
+      SOA Task
+    path: operation
+    attributes:
+      functionRef: createTask
+      functionArgs: '[["op","add"],["path","/fields/System.Title"],["value","${ .orderId + \" SOA\" }"]]'
+      actionDataFilterResults: '${ {soaTaskId: .id} }'
+      actionDataFilterUseResults: 'true'
+      display: x=200,y=50,w=100,h=80
+    links:
+      - id: l2
+        to: s3
+        attributes:
+          display: type=Elbow,x=NaN,y=NaN,xs=304&396,ys=90&90
+  - id: s3
+    name: |-
+      Await
+      SOA
+    path: event
+    attributes:
+      eventRefs: '[["ServiceOrderAcknowledgment"]]'
+      dueInterval: 24 hours
+      alertInterval: 2 hours
+      display: x=400,y=50,w=100,h=80
+    links:
+      - id: l3
+        to: s4
+        attributes:
+          display: type=Elbow,x=NaN,y=NaN,xs=450&450,ys=134&196
+  - id: s4
+    name: |-
+      Close
+      SOA Task
+    path: operation
+    attributes:
+      functionRef: updateTask
+      functionArgs: '[["id","${ .soaTaskId }"],["op","replace"],["path","/fields/System.State"],["value","Done"]]'
+      actionDataFilterResults: '${ {soaTaskState: .fields["System.State"]} }'
+      actionDataFilterUseResults: 'true'
+      display: x=400,y=200,w=100,h=80
+    links:
+      - id: l4
+        to: s5
+        attributes:
+          display: type=Elbow,x=NaN,y=NaN,xs=396&250,ys=240&356
+  - id: s5
+    name: |-
+      Create
+      SOC Task
+    path: operation
+    attributes:
+      functionRef: createTask
+      functionArgs: '[["op","add"],["path","/fields/System.Title"],["value","${ .orderId + \" SOC\" }"]]'
+      actionDataFilterResults: '${ {socTaskId: .id} }'
+      actionDataFilterUseResults: 'true'
+      display: x=200,y=360,w=100,h=80
+    links:
+      - id: l5
+        to: s6
+        attributes:
+          display: type=Elbow,x=NaN,y=NaN,xs=304&396,ys=400&400
+  - id: s6
+    name: |-
+      Await
+      SOC
+    path: event
+    attributes:
+      eventRefs: '[["ServiceOrderConfirmation"]]'
+      dueInterval: 5 days
+      alertInterval: 24 hours
+      display: x=400,y=360,w=100,h=80
+    links:
+      - id: l6
+        to: s7
+        attributes:
+          display: type=Elbow,x=NaN,y=NaN,xs=450&450,ys=444&516
+  - id: s7
+    name: |-
+      Close
+      SOC Task
+    path: operation
+    attributes:
+      functionRef: updateTask
+      functionArgs: '[["id","${ .socTaskId }"],["op","replace"],["path","/fields/System.State"],["value","Done"]]'
+      actionDataFilterResults: '${ {socTaskState: .fields["System.State"]} }'
+      actionDataFilterUseResults: 'true'
+      display: x=400,y=520,w=100,h=80
+    links:
+      - id: l7
+        to: s8
+        attributes:
+          display: type=Elbow,x=NaN,y=NaN,xs=504&586,ys=560&560
+  - id: s8
+    name: Stop
+    path: stop
+    attributes:
+      display: x=590,y=540,w=60,h=40

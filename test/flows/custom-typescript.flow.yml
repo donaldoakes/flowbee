@@ -1,0 +1,23 @@
+id: custom-typescript
+start: |-
+  Custom
+  TypeScript
+states:
+  - name: |-
+      Custom
+      TypeScript
+    type: operation
+    metadata:
+      stepId: s4
+      stepDisplay: x=200,y=150,w=100,h=80
+      linkDisplay: type=Elbow,x=250,y=250,xs=250&250,ys=234&266
+      stopStepId: s3
+      stopStepDisplay: x=220,y=270,w=60,h=40
+      tsFile: test/custom/custom-state.ts
+    end: true
+version: '1.0'
+metadata:
+  startStepId: s1
+  startStepDisplay: x=220,y=50,w=60,h=40
+  startLinkDisplay: type=Elbow,x=250,y=122,xs=250&250,ys=94&146
+  stepDisplay: x=200,y=150,w=100,h=80

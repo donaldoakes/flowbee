@@ -1,0 +1,98 @@
+id: order-notifications-bare
+name: Order Notifications Bare
+version: '1.0'
+start: Create_SOA_Task
+
+functions:
+  - name: createTask
+    type: rest
+    operation: test/openapi/tasks.yaml#createTask
+  - name: updateTask
+    type: rest
+    operation: test/openapi/tasks.yaml#updateTask
+
+events:
+  - name: ServiceOrderAcknowledgment
+    type: order.notifications
+    source: eis.lumen.com
+    correlation:
+      - contextAttributeName: orderId
+  - name: ServiceOrderConfirmation
+    type: order.notifications
+    source: eis.lumen.com
+    correlation:
+      - contextAttributeName: orderId
+
+# timeouts:
+#   workflowExecTimeout:
+#     duration: PT30D
+#     runBefore: Escalate_SOCN
+
+states:
+  - name: Create_SOA_Task
+    type: operation
+    actions:
+      - functionRef:
+          refName: createTask
+          arguments:
+            op: add
+            path: /fields/System.Title
+            value: '${ .orderId + " SOA" }'
+        actionDataFilter:
+          results: '${ {soaTaskId: .id} }'
+    transition:
+      nextState: Await_SOA
+  - name: Await_SOA
+    type: event
+    onEvents:
+      - eventRefs:
+          - ServiceOrderAcknowledgment
+    transition:
+      nextState: Close_SOA_Task
+  - name: Close_SOA_Task
+    type: operation
+    actions:
+      - functionRef:
+          refName: updateTask
+          arguments:
+            id: '${ .soaTaskId }'
+            op: replace
+            path: /fields/System.State
+            value: Done
+        actionDataFilter:
+          results: '${ {soaTaskState: .fields["System.State"]} }'
+    transition:
+      nextState: Create_SOC_Task
+  - name: Create_SOC_Task
+    type: operation
+    actions:
+      - functionRef:
+          refName: createTask
+          arguments:
+            op: add
+            path: /fields/System.Title
+            value: '${ .orderId + " SOC" }'
+        actionDataFilter:
+          results: '${ {socTaskId: .id} }'
+    transition:
+      nextState: Await_SOC
+  - name: Await_SOC
+    type: event
+    onEvents:
+      - eventRefs:
+          - ServiceOrderConfirmation
+    transition:
+      nextState: Close_SOC_Task
+  - name: Close_SOC_Task
+    type: operation
+    actions:
+      - functionRef:
+          refName: updateTask
+          arguments:
+            id: '${ .socTaskId }'
+            op: replace
+            path: /fields/System.State
+            value: Done
+        actionDataFilter:
+          results: '${ {socTaskState: .fields["System.State"]} }'
+    end: true

@@ -10,9 +10,5 @@
     "allowJs": true,
     "noUnusedLocals": false
   },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "rollup.config.js"
-  ]
+  "include": [ "src" ]
 }

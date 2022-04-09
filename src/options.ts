@@ -31,6 +31,10 @@ export const diagramDefault: DiagramOptions = {
     maxInstances: 10
 };
 
+export interface FlowDumpOptions {
+    indent?: number;
+}
+
 export interface ToolboxOptions {
     theme?: string;
     iconBase?: string;
