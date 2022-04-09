@@ -3,7 +3,12 @@ import { dateTime } from './format';
 import { Widget } from './model/template';
 
 export interface TableUpdateEvent {
-    value: string
+    value: string;
+}
+
+export interface TableActionEvent {
+    action: string;
+    value: number;
 }
 
 export class Table {
@@ -16,6 +21,11 @@ export class Table {
     onTableUpdate(listener: Listener<TableUpdateEvent>): Disposable {
         return this._onTableUpdate.on(listener);
     }
+    private _onTableAction = new TypedEvent<TableActionEvent>();
+    onTableAction(listener: Listener<TableActionEvent>): Disposable {
+        return this._onTableAction.on(listener);
+    }
+
 
     constructor(readonly widgets: Widget[], value: string, readonly readonly: boolean, readonly fixedRows = false ) {
         this.tableElement = document.createElement('table') as HTMLTableElement;
@@ -57,26 +67,42 @@ export class Table {
                 td.tabIndex = tabIndex++;
                 td.setAttribute('data-row', '' + i);
                 td.setAttribute('data-col', '' + j);
-                if (!this.readonly) {
-                    td.contentEditable = 'true';
-                    td.onblur = (e: FocusEvent) => {
-                        let rowIdx: string | null = null;
-                        let colIdx: string | null = null;
-                        if ((e.relatedTarget as any)?.getAttribute) {
-                            rowIdx = (e.relatedTarget as any).getAttribute('data-row');
-                            colIdx = (e.relatedTarget as any).getAttribute('data-col');
-                        }
-                        this.update(rowIdx ? parseInt(rowIdx) : null, colIdx ? parseInt(colIdx) : null);
-                    };
-                }
-                if (i < this.rows.length) {
-                    let cellVal = row[j];
-                    if (cellVal) {
-                        if (widget.type === 'datetime') {
-                            cellVal = dateTime(new Date(cellVal));
-                        }
+                if (widget.type === 'link' && widget.action) {
+                    if (i < this.rows.length && row[j]) {
+                        const isHttp = widget.action.startsWith('http://') || widget.action.startsWith('https://');
+                        const anchor = document.createElement('a');
+                        anchor.setAttribute('href', isHttp ? widget.action : '');
+                        anchor.innerText = row[j];
+                        td.appendChild(anchor);
+                        anchor.onclick = e => {
+                            if (isHttp) {
+                                e.preventDefault();
+                            }
+                            this._onTableAction.emit({ action: widget.action, value: i });
+                        };
                     }
-                    td.textContent = cellVal;
+                } else {
+                    if (!this.readonly) {
+                        td.contentEditable = 'true';
+                        td.onblur = (e: FocusEvent) => {
+                            let rowIdx: string | null = null;
+                            let colIdx: string | null = null;
+                            if ((e.relatedTarget as any)?.getAttribute) {
+                                rowIdx = (e.relatedTarget as any).getAttribute('data-row');
+                                colIdx = (e.relatedTarget as any).getAttribute('data-col');
+                            }
+                            this.update(rowIdx ? parseInt(rowIdx) : null, colIdx ? parseInt(colIdx) : null);
+                        };
+                    }
+                    if (i < this.rows.length) {
+                        let cellVal = row[j];
+                        if (cellVal) {
+                            if (widget.type === 'datetime') {
+                                cellVal = dateTime(new Date(cellVal));
+                            }
+                        }
+                        td.textContent = cellVal;
+                    }
                 }
                 rowElement.appendChild(td);
             }

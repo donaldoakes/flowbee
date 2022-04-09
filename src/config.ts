@@ -427,6 +427,9 @@ export class Configurator {
                 }
                 const table = new Table(widget.widgets, value, readonly);
                 table.onTableUpdate(tableUpdate => this.update(widget.attribute, tableUpdate.value));
+                table.onTableAction(tableAction => {
+                    this._onFlowElementUpdate.emit({ element: this.flowElement, action: tableAction.action });
+                });
                 this.tabContent.appendChild(table.tableElement);
             } else if (widget.type === 'note') {
                 const span = document.createElement('span');
