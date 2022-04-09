@@ -8,7 +8,8 @@ export interface TableUpdateEvent {
 
 export interface TableActionEvent {
     action: string;
-    value: number;
+    rownum: number;
+    value: string;
 }
 
 export class Table {
@@ -78,7 +79,7 @@ export class Table {
                             if (isHttp) {
                                 e.preventDefault();
                             }
-                            this._onTableAction.emit({ action: widget.action, value: i });
+                            this._onTableAction.emit({ action: widget.action, rownum: i, value: row[j] });
                         };
                     }
                 } else {
