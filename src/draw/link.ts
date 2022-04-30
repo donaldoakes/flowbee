@@ -5,40 +5,9 @@ import { Step } from './step';
 import { FlowElement } from '../model/element';
 import { Display, LinkDisplay } from './display';
 import { Edit } from './edit';
+import { LINK_LAYOUT, LINK_TYPES, AUTO_ELBOW_LINK_TYPES, LINK_EVENTS, LinkLayout } from './layout';
 
 export class Link {
-
-  static GAP = 4;
-  static CR = 8;
-  static CORR = 3; // offset for link start points
-  static LABEL_CORR = 3;
-
-  static EVENTS = {
-    Finish: {color: 'gray'},
-    Error: {color: '#f44336'},
-    Cancel: {color: '#f44336'},
-    Delay: {color: 'orange'},
-    Resume: {color: 'green'}
-  };
-
-  static LINK_TYPES = {
-    STRAIGHT: 'Straight',
-    ELBOW: 'Elbow',
-    ELBOWH: 'ElbowH',
-    ELBOWV: 'ElbowV'
-  };
-
-  static AUTO_ELBOW_LINK_TYPES = {
-    AUTOLINK_H: 1,
-    AUTOLINK_V: 2,
-    AUTOLINK_HV: 3,
-    AUTOLINK_VH: 4,
-    AUTOLINK_HVH: 5,
-    AUTOLINK_VHV: 6
-  };
-
-  static ELBOW_THRESHOLD = 0.8;
-  static ELBOW_VH_THRESHOLD = 60;
 
   flowElement: FlowElement;
   label?: Label;
@@ -94,21 +63,21 @@ export class Link {
     let labelText = this.link.event === 'Finish' || !this.link.event ? '' : this.link.event + ':';
     labelText += this.link.result ? this.link.result : '';
     if (labelText.length > 0) {
-      this.label = new Label(this, labelText, { x: this.display.x, y: this.display.y + Link.LABEL_CORR }, this.diagram.options.defaultFont);
+      this.label = new Label(this, labelText, { x: this.display.x, y: this.display.y + LINK_LAYOUT.LABEL_CORR }, this.diagram.options.defaultFont);
       this.label.prepareDisplay();
     }
     return maxDisplay;
   }
 
   getDisplay(): LinkDisplay {
-    return parseDisplay(this.link);
+    return LinkLayout.fromAttr(this.link.attributes?.display);
   }
 
   setDisplay(display: LinkDisplay) {
     if (!this.link.attributes) {
       this.link.attributes = {};
     }
-    this.link.attributes.display = Link.getAttr(display);
+    this.link.attributes.display = LinkLayout.toAttr(display);
   }
 
   /**
@@ -120,7 +89,7 @@ export class Link {
 
   getColor(): string {
     const event = this.link.event || 'Finish';
-    let color = Link.EVENTS[event].color;
+    let color = LINK_EVENTS[event].color;
     if (this.diagram.instance) {
       if (this.status) {
         if (this.status === 'Initiated') {
@@ -165,21 +134,21 @@ export class Link {
         hit = this.drawAutoElbowConnector(context, hitX, hitY, animationTimeSlice);
       }
       else {
-        // TODO: make use of Link.CORR
+        // TODO: make use of LINK_LAYOUT.CORR
         context.beginPath();
         let horizontal = ys[0] === ys[1] && (xs[0] !== xs[1] || xs[1] === xs[2]);
         context.moveTo(xs[0], ys[0]);
         for (let i = 1; i < xs.length; i++) {
           if (horizontal) {
-            context.lineTo(xs[i] > xs[i - 1] ? xs[i] - Link.CR : xs[i] + Link.CR, ys[i]);
+            context.lineTo(xs[i] > xs[i - 1] ? xs[i] - LINK_LAYOUT.CR : xs[i] + LINK_LAYOUT.CR, ys[i]);
             if (i < xs.length - 1) {
-              context.quadraticCurveTo(xs[i], ys[i], xs[i], ys[i + 1] > ys[i] ? ys[i] + Link.CR : ys[i] - Link.CR);
+              context.quadraticCurveTo(xs[i], ys[i], xs[i], ys[i + 1] > ys[i] ? ys[i] + LINK_LAYOUT.CR : ys[i] - LINK_LAYOUT.CR);
             }
           }
           else {
-            context.lineTo(xs[i], ys[i] > ys[i - 1] ? ys[i] - Link.CR : ys[i] + Link.CR);
+            context.lineTo(xs[i], ys[i] > ys[i - 1] ? ys[i] - LINK_LAYOUT.CR : ys[i] + LINK_LAYOUT.CR);
             if (i < xs.length - 1) {
-              context.quadraticCurveTo(xs[i], ys[i], xs[i + 1] > xs[i] ? xs[i] + Link.CR : xs[i] - Link.CR, ys[i]);
+              context.quadraticCurveTo(xs[i], ys[i], xs[i + 1] > xs[i] ? xs[i] + LINK_LAYOUT.CR : xs[i] - LINK_LAYOUT.CR, ys[i]);
             }
           }
           horizontal = !horizontal;
@@ -192,7 +161,7 @@ export class Link {
         }
       }
     }
-    else if (type === Link.LINK_TYPES.STRAIGHT) {
+    else if (type === LINK_TYPES.STRAIGHT) {
       const segments: LineSegment[] = [];
       xs.forEach(function (_x, i) {
         if (i < xs.length - 1) {
@@ -244,8 +213,8 @@ export class Link {
     const xs = this.display.xs;
     const ys = this.display.ys;
     let t;
-    const xcorr = xs[0] < xs[1] ? Link.CORR : -Link.CORR;
-    const ycorr = ys[0] < ys[1] ? Link.CORR : -Link.CORR;
+    const xcorr = xs[0] < xs[1] ? LINK_LAYOUT.CORR : -LINK_LAYOUT.CORR;
+    const ycorr = ys[0] < ys[1] ? LINK_LAYOUT.CORR : -LINK_LAYOUT.CORR;
     let drawArrow = null;
     const segments = [];
     const options = this.diagram.options;
@@ -259,7 +228,7 @@ export class Link {
     }
     context.beginPath();
     switch (this.getAutoElbowLinkType()) {
-      case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_H:
+      case AUTO_ELBOW_LINK_TYPES.AUTOLINK_H:
         if (animationTimeSlice) {
           segments.push({
             from: { x: xs[0] - xcorr, y: ys[0] },
@@ -273,7 +242,7 @@ export class Link {
           context.lineTo(xs[1], ys[1]);
         }
         break;
-      case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_V:
+      case AUTO_ELBOW_LINK_TYPES.AUTOLINK_V:
         if (animationTimeSlice) {
           segments.push({
             from: { x: xs[0], y: ys[0] - ycorr },
@@ -287,17 +256,17 @@ export class Link {
           context.lineTo(xs[1], ys[1]);
         }
         break;
-      case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_HVH:
+      case AUTO_ELBOW_LINK_TYPES.AUTOLINK_HVH:
         t = (xs[0] + xs[1]) / 2;
         if (animationTimeSlice) {
           let from = { x: xs[0] - xcorr, y: ys[0] };
-          let to = { x: t > xs[0] ? t - Link.CR : t + Link.CR, y: ys[0] };
-          let curveTo = { x: t, y: ys[1] > ys[0] ? ys[0] + Link.CR : ys[0] - Link.CR };
+          let to = { x: t > xs[0] ? t - LINK_LAYOUT.CR : t + LINK_LAYOUT.CR, y: ys[0] };
+          let curveTo = { x: t, y: ys[1] > ys[0] ? ys[0] + LINK_LAYOUT.CR : ys[0] - LINK_LAYOUT.CR };
           let curve = { cpx: t, cpy: ys[0], x: curveTo.x, y: curveTo.y };
           segments.push({ from: from, to: to, lineEnd: curve });
           from = curveTo;
-          to = { x: t, y: ys[1] > ys[0] ? ys[1] - Link.CR : ys[1] + Link.CR };
-          curveTo = { x: xs[1] > t ? t + Link.CR : t - Link.CR, y: ys[1] };
+          to = { x: t, y: ys[1] > ys[0] ? ys[1] - LINK_LAYOUT.CR : ys[1] + LINK_LAYOUT.CR };
+          curveTo = { x: xs[1] > t ? t + LINK_LAYOUT.CR : t - LINK_LAYOUT.CR, y: ys[1] };
           curve = { cpx: t, cpy: ys[1], x: curveTo.x, y: curveTo.y };
           segments.push({ from: from, to: to, lineEnd: curve });
           from = curveTo;
@@ -307,24 +276,24 @@ export class Link {
         }
         else {
           context.moveTo(xs[0] - xcorr, ys[0]);
-          context.lineTo(t > xs[0] ? t - Link.CR : t + Link.CR, ys[0]);
-          context.quadraticCurveTo(t, ys[0], t, ys[1] > ys[0] ? ys[0] + Link.CR : ys[0] - Link.CR);
-          context.lineTo(t, ys[1] > ys[0] ? ys[1] - Link.CR : ys[1] + Link.CR);
-          context.quadraticCurveTo(t, ys[1], xs[1] > t ? t + Link.CR : t - Link.CR, ys[1]);
+          context.lineTo(t > xs[0] ? t - LINK_LAYOUT.CR : t + LINK_LAYOUT.CR, ys[0]);
+          context.quadraticCurveTo(t, ys[0], t, ys[1] > ys[0] ? ys[0] + LINK_LAYOUT.CR : ys[0] - LINK_LAYOUT.CR);
+          context.lineTo(t, ys[1] > ys[0] ? ys[1] - LINK_LAYOUT.CR : ys[1] + LINK_LAYOUT.CR);
+          context.quadraticCurveTo(t, ys[1], xs[1] > t ? t + LINK_LAYOUT.CR : t - LINK_LAYOUT.CR, ys[1]);
           context.lineTo(xs[1], ys[1]);
         }
         break;
-      case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_VHV:
+      case AUTO_ELBOW_LINK_TYPES.AUTOLINK_VHV:
         t = (ys[0] + ys[1]) / 2;
         if (animationTimeSlice) {
           let from = { x: xs[0], y: ys[0] - ycorr };
-          let to = { x: xs[0], y: t > ys[0] ? t - Link.CR : t + Link.CR };
-          let curveTo = { x: xs[1] > xs[0] ? xs[0] + Link.CR : xs[0] - Link.CR, y: t };
+          let to = { x: xs[0], y: t > ys[0] ? t - LINK_LAYOUT.CR : t + LINK_LAYOUT.CR };
+          let curveTo = { x: xs[1] > xs[0] ? xs[0] + LINK_LAYOUT.CR : xs[0] - LINK_LAYOUT.CR, y: t };
           let curve = { cpx: xs[0], cpy: t, x: curveTo.x, y: curveTo.y };
           segments.push({ from: from, to: to, lineEnd: curve });
           from = curveTo;
-          to = { x: xs[1] > xs[0] ? xs[1] - Link.CR : xs[1] + Link.CR, y: t };
-          curveTo = { x: xs[1], y: ys[1] > t ? t + Link.CR : t - Link.CR };
+          to = { x: xs[1] > xs[0] ? xs[1] - LINK_LAYOUT.CR : xs[1] + LINK_LAYOUT.CR, y: t };
+          curveTo = { x: xs[1], y: ys[1] > t ? t + LINK_LAYOUT.CR : t - LINK_LAYOUT.CR };
           curve = { cpx: xs[1], cpy: t, x: curveTo.x, y: curveTo.y };
           segments.push({ from: from, to: to, lineEnd: curve });
           from = curveTo;
@@ -334,18 +303,18 @@ export class Link {
         }
         else {
           context.moveTo(xs[0], ys[0] - ycorr);
-          context.lineTo(xs[0], t > ys[0] ? t - Link.CR : t + Link.CR);
-          context.quadraticCurveTo(xs[0], t, xs[1] > xs[0] ? xs[0] + Link.CR : xs[0] - Link.CR, t);
-          context.lineTo(xs[1] > xs[0] ? xs[1] - Link.CR : xs[1] + Link.CR, t);
-          context.quadraticCurveTo(xs[1], t, xs[1], ys[1] > t ? t + Link.CR : t - Link.CR);
+          context.lineTo(xs[0], t > ys[0] ? t - LINK_LAYOUT.CR : t + LINK_LAYOUT.CR);
+          context.quadraticCurveTo(xs[0], t, xs[1] > xs[0] ? xs[0] + LINK_LAYOUT.CR : xs[0] - LINK_LAYOUT.CR, t);
+          context.lineTo(xs[1] > xs[0] ? xs[1] - LINK_LAYOUT.CR : xs[1] + LINK_LAYOUT.CR, t);
+          context.quadraticCurveTo(xs[1], t, xs[1], ys[1] > t ? t + LINK_LAYOUT.CR : t - LINK_LAYOUT.CR);
           context.lineTo(xs[1], ys[1]);
         }
         break;
-      case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_HV:
+      case AUTO_ELBOW_LINK_TYPES.AUTOLINK_HV:
         if (animationTimeSlice) {
           let from = { x: xs[0] - xcorr, y: ys[0] };
-          let to = { x: xs[1] > xs[0] ? xs[1] - Link.CR : xs[1] + Link.CR, y: ys[0] };
-          const curveTo = { x: xs[1], y: ys[1] > ys[0] ? ys[0] + Link.CR : ys[0] - Link.CR };
+          let to = { x: xs[1] > xs[0] ? xs[1] - LINK_LAYOUT.CR : xs[1] + LINK_LAYOUT.CR, y: ys[0] };
+          const curveTo = { x: xs[1], y: ys[1] > ys[0] ? ys[0] + LINK_LAYOUT.CR : ys[0] - LINK_LAYOUT.CR };
           const curve = { cpx: xs[1], cpy: ys[0], x: curveTo.x, y: curveTo.y };
           segments.push({ from: from, to: to, lineEnd: curve });
           from = curveTo;
@@ -355,16 +324,16 @@ export class Link {
         }
         else {
           context.moveTo(xs[0] - xcorr, ys[0]);
-          context.lineTo(xs[1] > xs[0] ? xs[1] - Link.CR : xs[1] + Link.CR, ys[0]);
-          context.quadraticCurveTo(xs[1], ys[0], xs[1], ys[1] > ys[0] ? ys[0] + Link.CR : ys[0] - Link.CR);
+          context.lineTo(xs[1] > xs[0] ? xs[1] - LINK_LAYOUT.CR : xs[1] + LINK_LAYOUT.CR, ys[0]);
+          context.quadraticCurveTo(xs[1], ys[0], xs[1], ys[1] > ys[0] ? ys[0] + LINK_LAYOUT.CR : ys[0] - LINK_LAYOUT.CR);
           context.lineTo(xs[1], ys[1]);
         }
         break;
-      case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_VH:
+      case AUTO_ELBOW_LINK_TYPES.AUTOLINK_VH:
         if (animationTimeSlice) {
           let from = { x: xs[0], y: ys[0] - ycorr };
-          let to = { x: xs[0], y: ys[1] > ys[0] ? ys[1] - Link.CR : ys[1] + Link.CR };
-          const curveTo = { x: xs[1] > xs[0] ? xs[0] + Link.CR : xs[0] - Link.CR, y: ys[1] };
+          let to = { x: xs[0], y: ys[1] > ys[0] ? ys[1] - LINK_LAYOUT.CR : ys[1] + LINK_LAYOUT.CR };
+          const curveTo = { x: xs[1] > xs[0] ? xs[0] + LINK_LAYOUT.CR : xs[0] - LINK_LAYOUT.CR, y: ys[1] };
           const curve = { cpx: xs[0], cpy: ys[1], x: curveTo.x, y: curveTo.y };
           segments.push({ from: from, to: to, lineEnd: curve });
           from = curveTo;
@@ -374,8 +343,8 @@ export class Link {
         }
         else {
           context.moveTo(xs[0], ys[0] - ycorr);
-          context.lineTo(xs[0], ys[1] > ys[0] ? ys[1] - Link.CR : ys[1] + Link.CR);
-          context.quadraticCurveTo(xs[0], ys[1], xs[1] > xs[0] ? xs[0] + Link.CR : xs[0] - Link.CR, ys[1]);
+          context.lineTo(xs[0], ys[1] > ys[0] ? ys[1] - LINK_LAYOUT.CR : ys[1] + LINK_LAYOUT.CR);
+          context.quadraticCurveTo(xs[0], ys[1], xs[1] > xs[0] ? xs[0] + LINK_LAYOUT.CR : xs[0] - LINK_LAYOUT.CR, ys[1]);
           context.lineTo(xs[1], ys[1]);
         }
         break;
@@ -397,7 +366,7 @@ export class Link {
     const xs = this.display.xs;
     const ys = this.display.ys;
     let p = 12;
-    let gap = Link.GAP;
+    let gap = LINK_LAYOUT.GAP;
     if (this.count > 1) {
       const f = 1 + (this.count - 1) * .5;
       p = p * f;
@@ -406,26 +375,26 @@ export class Link {
 
     let slope;
     let x, y;
-    if (type === Link.LINK_TYPES.STRAIGHT) {
+    if (type === LINK_TYPES.STRAIGHT) {
       const p2 = xs.length - 1;
       const p1 = p2 - 1;
       x = xs[p2];
       y = ys[p2];
-      slope = this.getSlope(xs[p1], ys[p1], xs[p2], ys[p2]);
+      slope = new LinkLayout(this.display, this.from.display, this.to.display).getSlope(xs[p1], ys[p1], xs[p2], ys[p2]);
     }
     else if (xs.length === 2) {
       // auto ELBOW/ELBOWH/ELBOWV type
       switch (this.getAutoElbowLinkType()) {
-        case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_V:
-        case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_VHV:
-        case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_HV:
+        case AUTO_ELBOW_LINK_TYPES.AUTOLINK_V:
+        case AUTO_ELBOW_LINK_TYPES.AUTOLINK_VHV:
+        case AUTO_ELBOW_LINK_TYPES.AUTOLINK_HV:
           x = xs[1];
           y = ys[1] > ys[0] ? ys[1] + gap : ys[1] - gap;
           slope = ys[1] > ys[0] ? Math.PI / 2 : Math.PI * 1.5;
           break;
-        case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_H:
-        case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_HVH:
-        case Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_VH:
+        case AUTO_ELBOW_LINK_TYPES.AUTOLINK_H:
+        case AUTO_ELBOW_LINK_TYPES.AUTOLINK_HVH:
+        case AUTO_ELBOW_LINK_TYPES.AUTOLINK_VH:
           x = xs[1] > xs[0] ? xs[1] + gap : xs[1] - gap;
           y = ys[1];
           slope = xs[1] > xs[0] ? 0 : Math.PI;
@@ -438,7 +407,7 @@ export class Link {
       if (xs[k] === xs[k - 1] && (ys[k] !== ys[k - 1] || ys[k - 1] === ys[k - 2])) {
         // verticle arrow
         x = xs[k];
-        y = ys[k] > ys[k - 1] ? ys[k] + gap : ys[k] - gap;
+        y = ys[k] > ys[k - 1] ? ys[k] + gap / 2 : ys[k] - gap / 2;
         slope = ys[k] > ys[k - 1] ? Math.PI / 2 : Math.PI * 1.5;
       }
       else {
@@ -469,484 +438,64 @@ export class Link {
     const xs = this.display.xs;
     const ys = this.display.ys;
 
-    if (type === Link.LINK_TYPES.ELBOWH) {
+    if (type === LINK_TYPES.ELBOWH) {
       if (xs[0] === xs[1]) {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_V;
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_V;
       }
       else if (ys[0] === ys[1]) {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_H;
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_H;
       }
-      else if (Math.abs(this.to.display.x - this.from.display.x) > Link.ELBOW_VH_THRESHOLD) {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_HVH;
+      else if (Math.abs(this.to.display.x - this.from.display.x) >LINK_LAYOUT.ELBOW_VH_THRESHOLD) {
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_HVH;
       }
       else {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_HV;
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_HV;
       }
     }
-    else if (type === Link.LINK_TYPES.ELBOWV) {
+    else if (type === LINK_TYPES.ELBOWV) {
       if (xs[0] === xs[1]) {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_V;
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_V;
       }
       else if (ys[0] === ys[1]) {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_H;
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_H;
       }
-      else if (Math.abs(this.to.display.y - this.from.display.y) > Link.ELBOW_VH_THRESHOLD) {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_VHV;
+      else if (Math.abs(this.to.display.y - this.from.display.y) >LINK_LAYOUT.ELBOW_VH_THRESHOLD) {
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_VHV;
       }
       else {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_VH;
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_VH;
       }
     }
     else {
       if (xs[0] === xs[1]) {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_V;
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_V;
       }
       else if (ys[0] === ys[1]) {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_H;
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_H;
       }
-      else if (Math.abs(this.to.display.x - this.from.display.x) < Math.abs(this.to.display.y - this.from.display.y) * Link.ELBOW_THRESHOLD) {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_VHV;
+      else if (Math.abs(this.to.display.x - this.from.display.x) < Math.abs(this.to.display.y - this.from.display.y) * LINK_LAYOUT.ELBOW_THRESHOLD) {
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_VHV;
       }
-      else if (Math.abs(this.to.display.y - this.from.display.y) < Math.abs(this.to.display.x - this.from.display.x) * Link.ELBOW_THRESHOLD) {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_HVH;
+      else if (Math.abs(this.to.display.y - this.from.display.y) < Math.abs(this.to.display.x - this.from.display.x) * LINK_LAYOUT.ELBOW_THRESHOLD) {
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_HVH;
       }
       else {
-        return Link.AUTO_ELBOW_LINK_TYPES.AUTOLINK_HV;
+        return AUTO_ELBOW_LINK_TYPES.AUTOLINK_HV;
       }
     }
   }
 
   recalc(step: Step) {
-    const type = this.display.type;
-    const xs = this.display.xs;
-    const ys = this.display.ys;
-    const x = this.display.x;
-    const y = this.display.y;
-
-    const n = xs.length;
-    let k;
-    // remember relative label position
-    let labelSlope = this.getSlope(xs[0], ys[0], x, y) - this.getSlope(xs[0], ys[0], xs[n - 1], ys[n - 1]);
-    let labelDist = this.getDist(xs[0], ys[0], xs[n - 1], ys[n - 1]);
-    if (labelDist < 5.0) {
-      labelDist = 0.5;
-    }
-    else {
-      labelDist = this.getDist(xs[0], ys[0], x, y) / labelDist;
-    }
-
-    if (type === Link.LINK_TYPES.STRAIGHT) {
-      if (n === 2) {
-        this.calc();
-      }
-      else {
-        if (step === this.from) {
-          if (xs[1] > step.display.x + step.display.w + Link.GAP) {
-            xs[0] = step.display.x + step.display.w + Link.GAP;
-          }
-          else if (xs[1] < step.display.x - Link.GAP) {
-            xs[0] = step.display.x - Link.GAP;
-          }
-          if (ys[1] > step.display.y + step.display.h + Link.GAP) {
-            ys[0] = step.display.y + step.display.h + Link.GAP;
-          }
-          else if (ys[1] < step.display.y - Link.GAP) {
-            ys[0] = step.display.y - Link.GAP;
-          }
-        }
-        else {
-          k = n - 1;
-          if (xs[k - 1] > step.display.x + step.display.w + Link.GAP) {
-            xs[k] = step.display.x + step.display.w + Link.GAP;
-          }
-          else if (xs[k - 1] < step.display.x - Link.GAP) {
-            xs[k] = step.display.x - Link.GAP;
-          }
-          if (ys[k - 1] > step.display.y + step.display.h + Link.GAP) {
-            ys[k] = step.display.y + step.display.h + Link.GAP;
-          }
-          else if (ys[k - 1] < step.display.y - Link.GAP) {
-            ys[k] = step.display.y - Link.GAP;
-          }
-        }
-      }
-    }
-    else if (n === 2) {
-      // automatic ELBOW, ELBOWH, ELBOWV
-      this.calcAutoElbow();
-    }
-    else {
-      // controlled ELBOW, ELBOWH, ELBOWV
-      const wasHorizontal = !this.isAnchorHorizontal(0);
-      const horizontalFirst = (Math.abs(this.from.display.x - this.to.display.x) >= Math.abs(this.from.display.y - this.to.display.y));
-      if (type === Link.LINK_TYPES.ELBOW && wasHorizontal !== horizontalFirst) {
-        this.calc();
-      }
-      else if (step === this.from) {
-        if (xs[1] > step.display.x + step.display.w) {
-          xs[0] = step.display.x + step.display.w + Link.GAP;
-        }
-        else if (xs[1] < step.display.x) {
-          xs[0] = step.display.x - Link.GAP;
-        }
-        else {
-          xs[0] = xs[1];
-        }
-
-        if (ys[1] > step.display.y + step.display.h) {
-          ys[0] = step.display.y + step.display.h + Link.GAP;
-        }
-        else if (ys[1] < step.display.y) {
-          ys[0] = step.display.y - Link.GAP;
-        }
-        else {
-          ys[0] = ys[1];
-        }
-
-        if (wasHorizontal) {
-          ys[1] = ys[0];
-        }
-        else{
-          xs[1] = xs[0];
-        }
-      }
-      else {
-        k = n - 1;
-        if (xs[k - 1] > step.display.x + step.display.w) {
-          xs[k] = step.display.x + step.display.w + Link.GAP;
-        }
-        else if (xs[k - 1] < step.display.x) {
-          xs[k] = step.display.x - Link.GAP;
-        }
-        else {
-          xs[k] = xs[k - 1];
-        }
-
-        if (ys[k - 1] > step.display.y + step.display.h) {
-          ys[k] = step.display.y + step.display.h + Link.GAP;
-        }
-        else if (ys[k - 1] < step.display.y) {
-          ys[k] = step.display.y - Link.GAP;
-        }
-        else {
-          ys[k] = ys[k - 1];
-        }
-
-        if ((wasHorizontal && n % 2 === 0) || (!wasHorizontal && n % 2 !== 0)) {
-          ys[k - 1] = ys[k];
-        }
-        else {
-          xs[k - 1] = xs[k];
-        }
-      }
-    }
-
-    // label position
-    labelSlope = this.getSlope(xs[0], ys[0], xs[n - 1], ys[n - 1]) + labelSlope;
-    labelDist = this.getDist(xs[0], ys[0], xs[n - 1], ys[n - 1]) * labelDist;
-    this.display.x = Math.round(xs[0] + Math.cos(labelSlope) * labelDist);
-    this.display.y = Math.round(ys[0] + Math.sin(labelSlope) * labelDist);
-
+    const linkLayout = new LinkLayout(this.display, this.from.display, this.to.display);
+    linkLayout.recalc(step.display, step === this.from);
     this.setDisplay(this.display);
   }
 
   calc(points?: number) {
-    const type = this.display.type;
-    let xs = this.display.xs;
-    let ys = this.display.ys;
-    const x1 = this.from.display.x;
-    const y1 = this.from.display.y;
-    const w1 = this.from.display.w;
-    const h1 = this.from.display.h;
-    const x2 = this.to.display.x;
-    const y2 = this.to.display.y;
-    const w2 = this.to.display.w;
-    const h2 = this.to.display.h;
-
-    const n = points ? points : (xs.length < 2 ? 2 : xs.length);
-    let i: number;
-
-    if (type === Link.LINK_TYPES.STRAIGHT) {
-      xs = this.display.xs = [];
-      ys = this.display.ys = [];
-      for (i = 0; i < n; i++) {
-        xs.push(0);
-        ys.push(0);
-      }
-
-      if (Math.abs(x1 - x2) >= Math.abs(y1 - y2)) {
-        // more of a horizontal link
-        xs[0] = (x1 <= x2) ? (x1 + w1) : x1;
-        ys[0] = y1 + h1 / 2;
-        xs[n - 1] = (x1 <= x2) ? x2 : (x2 + w2);
-        ys[n - 1] = y2 + h2 / 2;
-        for (i = 1; i < n - 1; i++) {
-          if (i % 2 !== 0) {
-            ys[i] = ys[i - 1];
-            xs[i] = (xs[n - 1] - xs[0]) * ((i + 1) / 2) / (n / 2) + xs[0];
-          }
-          else {
-            xs[i] = xs[i - 1];
-            ys[i] = (ys[n - 1] - ys[0]) * ((i + 1) / 2) / ((n - 1) / 2) + ys[0];
-          }
-        }
-      }
-      else {
-        // more of a vertical link
-        xs[0] = x1 + w1 / 2;
-        ys[0] = (y1 <= y2) ? (y1 + h1) : y1;
-        xs[n - 1] = x2 + w2 / 2;
-        ys[n - 1] = (y1 <= y2) ? y2 : (y2 + h2);
-        for (i = 1; i < n - 1; i++) {
-          if (i % 2 !== 0) {
-            xs[i] = xs[i - 1];
-            ys[i] = (ys[n - 1] - ys[0]) * ((i + 1) / 2) / (n / 2) + ys[0];
-          }
-          else {
-            ys[i] = ys[i - 1];
-            xs[i] = (xs[n - 1] - xs[0]) * (i / 2) / ((n - 1) / 2) + xs[0];
-          }
-        }
-      }
-    }
-    else if (n === 2) {
-      // auto ELBOW, ELBOWH, ELBOWV
-      xs = this.display.xs = [0, 0];
-      ys = this.display.ys = [0, 0];
-      this.calcAutoElbow();
-    }
-    else {
-      // ELBOW, ELBOWH, ELBOWV with middle control points
-      const horizontalFirst = type === Link.LINK_TYPES.ELBOWH || (type === Link.LINK_TYPES.ELBOW && Math.abs(x1 - x2) >= Math.abs(y1 - y2));
-      const evenN = n % 2 === 0;
-      const horizontalLast = (horizontalFirst && evenN) || (!horizontalFirst && !evenN);
-      xs = this.display.xs = [];
-      ys = this.display.ys = [];
-      for (i = 0; i < n; i++) {
-        xs.push(0);
-        ys.push(0);
-      }
-      if (horizontalFirst) {
-        xs[0] = (x1 <= x2) ? (x1 + w1) : x1;
-        ys[0] = y1 + h1 / 2;
-      }
-      else {
-        xs[0] = x1 + w1 / 2;
-        ys[0] = (y1 <= y2) ? (y1 + h1) : y1;
-      }
-      if (horizontalLast) {
-        xs[n - 1] = (x2 <= x1) ? (x2 + w2) : x2;
-        ys[n - 1] = y2 + h2 / 2;
-      }
-      else {
-        xs[n - 1] = x2 + w2 / 2;
-        ys[n - 1] = (y2 <= y1) ? (y2 + h2) : y2;
-      }
-      if (horizontalFirst) {
-        for (i = 1; i < n - 1; i++) {
-          if (i % 2 !== 0) {
-            ys[i] = ys[i - 1];
-            xs[i] = (xs[n - 1] - xs[0]) * Math.round(((i + 1) / 2) / (n / 2)) + xs[0];
-          }
-          else {
-            xs[i] = xs[i - 1];
-            ys[i] = (ys[n - 1] - ys[0]) * Math.round(((i + 1) / 2) / ((n - 1) / 2)) + ys[0];
-          }
-        }
-      }
-      else {
-        for (i = 1; i < n - 1; i++) {
-          if (i % 2 !== 0) {
-            xs[i] = xs[i - 1];
-            ys[i] = (ys[n - 1] - ys[0]) * Math.round(((i + 1) / 2) / (n / 2)) + ys[0];
-          }
-          else {
-            ys[i] = ys[i - 1];
-            xs[i] = (xs[n - 1] - xs[0]) * Math.round((i / 2) / ((n - 1) / 2)) + xs[0];
-          }
-        }
-      }
-    }
-    this.calcLabel();
+    const linkLayout = new LinkLayout(this.display, this.from.display, this.to.display);
+    linkLayout.calcLink(points);
+    linkLayout.calcLabel();
     this.setDisplay(this.display);
-  }
-
-  isAnchorHorizontal(anchor): boolean {
-    const p = anchor - 1;
-    const n = anchor + 1;
-    if (p >= 0 && this.display.xs[p] !== this.display.xs[anchor] && this.display.ys[p] === this.display.ys[anchor]) {
-      return true;
-    }
-    else if (n < this.display.xs.length && this.display.xs[n] === this.display.xs[anchor] && this.display.ys[n] !== this.display.ys[anchor]) {
-      return true;
-    }
-    else {
-      return false;
-    }
-  }
-
-  calcLabel() {
-    const type = this.display.type;
-    const xs = this.display.xs;
-    const ys = this.display.ys;
-
-    const x1 = this.from.display.x;
-    const x2 = this.to.display.x;
-
-    const n = xs.length;
-
-    if (type === Link.LINK_TYPES.STRAIGHT) {
-      this.display.x = (xs[0] + xs[n - 1]) / 2;
-      this.display.y = (ys[0] + ys[n - 1]) / 2;
-    }
-    else if (n === 2) {
-      // auto ELBOW, ELBOWH, ELBOWV
-      this.display.x = (xs[0] + xs[n - 1]) / 2;
-      this.display.y = (ys[0] + ys[n - 1]) / 2;
-    }
-    else {
-      // ELBOW, ELBOWH, ELBOWV with middle control points
-      const horizontalFirst = ys[0] === ys[1];
-      if (n <= 3) {
-        if (horizontalFirst) {
-          this.display.x = (x1 + x2) / 2 - 40;
-          this.display.y = ys[0] - 4;
-        }
-        else {
-          this.display.x = xs[0] + 2;
-          this.display.y = (ys[0] + ys[1]) / 2;
-        }
-      }
-      else {
-        if (horizontalFirst) {
-          this.display.x = (x1 <= x2) ? (xs[(n - 1) / 2] + 2) : (xs[(n - 1) / 2 + 1] + 2);
-          this.display.y = ys[n / 2] - 4;
-        }
-        else {
-          this.display.x = (x1 <= x2) ? xs[n / 2 - 1] : xs[n / 2];
-          this.display.y = ys[n / 2 - 1] - 4;
-        }
-      }
-    }
-  }
-
-  calcAutoElbow() {
-    const type = this.display.type;
-    const xs = this.display.xs;
-    const ys = this.display.ys;
-
-    if (this.to.display.x + this.to.display.w >= this.from.display.x && this.to.display.x <= this.from.display.x + this.from.display.w) {
-      // V
-      xs[0] = xs[1] = (Math.max(this.from.display.x, this.to.display.x) + Math.min(this.from.display.x + this.from.display.w, this.to.display.x + this.to.display.w)) / 2;
-      if (this.to.display.y > this.from.display.y) {
-        ys[0] = this.from.display.y + this.from.display.h + Link.GAP;
-        ys[1] = this.to.display.y - Link.GAP;
-      }
-      else {
-        ys[0] = this.from.display.y - Link.GAP;
-        ys[1] = this.to.display.y + this.to.display.h + Link.GAP;
-      }
-    }
-    else if (this.to.display.y + this.to.display.h >= this.from.display.y && this.to.display.y <= this.from.display.y + this.from.display.h) {
-      // H
-      ys[0] = ys[1] = (Math.max(this.from.display.y, this.to.display.y) + Math.min(this.from.display.y + this.from.display.h, this.to.display.y + this.to.display.h)) / 2;
-      if (this.to.display.x > this.from.display.x) {
-        xs[0] = this.from.display.x + this.from.display.w + Link.GAP;
-        xs[1] = this.to.display.x - Link.GAP;
-      }
-      else {
-        xs[0] = this.from.display.x - Link.GAP;
-        xs[1] = this.to.display.x + this.to.display.w + Link.GAP;
-      }
-    }
-    else if ((type === Link.LINK_TYPES.ELBOW && Math.abs(this.to.display.x - this.from.display.x) < Math.abs(this.to.display.y - this.from.display.y) * Link.ELBOW_THRESHOLD) ||
-      (type === Link.LINK_TYPES.ELBOWV && Math.abs(this.to.display.y - this.from.display.y) > Link.ELBOW_VH_THRESHOLD)) {
-      // VHV
-      xs[0] = this.from.display.x + this.from.display.w / 2;
-      xs[1] = this.to.display.x + this.to.display.w / 2;
-      if (this.to.display.y > this.from.display.y) {
-        ys[0] = this.from.display.y + this.from.display.h + Link.GAP;
-        ys[1] = this.to.display.y - Link.GAP;
-      }
-      else {
-        ys[0] = this.from.display.y - Link.GAP;
-        ys[1] = this.to.display.y + this.to.display.h + Link.GAP;
-      }
-    }
-    else if ((type === Link.LINK_TYPES.ELBOW && Math.abs(this.to.display.y - this.from.display.y) < Math.abs(this.to.display.x - this.from.display.x) * Link.ELBOW_THRESHOLD) ||
-      (type === Link.LINK_TYPES.ELBOWH && Math.abs(this.to.display.x - this.from.display.x) > Link.ELBOW_VH_THRESHOLD)) {
-      // HVH
-      ys[0] = this.from.display.y + this.from.display.h / 2;
-      ys[1] = this.to.display.y + this.to.display.h / 2;
-      if (this.to.display.x > this.from.display.x) {
-        xs[0] = this.from.display.x + this.from.display.w + Link.GAP;
-        xs[1] = this.to.display.x - Link.GAP;
-      }
-      else {
-        xs[0] = this.from.display.x - Link.GAP;
-        xs[1] = this.to.display.x + this.to.display.w + Link.GAP;
-      }
-    }
-    else if (type === Link.LINK_TYPES.ELBOWV) {
-      // VH
-      if (this.to.display.y > this.from.display.y) {
-        ys[0] = this.from.display.y + this.from.display.h + Link.GAP;
-      }
-      else {
-        ys[0] = this.from.display.y - Link.GAP;
-      }
-      xs[0] = this.from.display.x + this.from.display.w / 2;
-      ys[1] = this.to.display.y + this.to.display.h / 2;
-      if (this.to.display.x > this.from.display.x) {
-        xs[1] = this.to.display.x - Link.GAP;
-      }
-      else {
-        xs[1] = this.to.display.x + this.to.display.w + Link.GAP;
-      }
-    }
-    else {
-      // HV
-      if (this.to.display.x > this.from.display.x) {
-        xs[0] = this.from.display.x + this.from.display.w + Link.GAP;
-      }
-      else {
-        xs[0] = this.from.display.x - Link.GAP;
-      }
-      ys[0] = this.from.display.y + this.from.display.h / 2;
-      xs[1] = this.to.display.x + this.to.display.w / 2;
-      if (this.to.display.y > this.from.display.y) {
-        ys[1] = this.to.display.y - Link.GAP;
-      }
-      else {
-        ys[1] = this.to.display.y + this.to.display.h + Link.GAP;
-      }
-    }
-  }
-
-  /**
-   * in polar degrees
-   */
-  getSlope(x1: number, y1: number, x2: number, y2: number): number {
-    let slope: number;
-    if (x1 === x2) {
-      slope = (y1 < y2) ? Math.PI / 2 : -Math.PI / 2;
-    }
-    else {
-      slope = Math.atan((y2 - y1) / (x2 - x1));
-    }
-    if (x1 > x2) {
-      if (slope > 0) {
-        slope -= Math.PI;
-      }
-      else {
-        slope += Math.PI;
-      }
-    }
-    return slope;
-  }
-
-  getDist(x1: number, y1: number, x2: number, y2: number): number {
-    return Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
   }
 
   select() {
@@ -1056,7 +605,8 @@ export class Link {
     }
 
     if (display.type.startsWith('Elbow') && display.xs.length !== 2) {
-      if (this.isAnchorHorizontal(anchor)) {
+      const linkLayout = new LinkLayout(this.display, this.from.display, this.to.display);
+      if (linkLayout.isAnchorHorizontal(anchor)) {
         if (anchor > 0) {
           display.ys[anchor - 1] = this.display.ys[anchor] + deltaY;
         }
@@ -1124,7 +674,7 @@ export class Link {
   edit(onchange: (text: string) => void) {
     const edit = new Edit(this.diagram);
     const text = this.label?.text || '';
-    const display = this.label?.display || { x: this.display.x + 2, y: this.display.y + Link.LABEL_CORR };
+    const display = this.label?.display || { x: this.display.x + 2, y: this.display.y + LINK_LAYOUT.LABEL_CORR };
     display.y -= 1;
     edit.render(text, display, text => {
       if (text) this.link.result = text;
@@ -1140,14 +690,14 @@ export class Link {
       from.step.links = [];
     }
     from.step.links.push(linkElement);
-    link.display = { type: Link.LINK_TYPES.ELBOW, x: 0, y: 0, xs: [0, 0], ys: [0, 0] };
+    link.display = { type: LINK_TYPES.ELBOW, x: 0, y: 0, xs: [0, 0], ys: [0, 0] };
     link.calc();
     link.count = diagram.countLinks(link);
     return link;
   }
 
   static copy(diagram: Diagram, linkElement: LinkElement, dx: number, dy: number, from: Step, to: Step): Link {
-    const display = parseDisplay(linkElement);
+    const display = LinkLayout.fromAttr(linkElement.attributes?.display);
     if (typeof display.x === 'number') display.x += dx;
     if (typeof display.y === 'number') display.y += dy;
     display.xs = display.xs.map(x => x + dx);
@@ -1159,7 +709,7 @@ export class Link {
       to: to.id,
       ...(linkElement.event) && { event: linkElement.event },
       ...(linkElement.result) && { result: linkElement.result },
-      attributes: { ...linkElement.attributes,  display: Link.getAttr(display) }
+      attributes: { ...linkElement.attributes,  display: LinkLayout.toAttr(display) }
     }, from, to);
     link.display = display;
     return link;
@@ -1172,26 +722,6 @@ export class Link {
       to: toId
     };
   }
-
-  static getAttr(display: LinkDisplay): string {
-    let attr = 'type=' + display.type + ',x=' + Math.round(display.x) + ',y=' + Math.round(display.y);
-    attr += ',xs=';
-    for (let i = 0; i < display.xs.length; i++) {
-      if (i > 0) {
-        attr += '&';
-      }
-      attr += Math.round(display.xs[i]);
-    }
-    attr += ',ys=';
-    for (let i = 0; i < display.ys.length; i++) {
-      if (i > 0) {
-        attr += '&';
-      }
-      attr += Math.round(display.ys[i]);
-    }
-    return attr;
-  }
-
 }
 
 export type LineSegment = {
@@ -1203,36 +733,4 @@ export type LineSegment = {
     cpx: number,
     cpy: number
   } | ((context: CanvasRenderingContext2D) => void)
-}
-
-function parseDisplay(linkElement: LinkElement): LinkDisplay {
-  const display: LinkDisplay = {};
-  const displayAttr = linkElement.attributes.display;
-  if (displayAttr) {
-    const vals = displayAttr.split(',');
-    display.xs = [];
-    display.ys = [];
-    vals.forEach(function (val) {
-      if (val.startsWith('x=')) {
-        display.x = parseInt(val.substring(2));
-      }
-      else if (val.startsWith('y=')) {
-        display.y = parseInt(val.substring(2));
-      }
-      else if (val.startsWith('xs=')) {
-        val.substring(3).split('&').forEach(function (x) {
-          display.xs.push(parseInt(x));
-        });
-      }
-      else if (val.startsWith('ys=')) {
-        val.substring(3).split('&').forEach(function (y) {
-          display.ys.push(parseInt(y));
-        });
-      }
-      else if (val.startsWith('type=')) {
-        display.type = val.substring(5);
-      }
-    });
-  }
-  return display;
 }

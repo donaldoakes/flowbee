@@ -72,31 +72,48 @@ export class FlowbeeTranslator {
             this.flow.steps.push(step);
             const nexts: swf.SwfState[] = [];
             if (state.end) {
-                const stopStep = {
-                    id: this.stepId(state, 'stopStepId'),
-                    name: this.metadata(state, 'stopStepName', 'Stop'),
-                    path: 'stop'
-                };
-                step.links = [
-                    {
-                        id: this.getNextLinkId(),
-                        to: stopStep.id
-                    }
-                ];
+                const stopStep = this.getStopStep(state);
+                step.links = [ { id: this.getNextLinkId(), to: stopStep.id } ];
                 this.flow.steps.push(stopStep);
-            } else if (state.transition) {
-                if (typeof state.transition === 'string') {
-                    const next = this.swf.states.find((s) => s.name === state.transition);
-                    if (next) nexts.push(next);
+            } else {
+                const transitions: (string | swf.SwfTransition)[] = [];
+                if (state.transition) {
+                    transitions.push(state.transition);
                 } else {
-                    const transition: swf.SwfTransition = state.transition;
-                    const next = this.swf.states.find((s) => s.name === transition.nextState);
-                    if (next) nexts.push(next);
+                    const dataConditions: swf.DataCondition[] | undefined = (state as any).dataConditions;
+                    if (dataConditions) {
+                        for (const dataCondition of dataConditions) {
+                            if (dataCondition.end) {
+                                const stopStep = this.getStopStep(state);
+                                step.links = [ { id: this.getNextLinkId(), to: stopStep.id } ];
+                                this.flow.steps.push(stopStep);
+                            } else {
+                                transitions.push(dataCondition.transition);
+                            }
+                        }
+                    }
+                }
+                for (const transition of transitions) {
+                    if (typeof transition === 'string') {
+                        const next = this.swf.states.find((s) => s.name === transition);
+                        if (next) nexts.push(next);
+                    } else {
+                        const next = this.swf.states.find((s) => s.name === transition.nextState);
+                        if (next) nexts.push(next);
+                    }
                 }
             }
             this.addLinks(step, nexts);
             await this.addSteps(nexts);
         }
+    }
+
+    private getStopStep(state: swf.SwfState): Step {
+        return {
+            id: this.stepId(state, 'stopStepId'),
+            name: this.metadata(state, 'stopStepName', 'Stop'),
+            path: 'stop'
+        };
     }
 
     private async toStep(state: swf.SwfState): Promise<Step> {

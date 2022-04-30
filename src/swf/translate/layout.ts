@@ -1,3 +1,4 @@
+import { LinkLayout } from '../../draw/layout';
 import { Flow } from '../../model/flow';
 import { Link } from '../../model/link';
 import { Step } from '../../model/step';
@@ -9,6 +10,12 @@ export type Display = {
     w: number;
     h: number;
 };
+
+export type LinkDisplay = {
+    type: string,
+    xs: number[],
+    ys: number[]
+}
 
 const parseDisplay = (displayAttr: string): Display => {
     const display: Display = { x: 0, y: 0, w: 0, h: 0 };
@@ -42,10 +49,10 @@ export class FlowLayout {
     private static STD_H = 80;
     private static START_STOP_W = 60;
     private static START_STOP_H = 40;
+    private static PARALLEL_INDENT = 180;
     private static STD_Y_DIST = 130;
     private static START_STOP_X_ADJ = (FlowLayout.STD_W - FlowLayout.START_STOP_W) / 2;
     private static START_Y_DIST_ADJ = 40;
-    private static LINK_GAP = 4;
 
     constructor(readonly swf: swf.SwfWorkflow, readonly flow: Flow) {
         if (!this.flow.attributes) this.flow.attributes = {};
@@ -56,37 +63,43 @@ export class FlowLayout {
         if (this.swf.metadata?.startStepDisplay) {
             this.setAttribute(startStep, 'display', this.swf.metadata.startStepDisplay);
         }
-        this.layoutSteps([startStep]);
+        this.layoutSteps([startStep], false);
     }
 
-    /**
-     * TODO parallel
-     */
-    private layoutSteps(steps: Step[]) {
-        for (const step of steps) {
+    private layoutSteps(steps: Step[], incrementY: boolean) {
+        const prevX = this.curX;
+        if (incrementY) this.curY += FlowLayout.STD_Y_DIST;
+        for (const [i, step] of steps.entries()) {
             const state = this.swf.states.find((s) => s.metadata?.stepId === step.id);
             let display = this.metaDisplay(step, state);
             if (display) {
                 if (display.y) this.curY = display.y;
             } else {
                 // autodisplay
+                if (i > 0) this.curX += FlowLayout.PARALLEL_INDENT;
                 display = this.stepDisplay(step);
             }
-            this.curY += FlowLayout.STD_Y_DIST;
             if (step.path === 'start') this.curY -= FlowLayout.START_Y_DIST_ADJ;
+
             if (!step.attributes) step.attributes = {};
             step.attributes.display = toDisplayAttr(display);
 
             if (step.links) {
-                const nexts: Step[] = [];
+                const nexts = new Map<Link, Step>();
                 for (const link of step.links) {
-                    this.layoutLink(step, link, display, state);
                     const next = this.flow.steps?.find((s) => s.id === link.to);
-                    if (next) nexts.push(next);
+                    if (next) nexts.set(link, next);
                 }
-                this.layoutSteps(nexts);
+                const prevY = this.curY;
+                this.layoutSteps(Array.from(nexts.values()), true);
+                for (const link of nexts.keys()) {
+                    const next = nexts.get(link);
+                    this.layoutLink(step, link, next, state);
+                }
+                this.curY = prevY;
             }
         }
+        this.curX = prevX;
     }
 
     /**
@@ -134,26 +147,40 @@ export class FlowLayout {
     }
 
     private layoutLink(
-        step: Step,
+        from: Step,
         link: Link,
-        display: Display,
+        to: Step,
         state?: swf.SwfState
     ) {
         if (!link.attributes) link.attributes = {};
         let dispAttr: string | undefined;
-        if (step.path === 'start' && this.swf.metadata) {
+        if (from.path === 'start' && this.swf.metadata) {
             dispAttr = this.swf.metadata[`startLinkDisplay`];
         } else if (state?.metadata) {
             dispAttr = state.metadata[`linkDisplay`];
         }
         if (dispAttr) {
-            link.attributes.display = dispAttr;
+            if (dispAttr.indexOf('x=NaN') >= 0 || dispAttr.indexOf('y=NaN') >= 0) {
+                // fix poorly-saved label attributes
+                const display = LinkLayout.fromAttr(dispAttr);
+                const fromDisplay = parseDisplay(from.attributes!.display);
+                const toDisplay = parseDisplay(to.attributes!.display);
+                new LinkLayout(display, fromDisplay, toDisplay).calcLabel();
+                link.attributes.display = LinkLayout.toAttr(display);
+            } else {
+                link.attributes.display = dispAttr;
+            }
         } else {
             // autolayout
-            const x = display.x + display.w / 2;
-            const y1 = display.y + display.h + FlowLayout.LINK_GAP;
-            const y2 = this.curY - FlowLayout.LINK_GAP;
-            link.attributes.display = `type=Elbow,xs=${x}&${x},ys=${y1}&${y2}`;
+            const fromDisplay = parseDisplay(from.attributes!.display);
+            const toDisplay = parseDisplay(to.attributes!.display);
+            let points: number | undefined;
+            if ((fromDisplay.x + fromDisplay.w/2) !== (toDisplay.x + toDisplay.w/2)) points = 3;
+            const display = { type: points ? 'ElbowH' : 'Elbow', xs: [], ys: [] };
+            const linkLayout = new LinkLayout(display, fromDisplay, toDisplay);
+            linkLayout.calcLink(points);
+            linkLayout.calcLabel();
+            link.attributes.display = LinkLayout.toAttr(linkLayout.display);
         }
     }
 

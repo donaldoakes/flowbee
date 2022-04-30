@@ -53,13 +53,13 @@ export interface SwfTransition {
     metadata?: Metadata;
 }
 
-export type StateType = 'operation' | 'event' | 'inject';
-export const StateTypes = ['operation', 'event', 'inject'];
+export type StateType = 'operation' | 'event' | 'inject' | 'switch' | 'parallel';
+export const StateTypes = ['operation', 'event', 'inject', 'switch', 'parallel'];
 
 export interface SwfState {
     name: string;
     type: StateType;
-    transition?: SwfTransition | string;
+    transition?: string | SwfTransition;
     end?: boolean;
     stateDataFilter?: StateDataFilter;
     metadata?: Metadata;
@@ -86,6 +86,17 @@ export interface EventState extends SwfState {
 
 export interface InjectState extends SwfState {
     data?: { [key: string]: any };
+}
+
+export interface DataCondition {
+    name?: string;
+    condition: string;
+    transition?: string | SwfTransition;
+    end?: boolean;
+}
+
+export interface SwitchState extends SwfState {
+    dataConditions?: DataCondition[];
 }
 
 /**

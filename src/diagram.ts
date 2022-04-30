@@ -440,6 +440,7 @@ export class FlowDiagram {
                 (selObj as any).edit(text => {
                     this._onFlowElementUpdate.emit({ element: selObj.flowElement });
                     this.handleChange();
+                    if (selObj.type === 'link') emitDrill();
                 });
             } else if (selObj.type === 'flow') {
                 emitDrill();

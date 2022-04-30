@@ -22,7 +22,7 @@ export class Toolbox {
         this.descriptors = descriptors || StandardDescriptors;
     }
 
-    async render(options: ToolboxOptions = {}) {
+    render(options: ToolboxOptions = {}) {
 
         // loading styles is expensive, so only load if theme has changed
         if (!this.styles || !this.stylesObj || (options.theme && options.theme !== this.styles.theme.name)) {
@@ -78,10 +78,6 @@ export class Toolbox {
                 }
                 li.appendChild(iconDiv);
                 li.ondragstart = (e: DragEvent) => {
-                    let data = descriptor.path;
-                    if (descriptor.link) {
-                        data += `#${descriptor.link.url}`;
-                    }
                     e.dataTransfer.setData('application/json', JSON.stringify(descriptor));
                     e.dataTransfer.setDragImage(iconElem, iconWidth, iconWidth);
                     e.dataTransfer.dropEffect = 'copy';

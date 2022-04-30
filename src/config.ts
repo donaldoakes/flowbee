@@ -305,26 +305,42 @@ export class Configurator {
             } else if (this.flowElement.attributes && this.flowElement.attributes[widget.attribute]) {
                 value = this.flowElement.attributes[widget.attribute];
             } else if (widget.default) {
-                value = widget.default;
-                this.update(widget.attribute, value);
+                if (typeof widget.default === 'function') {
+                    value = widget.default(this.flowElement);
+                } else {
+                    value = '' + widget.default;
+                }
+                if (!widget.action) {
+                    this.update(widget.attribute, value);
+                }
             }
             const readonly = !!this.instance || widget.readonly || this.flowElement.readonly;
 
             // TODO separate date/datetime entry widget
-            if (widget.type === 'text' || widget.type === 'datetime') {
-                const text = document.createElement('input') as HTMLInputElement;
-                text.type = 'text';
+            if (widget.type === 'text' || widget.type === 'datetime' || widget.type === 'number') {
+                const input = document.createElement('input') as HTMLInputElement;
+                if (widget.type === 'number') {
+                    input.type = 'number';
+                    if (typeof widget.min === 'number') input.min = '' + widget.min;
+                    if (typeof widget.max === 'number') input.max = '' + widget.max;
+                } else {
+                    input.type = 'text';
+                }
                 if (value) {
-                    text.value = widget.type === 'datetime' ? dateTime(new Date(value)) : value;
+                    input.value = widget.type === 'datetime' ? dateTime(new Date(value)) : value;
                 }
                 if (readonly) {
-                    text.readOnly = true;
-                    text.style.borderColor = 'transparent';
-                    text.style.outline = 'none';
+                    input.readOnly = true;
+                    input.style.borderColor = 'transparent';
+                    input.style.outline = 'none';
                 } else {
-                    text.onchange = e => this.update(widget.attribute, text.value);
+                    if (widget.action) {
+                        input.onchange = e => this.action(widget.action, input.value);
+                    } else {
+                        input.onchange = e => this.update(widget.attribute, input.value);
+                    }
                 }
-                this.tabContent.appendChild(text);
+                this.tabContent.appendChild(input);
             } else if (widget.type === 'button') {
                 const button = document.createElement('button') as HTMLButtonElement;
                 button.innerText = widget.label;
@@ -339,7 +355,11 @@ export class Configurator {
                 if (readonly) {
                     checkbox.readOnly = true;
                 } else {
-                    checkbox.onclick = e => this.update(widget.attribute, '' + checkbox.checked);
+                    if (widget.action) {
+                        checkbox.onclick = e => this.action(widget.action, '' + checkbox.checked);
+                    } else {
+                        checkbox.onclick = e => this.update(widget.attribute, '' + checkbox.checked);
+                    }
                 }
                 this.tabContent.appendChild(checkbox);
             } else if (widget.type === 'radio') {
@@ -357,7 +377,11 @@ export class Configurator {
                             radio.checked = true;
                         }
                         if (!readonly) {
-                            radio.onchange = e => this.update(widget.attribute, opt);
+                            if (widget.action) {
+                                radio.onchange = e => this.action(widget.action, opt);
+                            } else {
+                                radio.onchange = e => this.update(widget.attribute, opt);
+                            }
                         }
                         div.appendChild(radio);
                         const label = document.createElement('label') as HTMLLabelElement;
@@ -382,7 +406,11 @@ export class Configurator {
                     if (widget.label) {
                         textarea.placeholder = widget.label;
                     }
-                    textarea.onchange = e => this.update(widget.attribute, textarea.value);
+                    if (widget.action) {
+                        textarea.onchange = e => this.action(widget.action, textarea.value);
+                    } else {
+                        textarea.onchange = e => this.update(widget.attribute, textarea.value);
+                    }
                     this.tabContent.appendChild(textarea);
                 }
             } else if (widget.type === 'code') {
@@ -394,7 +422,11 @@ export class Configurator {
                 code.style.margin = '0';
                 if (!readonly) {
                     code.setAttribute('contenteditable', 'true');
-                    code.oninput = e => this.update(widget.attribute, code.innerText);
+                    if (widget.action) {
+                        code.oninput = e => this.action(widget.action, code.innerText);
+                    } else {
+                        code.oninput = e => this.update(widget.attribute, code.innerText);
+                    }
                 }
                 this.tabContent.appendChild(code);
             } else if (widget.type === 'select') {
@@ -418,7 +450,11 @@ export class Configurator {
                     select.selectedIndex = 0;
                 }
                 if (!readonly) {
-                    select.onchange = e => this.update(widget.attribute, widget.options[select.selectedIndex]);
+                    if (widget.action) {
+                        select.onchange = e => this.action(widget.action, widget.options[select.selectedIndex]);
+                    } else {
+                        select.onchange = e => this.update(widget.attribute, widget.options[select.selectedIndex]);
+                    }
                 }
                 this.tabContent.appendChild(select);
             } else if (widget.type === 'table') {
@@ -426,7 +462,11 @@ export class Configurator {
                     this.tabContent.style.gridAutoRows = ''; // fill entire tab
                 }
                 const table = new Table(widget.widgets, value, readonly);
-                table.onTableUpdate(tableUpdate => this.update(widget.attribute, tableUpdate.value));
+                if (widget.action) {
+                    table.onTableUpdate(tableUpdate => this.action(widget.action, tableUpdate.value));
+                } else {
+                    table.onTableUpdate(tableUpdate => this.update(widget.attribute, tableUpdate.value));
+                }
                 table.onTableAction(tableAction => {
                     this._onFlowElementUpdate.emit({ element: this.flowElement, action: tableAction.action });
                 });
@@ -474,9 +514,11 @@ export class Configurator {
 
                     if (widget.default) {
                         const createBtn = document.createElement('button') as HTMLButtonElement;
-                        createBtn.innerText = widget.default;
+                        if (typeof widget.default === 'string') {
+                            createBtn.innerText = widget.default;
+                        }
                         createBtn.onclick = e => {
-                            this._onFlowElementUpdate.emit({ element: this.flowElement, action: widget.default });
+                            this._onFlowElementUpdate.emit({ element: this.flowElement, action: '' + widget.default });
                         };
                         span.appendChild(createBtn);
                     }
@@ -520,6 +562,10 @@ export class Configurator {
             delete this.flowElement.attributes[attribute];
         }
         this._onFlowElementUpdate.emit({ element: this.flowElement });
+    }
+
+    action(action: string, value: string) {
+        this._onFlowElementUpdate.emit({ element: this.flowElement, action: { name: action, value }});
     }
 
     get isOpen(): boolean {

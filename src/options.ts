@@ -35,6 +35,14 @@ export interface FlowDumpOptions {
     indent?: number;
 }
 
+export interface ToolbarOptions {
+    theme?: string;
+    iconBase?: string;
+}
+export const toolbarDefault: ToolbarOptions = {
+    theme: 'light',
+    iconBase: null
+};
 export interface ToolboxOptions {
     theme?: string;
     iconBase?: string;

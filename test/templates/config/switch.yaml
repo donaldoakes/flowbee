@@ -1,0 +1,15 @@
+Conditions:
+  widgets:
+    - type: table
+      attribute: conditions
+      swf: dataConditions
+      widgets:
+        - type: text
+          label: Condition
+          swf: condition
+        - type: checkbox
+          label: End?
+          swf: end
+        - type: text
+          label: To State
+          swf: transition

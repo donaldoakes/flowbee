@@ -5,6 +5,9 @@ import { Attrs, TemplateSpec } from './attrs';
 import { Flow } from '../../model/flow';
 import { Step } from '../../model/step';
 
+/**
+ * From Flowbee flow to SWF workflow.
+ */
 export class SwfTranslator {
     private  workflow: swf.SwfWorkflow;
     private readonly attrs: Attrs;

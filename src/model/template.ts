@@ -16,6 +16,7 @@ export type WidgetType =
     'select' |
     'date' |
     'datetime' |
+    'number' |
     'table' |
     'note' |
     'link' |
@@ -57,7 +58,10 @@ export interface Widget {
      * Set this for selects so that attribute will
      * be populated with first value.
      */
-    default?: string;
+    default?: string | ((element: { attributes?: {[key: string]: string} }) => string);
+
+    min?: number;
+    max?: number;
 
     multi?: boolean;
 

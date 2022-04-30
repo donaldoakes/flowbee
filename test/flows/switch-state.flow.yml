@@ -1,0 +1,48 @@
+id: test/flows/switch-state.flow.yml
+version: 0.1.0
+description: Determine if applicant request is valid
+start: |-
+  Check
+  Application
+functions:
+  - name: submitApplicationFunction
+    operation: http://myapis.org/applicationapi.json#submitApplication
+  - name: sendRejectionEmailFunction
+    operation: http://myapis.org/applicationapi.json#emailRejection
+states:
+  - name: |-
+      Check
+      Application
+    type: switch
+    dataConditions:
+      - condition: '${ .applicants | .income < 18000 }'
+        end: true
+      - condition: '${ .applicants | .age >= 18 }'
+        transition: |
+          Submit
+          Application
+      - condition: '${ .applicants | .age < 18 }'
+        transition: |
+          Reject
+          Application
+  - name: |
+      Submit
+      Application
+    type: operation
+    actions:
+      - functionRef:
+          refName: submitApplicationFunction
+          arguments:
+            applicant: '${ .applicant }'
+    end: true
+  - name: |
+      Reject
+      Application
+    type: operation
+    actionMode: sequential
+    actions:
+      - functionRef:
+          refName: sendRejectionEmailFunction
+          arguments:
+            applicant: '${ .applicant }'
+    end: true
