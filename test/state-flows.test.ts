@@ -15,9 +15,9 @@ describe('state flows', () => {
         expect(checkAppStep.links?.length).to.be.equal(3);
         const conditionsAttr = checkAppStep.attributes.conditions;
         const rows = JSON.parse(conditionsAttr);
-        expect(rows[0]).to.be.deep.equal(['${ .applicants | .income < 18000 }',true,'']);
-        expect(rows[1]).to.be.deep.equal(['${ .applicants | .age >= 18 }','','Submit\nApplication\n']);
-        expect(rows[2]).to.be.deep.equal(['${ .applicants | .age < 18 }','','Reject\nApplication\n']);
+        expect(rows[0]).to.be.deep.equal(['', '${ .applicants | .income < 18000 }',true,'']);
+        expect(rows[1]).to.be.deep.equal(['', '${ .applicants | .age >= 18 }','','Submit\nApplication\n']);
+        expect(rows[2]).to.be.deep.equal(['reject', '${ .applicants | .age < 18 }','','Reject\nApplication\n']);
         // round-trip
         const swf = yaml.load('test/flows/switch-state.flow.yml', await translator.toSwf(flowbeeText));
         const checkAppState = swf.states.find(s => s.name === 'Check\nApplication');

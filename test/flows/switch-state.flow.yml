@@ -21,7 +21,8 @@ states:
         transition: |
           Submit
           Application
-      - condition: '${ .applicants | .age < 18 }'
+      - name: reject
+        condition: '${ .applicants | .age < 18 }'
         transition: |
           Reject
           Application
