@@ -5,6 +5,9 @@ Conditions:
       swf: dataConditions
       widgets:
         - type: text
+          label: Name
+          swf: name
+        - type: text
           label: Condition
           swf: condition
         - type: checkbox

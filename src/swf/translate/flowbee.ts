@@ -70,15 +70,15 @@ export class FlowbeeTranslator {
         for (const state of states) {
             const step = await this.toStep(state);
             this.flow.steps.push(step);
-            const nexts: swf.SwfState[] = [];
+            let nexts: swf.SwfState[] = [];
             if (state.end) {
                 const stopStep = this.getStopStep(state);
                 step.links = [ { id: this.getNextLinkId(), to: stopStep.id } ];
                 this.flow.steps.push(stopStep);
             } else {
-                const transitions: (string | swf.SwfTransition)[] = [];
+                const transitions: swf.SwfTransition[] = [];
                 if (state.transition) {
-                    transitions.push(state.transition);
+                    transitions.push(typeof state.transition === 'string' ? { nextState: state.transition } : state.transition);
                 } else {
                     const dataConditions: swf.DataCondition[] | undefined = (state as any).dataConditions;
                     if (dataConditions) {
@@ -86,24 +86,21 @@ export class FlowbeeTranslator {
                             if (dataCondition.end) {
                                 const stopStep = this.getStopStep(state);
                                 step.links = [ { id: this.getNextLinkId(), to: stopStep.id } ];
+                                if (dataCondition.name) step.links[0].result = dataCondition.name;
                                 this.flow.steps.push(stopStep);
-                            } else {
-                                transitions.push(dataCondition.transition);
+                            } else if (dataCondition.transition) {
+                                const transition = typeof dataCondition.transition === 'string' ? { nextState: dataCondition.transition } : dataCondition.transition;
+                                if (dataCondition.name) {
+                                    if (!transition.metadata) transition.metadata = {};
+                                    transition.metadata.linkLabel = dataCondition.name;
+                                }
+                                transitions.push(transition);
                             }
                         }
                     }
                 }
-                for (const transition of transitions) {
-                    if (typeof transition === 'string') {
-                        const next = this.swf.states.find((s) => s.name === transition);
-                        if (next) nexts.push(next);
-                    } else {
-                        const next = this.swf.states.find((s) => s.name === transition.nextState);
-                        if (next) nexts.push(next);
-                    }
-                }
+                nexts = this.addLinks(step, transitions);
             }
-            this.addLinks(step, nexts);
             await this.addSteps(nexts);
         }
     }
@@ -142,14 +139,27 @@ export class FlowbeeTranslator {
         return step;
     }
 
-    private addLinks(from: Step, nexts: swf.SwfState[]) {
-        for (const next of nexts) {
-            if (!from.links) from.links = [];
-            from.links.push({
-                id: this.getNextLinkId(),
-                to: this.stepId(next, 'stepId')
-            });
+    private addLinks(from: Step, transitions: swf.SwfTransition[]): swf.SwfState[] {
+        const nexts: swf.SwfState[] = [];
+
+        for (const transition of transitions) {
+            if (transition.nextState) {
+                const next = this.swf.states.find((s) => s.name === transition.nextState);
+                if (next) {
+                    if (!from.links) from.links = [];
+                    from.links.push({
+                        id: this.getNextLinkId(),
+                        to: this.stepId(next, 'stepId')
+                    });
+                    if (transition.metadata?.linkLabel) {
+                        from.links[from.links.length - 1].result = transition.metadata.linkLabel;
+                    }
+                    nexts.push(next);
+                }
+            }
         }
+
+        return nexts;
     }
 
     /**

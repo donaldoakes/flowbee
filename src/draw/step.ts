@@ -222,6 +222,14 @@ export class Step extends Shape {
     }
   }
 
+  isMultiLink() {
+    return this.options.multiLink || this.descriptor.multiLink;
+  }
+
+  canLinkFrom(): boolean {
+    return this.step.path !== 'stop' && ((this.step.links?.length || 0) === 0 || this.isMultiLink());
+  }
+
   highlight() {
     this.diagram.oval(
       this.display.x - this.diagram.options.highlight.padding,

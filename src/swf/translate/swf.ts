@@ -4,6 +4,7 @@ import { TranslatorOptions } from './options';
 import { Attrs, TemplateSpec } from './attrs';
 import { Flow } from '../../model/flow';
 import { Step } from '../../model/step';
+import { Link } from '../../model/link';
 
 /**
  * From Flowbee flow to SWF workflow.
@@ -55,13 +56,8 @@ export class SwfTranslator {
             }
             if (startStep.links?.length) {
                 const startLink = startStep.links![0];
-                if (startLink.attributes?.display) {
-                    this.setMetadata(
-                        this.workflow,
-                        `startLinkDisplay`,
-                        startLink.attributes.display
-                    );
-                }
+                this.setMetadata(this.workflow, `startLinkDisplay`, startLink.attributes.display);
+                this.setMetadata(this.workflow, 'startLinkLabel', startLink.result);
             }
         }
 
@@ -77,30 +73,81 @@ export class SwfTranslator {
         for (const step of steps) {
             const state = await this.toState(step);
             this.workflow.states.push(state);
+
+            // prep switch state to receive conditions from flowbee steps
+            if (step.path === 'switch') {
+                (state as swf.SwitchState).dataConditions = [];
+                delete state.metadata?.linkDisplays;
+            }
+
             if (step.links?.length) {
-                // TODO parallel
-                const link = step.links[0]!;
-                if (link.attributes?.display) {
-                    this.setMetadata(state, `linkDisplay`, link.attributes.display);
-                }
-                const next = this.flow.steps?.find((s) => s.id === link.to);
-                if (next) {
-                    if (next.path === 'stop') {
-                        state.end = true;
-                        this.setMetadata(state, 'stopStepId', next.id);
-                        if (next.attributes?.display) {
-                            this.setMetadata(state, 'stopStepDisplay', next.attributes.display);
+                for (const link of step.links) {
+                    const next = this.flow.steps?.find((s) => s.id === link.to);
+                    if (next) {
+                        if (next.path === 'stop') {
+                            if (step.path === 'switch') {
+                                this.addDataCondition(state, step, link, next);
+                            } else {
+                                state.end = true;
+                                this.setMetadata(state, 'stopLinkDisplay', link.attributes.display);
+                                this.setMetadata(state, 'stopLinkLabel', link.result);
+                            }
+                            this.setMetadata(state, 'stopStepId', next.id);
+                            if (next.attributes?.display) {
+                                this.setMetadata(state, 'stopStepDisplay', next.attributes.display);
+                            }
+                            if (next.name !== 'Stop') {
+                                this.setMetadata(state, 'stopStepName', next.name);
+                            }
+                        } else {
+                            if (step.path === 'switch') {
+                                this.addDataCondition(state, step, link, next);
+                            } else {
+                                state.transition = { nextState: next.name };
+                                this.setMetadata(state.transition, 'linkDisplay', link.attributes.display);
+                                if (link.result) {
+                                    this.setMetadata(state.transition, 'linkLabel', link.result);
+                                }
+                            }
+                            await this.addStates([next]);
                         }
-                        if (next.name !== 'Stop') {
-                            this.setMetadata(state, 'stopStepName', next.name);
-                        }
-                    } else {
-                        state.transition = { nextState: next.name };
-                        await this.addStates([next]);
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Also adds linkDisplays meta to switch state.
+     * TODO: EventConditions?
+     */
+    private addDataCondition(state: swf.SwitchState, step: Step, link: Link, next: Step) {
+        if (!state.dataConditions) state.dataConditions = [];
+        const rows = JSON.parse(step.attributes?.conditions || '[[]]');
+        let condition: swf.DataCondition;
+        if (next.path === 'stop') {
+            if (state.dataConditions.find(dc => dc.end)) {
+                return; // only one end condition
+            }
+            condition = { condition: '', end: true };
+            const row = rows.find((r: string[]) => ('' + r[2]) === 'true');
+            if (row) {
+                if (row[0]) condition.name = row[0];
+                if (row[1]) condition.condition = row[1];
+            }
+        } else {
+            condition = { condition: '', transition: next.name };
+            const row = rows.find((r: string[]) => r[3] === next.name);
+            if (row) {
+                if (row[0]) condition.name = row[0];
+                if (row[1]) condition.condition = row[1];
+            }
+        }
+        state.dataConditions.push(condition);
+
+        const linkDisplays: { [name: string]: string } = JSON.parse(state.metadata?.linkDisplays || '{}');
+        linkDisplays[next.id] = link.attributes.display;
+        this.setMetadata(state, 'linkDisplays', JSON.stringify(linkDisplays));
     }
 
     private async toState(step: Step): Promise<swf.SwfState> {
@@ -124,9 +171,6 @@ export class SwfTranslator {
         this.setMetadata(state, 'stepId', step.id);
         if (step.path.endsWith('.ts') || !swf.StateTypes.includes(step.path)) {
             this.setMetadata(state, 'stepPath', step.path);
-        }
-        if (step.attributes?.display) {
-            this.setMetadata(this.workflow, 'stepDisplay', step.attributes.display);
         }
 
         let templateSpec: TemplateSpec = step.path;

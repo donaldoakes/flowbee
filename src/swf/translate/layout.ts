@@ -155,12 +155,23 @@ export class FlowLayout {
         if (!link.attributes) link.attributes = {};
         let dispAttr: string | undefined;
         if (from.path === 'start' && this.swf.metadata) {
-            dispAttr = this.swf.metadata[`startLinkDisplay`];
-        } else if (state?.metadata) {
-            dispAttr = state.metadata[`linkDisplay`];
+            dispAttr = this.swf.metadata.startLinkDisplay;
+            if (this.swf.metadata.startLinkLabel) link.result = this.swf.metadata.startLinkLabel;
+        } else if (to.path === 'stop' && state?.metadata?.stopLinkDisplay) {
+            dispAttr = state.metadata.stopLinkDisplay;
+            if (state.metadata.stopLinkLabel) link.result = state.metadata.stopLinkLabel;
+        } else if (from.path === 'switch') {
+            const linkDisplays = JSON.parse(state?.metadata?.linkDisplays || '{}');
+            dispAttr = linkDisplays[to.id];
+        } else {
+            dispAttr = (state as any)?.transition?.metadata?.linkDisplay;
+            if (!dispAttr) {
+                // compatibility
+                dispAttr = state.metadata.linkDisplay;
+            }
         }
         if (dispAttr) {
-            if (dispAttr.indexOf('x=NaN') >= 0 || dispAttr.indexOf('y=NaN') >= 0) {
+            if (dispAttr.indexOf('=NaN') >= 0) {
                 // fix poorly-saved label attributes
                 const display = LinkLayout.fromAttr(dispAttr);
                 const fromDisplay = parseDisplay(from.attributes!.display);

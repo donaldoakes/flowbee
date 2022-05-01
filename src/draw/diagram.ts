@@ -1392,15 +1392,17 @@ export class Diagram extends Shape {
 
         if (destObj && destObj.type === 'step') {
           const srcStep = selObj as Step;
-          if (this.getStep(srcStep.id) && this.getStep(destObj.id)) {
-            chg = this.addLink(srcStep, destObj as Step).flowElement;
-          } else {
-            // src and dest must be in same subflow
-            for (let i = 0; i < this.subflows.length; i++) {
-              const subflow = this.subflows[i];
-              if (subflow.getStep(srcStep.id) && subflow.getStep(destObj.id)) {
-                chg = this.addLink(srcStep, destObj as Step).flowElement;
-                break;
+          if (srcStep.canLinkFrom()) {
+            if (this.getStep(srcStep.id) && this.getStep(destObj.id)) {
+              chg = this.addLink(srcStep, destObj as Step).flowElement;
+            } else {
+              // src and dest must be in same subflow
+              for (let i = 0; i < this.subflows.length; i++) {
+                const subflow = this.subflows[i];
+                if (subflow.getStep(srcStep.id) && subflow.getStep(destObj.id)) {
+                  chg = this.addLink(srcStep, destObj as Step).flowElement;
+                  break;
+                }
               }
             }
           }
@@ -1529,8 +1531,12 @@ export class Diagram extends Shape {
           const diagram = this;
           if (this.shiftDrag || (this.mode === 'connect' && selObj.type === 'step')) {
             this.draw();
-            const startObj = this.getHoverObj(this.dragX, this.dragY);
-            if (startObj?.type === 'step') {
+            const srcObj = this.getHoverObj(this.dragX, this.dragY);
+            if (srcObj?.type === 'step') {
+              const srcStep = srcObj as Step;
+              if (!srcStep.canLinkFrom()) {
+                return false;
+              }
               document.body.style.cursor = this.canvas.style.cursor = 'crosshair';
               this.drawLine([{
                 from: { x: this.dragX, y: this.dragY },

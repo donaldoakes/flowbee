@@ -96,5 +96,6 @@ export interface DrawingOptions {
     anchor?: AnchorOptions;
     highlight?: HighlightOptions;
     hyperlink?: { color?: string };
+    multiLink?: boolean;
 }
 

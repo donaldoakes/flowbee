@@ -18,6 +18,12 @@ export interface Descriptor {
      * Item type ('step', 'subflow', 'note')
      */
     type: DescriptorType;
+
+    /**
+     * Allows multiple outbound links.
+     */
+    multiLink?: boolean;
+
     /**
      * Icon for the toolbox
      */

@@ -82,6 +82,17 @@ export class Table {
                             this._onTableAction.emit({ action: widget.action, rownum: i, value: row[j] });
                         };
                     }
+                } else if (widget.type === 'checkbox') {
+                    const checkbox = document.createElement('input') as HTMLInputElement;
+                    checkbox.type = 'checkbox';
+                    checkbox.style.accentColor = 'transparent';
+                    checkbox.checked = row && row[j] ? ('' + row[j]) === 'true' : false;
+                    if (this.readonly) {
+                        checkbox.readOnly = true;
+                    } else {
+                        checkbox.onclick = e => this.update();
+                    }
+                    td.appendChild(checkbox);
                 } else {
                     if (!this.readonly) {
                         td.contentEditable = 'true';
@@ -127,7 +138,13 @@ export class Table {
             const row = [];
             for (let i = 0; i < tds.length; i++) {
                 const td = tds[i] as HTMLTableCellElement;
-                const val = td.textContent;
+                const checkbox = td.querySelector('input[type="checkbox"]');
+                let val: string;
+                if (checkbox) {
+                    val = (checkbox as HTMLInputElement).checked ? 'true' : '';
+                } else {
+                    val = td.textContent;
+                }
                 if (val) {
                     rowHasVal = true;
                     row[i] = val;
