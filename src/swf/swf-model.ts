@@ -41,8 +41,15 @@ export interface ActionDataFilter {
     toStateData?: string;
 }
 
+export interface SubFlowRef {
+    workflowId: string;
+    version?: string;
+    onParentComplete?: 'continue' | 'terminate';
+}
+
 export interface SwfAction {
     functionRef?: FunctionRef;
+    subFlowRef?: SubFlowRef;
     actionDataFilter?: ActionDataFilter;
     retryRef?: string;
     retryableErrors?: string[];
@@ -97,6 +104,17 @@ export interface DataCondition {
 
 export interface SwitchState extends SwfState {
     dataConditions?: DataCondition[];
+}
+
+export interface Branch {
+    name: string;
+    actions: SwfAction[];
+
+}
+
+export interface ParallelState extends SwfState {
+    completionType: 'allOf'; // only this is supported
+    branches?: Branch[];
 }
 
 /**
