@@ -1,5 +1,4 @@
 import { Descriptor } from '../../model/descriptor';
-import { ConfigTemplate } from '../../model/template';
 
 export interface TranslatorOptions {
     templatePath: string;

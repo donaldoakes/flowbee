@@ -1,4 +1,4 @@
-id: test/flows/switch-state.flow.yml
+id: test/flows/data-switch-state.flow.yml
 version: 0.1.0
 description: Determine if applicant request is valid
 start: |-

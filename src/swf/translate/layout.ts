@@ -160,7 +160,7 @@ export class FlowLayout {
         } else if (to.path === 'stop' && state?.metadata?.stopLinkDisplay) {
             dispAttr = state.metadata.stopLinkDisplay;
             if (state.metadata.stopLinkLabel) link.result = state.metadata.stopLinkLabel;
-        } else if (from.path === 'switch') {
+        } else if (from.path === 'data-switch' || from.path === 'event-switch') {
             const linkDisplays = JSON.parse(state?.metadata?.linkDisplays || '{}');
             dispAttr = linkDisplays[to.id];
         } else {

@@ -66,16 +66,16 @@ export class SwfTranslator {
         return this.workflow;
     }
 
-    /**
-     *
-     */
     private async addStates(steps: Step[]) {
         for (const step of steps) {
             const state = await this.toState(step);
             this.workflow.states.push(state);
 
             // prep switch state to receive conditions from flowbee steps
-            if (step.path === 'switch') {
+            if (step.path === 'data-switch') {
+                (state as swf.SwitchState).dataConditions = [];
+                delete state.metadata?.linkDisplays;
+            } else if (step.path === 'event-switch') {
                 (state as swf.SwitchState).dataConditions = [];
                 delete state.metadata?.linkDisplays;
             }
@@ -85,8 +85,10 @@ export class SwfTranslator {
                     const next = this.flow.steps?.find((s) => s.id === link.to);
                     if (next) {
                         if (next.path === 'stop') {
-                            if (step.path === 'switch') {
+                            if (step.path === 'data-switch') {
                                 this.addDataCondition(state, step, link, next);
+                            } else if (step.path === 'event-switch') {
+                                this.addEventCondition(state, step, link, next);
                             } else {
                                 state.end = true;
                                 this.setMetadata(state, 'stopLinkDisplay', link.attributes.display);
@@ -100,8 +102,10 @@ export class SwfTranslator {
                                 this.setMetadata(state, 'stopStepName', next.name);
                             }
                         } else {
-                            if (step.path === 'switch') {
+                            if (step.path === 'data-switch') {
                                 this.addDataCondition(state, step, link, next);
+                            } else if (step.path === 'event-switch') {
+                                this.addEventCondition(state, step, link, next);
                             } else {
                                 state.transition = { nextState: next.name };
                                 this.setMetadata(state.transition, 'linkDisplay', link.attributes.display);
@@ -119,7 +123,6 @@ export class SwfTranslator {
 
     /**
      * Also adds linkDisplays meta to switch state.
-     * TODO: EventConditions?
      */
     private addDataCondition(state: swf.SwitchState, step: Step, link: Link, next: Step) {
         if (!state.dataConditions) state.dataConditions = [];
@@ -150,17 +153,50 @@ export class SwfTranslator {
         this.setMetadata(state, 'linkDisplays', JSON.stringify(linkDisplays));
     }
 
+    /**
+     * Also adds linkDisplays meta to switch state.
+     */
+    private addEventCondition(state: swf.SwitchState, step: Step, link: Link, next: Step) {
+        if (!state.eventConditions) state.eventConditions = [];
+        const rows = JSON.parse(step.attributes?.conditions || '[[]]');
+        let condition: swf.EventCondition;
+        if (next.path === 'stop') {
+            if (state.eventConditions.find(dc => dc.end)) {
+                return; // only one end condition
+            }
+            condition = { eventRef: '', end: true };
+            const row = rows.find((r: string[]) => ('' + r[2]) === 'true');
+            if (row) {
+                if (row[0]) condition.name = row[0];
+                if (row[1]) condition.eventRef = row[1];
+            }
+        } else {
+            condition = { eventRef: '', transition: next.name };
+            const row = rows.find((r: string[]) => r[3] === next.name);
+            if (row) {
+                if (row[0]) condition.name = row[0];
+                if (row[1]) condition.eventRef = row[1];
+            }
+        }
+        state.eventConditions.push(condition);
+
+        const linkDisplays: { [name: string]: string } = JSON.parse(state.metadata?.linkDisplays || '{}');
+        linkDisplays[next.id] = link.attributes.display;
+        this.setMetadata(state, 'linkDisplays', JSON.stringify(linkDisplays));
+    }
+
     private async toState(step: Step): Promise<swf.SwfState> {
         let stateType = step.path;
         if (
             step.path === 'typescript' ||
             step.path === 'request' ||
-            step.path === 'task' ||
             step.path.endsWith('.ts')
         ) {
             stateType = 'operation';
-        } else if (step.path === 'delay') {
+        } else if (step.path === 'task' || step.path === 'delay') {
             stateType = 'event';
+        } else if (step.path === 'data-switch' || step.path === 'event-switch') {
+            stateType = 'switch';
         }
 
         const state: swf.SwfState = {

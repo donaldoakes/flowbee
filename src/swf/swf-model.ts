@@ -95,21 +95,28 @@ export interface InjectState extends SwfState {
     data?: { [key: string]: any };
 }
 
-export interface DataCondition {
+export interface Condition {
     name?: string;
-    condition: string;
     transition?: string | SwfTransition;
     end?: boolean;
 }
 
+export interface DataCondition extends Condition {
+    condition: string;
+}
+
+export interface EventCondition extends Condition {
+    eventRef: string;
+}
+
 export interface SwitchState extends SwfState {
     dataConditions?: DataCondition[];
+    eventConditions?: EventCondition[];
 }
 
 export interface Branch {
     name: string;
     actions: SwfAction[];
-
 }
 
 export interface ParallelState extends SwfState {
