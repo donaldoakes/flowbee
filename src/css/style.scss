@@ -594,9 +594,10 @@
     height: fit-content;
   }
   .flowbee-config-tab-content th, td {
-    border: 1px solid #4f4f4f;
+    border: 1px solid #e0e0e0;
     text-align: left;
     padding-left: 3px;
+    padding-right: 3px;
     min-width: 25px;
     white-space: nowrap;
   }
@@ -676,7 +677,7 @@
     color: #cccccc;
   }
   .flowbee-config-tab-content th, td {
-    border: 1px solid #cccccc;
+    border: 1px solid #606060;
   }
   .flowbee-config-footer {
     background-color: #323232;

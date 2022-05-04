@@ -18,7 +18,7 @@ export interface FlowChangeEvent {
 }
 export interface FlowElementUpdateEvent {
     element: FlowElement;
-    action?: string | { name: string, value: string };
+    action?: string | { name: string, value: string | string[] };
 }
 export interface ItemOpenEvent {
     url: string;

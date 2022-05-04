@@ -197,6 +197,8 @@ export class SwfTranslator {
             stateType = 'event';
         } else if (step.path === 'data-switch' || step.path === 'event-switch') {
             stateType = 'switch';
+        } else if (step.path === 'orchestrator') {
+            stateType = 'parallel';
         }
 
         const state: swf.SwfState = {

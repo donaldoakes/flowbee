@@ -9,7 +9,7 @@ export interface TableUpdateEvent {
 export interface TableActionEvent {
     action: string;
     rownum: number;
-    value: string;
+    value: string[];
 }
 
 export class Table {
@@ -79,7 +79,7 @@ export class Table {
                             if (isHttp) {
                                 e.preventDefault();
                             }
-                            this._onTableAction.emit({ action: widget.action, rownum: i, value: row[j] });
+                            this._onTableAction.emit({ action: widget.action, rownum: i, value: row });
                         };
                     }
                 } else if (widget.type === 'checkbox') {

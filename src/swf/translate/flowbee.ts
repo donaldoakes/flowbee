@@ -121,6 +121,8 @@ export class FlowbeeTranslator {
             if (state.metadata?.eventConditions) path = 'event-switch';
         } else if (state.metadata?.tsFile) {
             path = 'typescript';
+        } else if (state.type === 'parallel' && state.metadata?.orchestratorHelp) {
+            path = 'orchestrator';
         } else if (state.metadata?.stepPath) {
             path = state.metadata.stepPath;
         }
