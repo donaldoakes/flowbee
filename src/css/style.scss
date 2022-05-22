@@ -206,6 +206,7 @@
 @mixin toolbar {
   display: flex;
   height: 25px;
+  padding-top: 1px;
   align-items: center;
   background-color: #ffffff;
   border-top: 1px solid #f3f3f3;
@@ -223,7 +224,6 @@
   .drawing-tools input[type='image'] {
     margin-right: 10px;
     width: 16px;
-    display: none;
   }
   .drawing-tools #zoom-out {
     margin-right: 0;
