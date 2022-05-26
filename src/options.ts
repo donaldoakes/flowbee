@@ -56,6 +56,7 @@ export interface ConfiguratorOptions {
     theme?: string;
     sourceTab?: 'json' | 'yaml';
     moveAndResize?: boolean;
+    iconBase?: string;
 }
 export const configuratorDefault: ConfiguratorOptions = {
     theme: 'light',

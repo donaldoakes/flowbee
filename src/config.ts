@@ -26,6 +26,7 @@ export class Configurator {
     private stylesObj: object;
 
     private div: HTMLDivElement;
+    private closeImg: HTMLInputElement;
     private header: HTMLDivElement;
     private title: HTMLDivElement;
     private content: HTMLDivElement;
@@ -96,11 +97,11 @@ export class Configurator {
         const close = document.createElement('div') as HTMLDivElement;
         close.className = 'flowbee-config-close';
         close.onclick = _e => this.close();
-        const closeImg = document.createElement('input') as HTMLInputElement;
-        closeImg.type = 'image';
-        closeImg.alt = closeImg.title = 'Close Configurator';
-        closeImg.setAttribute('data-icon', 'close.svg');
-        close.appendChild(closeImg);
+        this.closeImg = document.createElement('input') as HTMLInputElement;
+        this.closeImg.type = 'image';
+        this.closeImg.alt = this.closeImg.title = 'Close Configurator';
+        this.closeImg.setAttribute('data-icon', 'close.svg');
+        close.appendChild(this.closeImg);
         this.header.appendChild(close);
         this.div.appendChild(this.header);
         this.content = document.createElement('div') as HTMLDivElement;
@@ -149,6 +150,10 @@ export class Configurator {
         this.template = template;
         if (this.options.sourceTab) {
             this.template['Source'] = { widgets: [{ type: 'source' }] };
+        }
+
+        if (this.options.iconBase) {
+            this.closeImg.src = `${this.options.iconBase}/close.svg`;
         }
 
         // clear old tabs and content
