@@ -480,7 +480,7 @@ export class Configurator {
                 const span = document.createElement('span');
                 span.innerText = widget.label;
                 this.tabContent.appendChild(span);
-            } else if (widget.type === 'link') {
+            } else if (widget.type === 'link' && value) {
                 const isHttp = value.startsWith('http://') || value.startsWith('https://');
                 const anchor = document.createElement('a');
                 anchor.setAttribute('href', isHttp ? value : '');

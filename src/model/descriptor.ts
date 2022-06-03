@@ -38,6 +38,8 @@ export interface Descriptor {
      * to configurator).
      */
     template?: ConfigTemplate | string; // translates to attributes
+    runtimeTemplate?: ConfigTemplate;   // for inspect mode
+
     /**
      * Documentation/info link
      */

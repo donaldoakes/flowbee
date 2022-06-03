@@ -32,6 +32,7 @@ export interface FlowInstance {
     values?: Values;
     start?: Date;
     end?: Date;
+    data?: any;
 }
 
 export type Value = string | boolean | number | Date | object;
