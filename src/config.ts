@@ -26,6 +26,10 @@ export class Configurator {
     private stylesObj: object;
 
     private div: HTMLDivElement;
+    private editDiv: HTMLDivElement;
+    private editImg: HTMLInputElement;
+    private saveDiv: HTMLDivElement;
+    private saveImg: HTMLInputElement;
     private closeImg: HTMLInputElement;
     private header: HTMLDivElement;
     private title: HTMLDivElement;
@@ -94,6 +98,29 @@ export class Configurator {
         this.title = document.createElement('div') as HTMLDivElement;
         this.title.className = 'flowbee-config-title';
         this.header.appendChild(this.title);
+
+        this.editDiv = document.createElement('div') as HTMLDivElement;
+        this.editDiv.className = 'flowbee-edit-icon';
+        this.editDiv.style.display = 'none';
+        this.editDiv.onclick = _e => this.editData();
+        this.editImg = document.createElement('input') as HTMLInputElement;
+        this.editImg.type = 'image';
+        this.editImg.alt = this.editImg.title = 'Edit Data';
+        this.editImg.setAttribute('data-icon', 'edit.svg');
+        this.editDiv.appendChild(this.editImg);
+        this.header.appendChild(this.editDiv);
+
+        this.saveDiv = document.createElement('div') as HTMLDivElement;
+        this.saveDiv.className = 'flowbee-edit-icon';
+        this.saveDiv.style.display = 'none';
+        this.saveDiv.onclick = _e => this.saveData();
+        this.saveImg = document.createElement('input') as HTMLInputElement;
+        this.saveImg.type = 'image';
+        this.saveImg.alt = this.saveImg.title = 'Save Data';
+        this.saveImg.setAttribute('data-icon', 'save.svg');
+        this.saveDiv.appendChild(this.saveImg);
+        this.header.appendChild(this.saveDiv);
+
         const close = document.createElement('div') as HTMLDivElement;
         close.className = 'flowbee-config-close';
         close.onclick = _e => this.close();
@@ -103,6 +130,7 @@ export class Configurator {
         this.closeImg.setAttribute('data-icon', 'close.svg');
         close.appendChild(this.closeImg);
         this.header.appendChild(close);
+
         this.div.appendChild(this.header);
         this.content = document.createElement('div') as HTMLDivElement;
         this.content.className = 'flowbee-config-content';
@@ -153,6 +181,8 @@ export class Configurator {
         }
 
         if (this.options.iconBase) {
+            this.editImg.src = `${this.options.iconBase}/edit.svg`;
+            this.saveImg.src = `${this.options.iconBase}/save.svg`;
             this.closeImg.src = `${this.options.iconBase}/close.svg`;
         }
 
@@ -552,6 +582,13 @@ export class Configurator {
                 this.tabContent.appendChild(pre);
             }
         }
+
+        this.saveDiv.style.display = 'none';
+        if (this.instance && widgets.find(w => w.instanceEdit)) {
+            this.editDiv.style.display = 'inline-block';
+        } else {
+            this.editDiv.style.display = 'none';
+        }
     }
 
     update(attribute: string, value: string) {
@@ -575,6 +612,26 @@ export class Configurator {
 
     get isOpen(): boolean {
         return this.div.style.display?.length > 0 && this.div.style.display !== 'none';
+    }
+
+    editData() {
+        this.editDiv.style.display = 'none';
+        const pre = this.tabContent.querySelector('pre');
+        if (pre) pre.contentEditable = 'true';
+        this.saveDiv.style.display = 'inline-block';
+    }
+
+    saveData() {
+        this.saveDiv.style.display = 'none';
+        const pre = this.tabContent.querySelector('pre');
+        if (pre) {
+            if (this.template && this.activeTab) {
+                const widget = this.template[this.activeTab.name].widgets.find(w => w.instanceEdit);
+                if (widget) this.action(widget.instanceProp, pre.innerText);
+            }
+            pre.contentEditable = 'false';
+        }
+        this.editDiv.style.display = 'inline-block';
     }
 
     close() {

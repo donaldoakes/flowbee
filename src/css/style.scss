@@ -473,6 +473,11 @@
     margin-left: 7px;
     font-weight: normal;
   }
+  .flowbee-edit-icon {
+    cursor: pointer;
+    user-select: none;
+    margin-right: 5px;
+  }
   .flowbee-config-close {
     cursor: pointer;
     user-select: none;
@@ -575,6 +580,9 @@
     border-width: 0;
     background-color: #ffffff;
     color: #404040;
+  }
+  .flowbee-config-tab-content pre {
+    outline: none;
   }
   .flowbee-config-tab-content a {
     outline: none;
