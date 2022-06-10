@@ -1,9 +1,15 @@
 import { merge } from 'merge-anything';
 import { ToolbarOptions, toolbarDefault } from './options';
+import { ToolbarActionEvent, Disposable, Listener, TypedEvent } from './event';
 
 export class Toolbar {
 
     private div: HTMLDivElement;
+
+    private _onToolbarAction = new TypedEvent<ToolbarActionEvent>();
+    onToolbarAction(listener: Listener<ToolbarActionEvent>): Disposable {
+        return this._onToolbarAction.on(listener);
+    }
 
     constructor(readonly container: HTMLElement) { }
 
@@ -77,7 +83,7 @@ export class Toolbar {
         modeGroup.appendChild(modeMenu);
         this.div.appendChild(modeGroup);
 
-        // flow-actions -- TODO not hardwired & help link
+        // flow-actions
         const flowActions = document.createElement('div') as HTMLDivElement;
         flowActions.id = 'flow-actions';
         flowActions.className = 'drawing-tools tool-group action-group';
@@ -86,7 +92,8 @@ export class Toolbar {
         this.addInput(flowActions, { id: 'run', src: `${iconBase}/run.svg`, type: 'image', alt: 'run', title: 'Run', 'data-icon': 'run.svg' });
         this.addInput(flowActions, { id: 'test', src: `${iconBase}/test.svg`, type: 'image', alt: 'test', title: 'Test', 'data-icon': 'test.svg' });
         const helpLink = document.createElement('a') as HTMLAnchorElement;
-        helpLink.href = 'https://www.npmjs.com/package/flowbee';
+        helpLink.href = options.helpUrl || 'https://www.npmjs.com/package/flowbee';
+        helpLink.target = '_blank';
         this.addInput(helpLink, { id: 'help', src: `${iconBase}/help.svg`, type: 'image', alt: 'help', title: 'Help', 'data-icon': 'help.svg' });
         flowActions.appendChild(helpLink);
         this.div.appendChild(flowActions);
@@ -99,6 +106,10 @@ export class Toolbar {
         for (const name of Object.keys(attributes)) {
             input.setAttribute(name, attributes[name]);
         }
+        input.onclick = (e: MouseEvent) => {
+            this._onToolbarAction.emit({ action: attributes.id });
+        };
+
         el.appendChild(input);
         return input;
     }

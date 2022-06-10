@@ -38,6 +38,7 @@ export interface FlowDumpOptions {
 export interface ToolbarOptions {
     theme?: string;
     iconBase?: string;
+    helpUrl?: string;
 }
 export const toolbarDefault: ToolbarOptions = {
     theme: 'light',
@@ -56,7 +57,6 @@ export interface ConfiguratorOptions {
     theme?: string;
     sourceTab?: 'json' | 'yaml';
     moveAndResize?: boolean;
-    iconBase?: string;
 }
 export const configuratorDefault: ConfiguratorOptions = {
     theme: 'light',

@@ -31,6 +31,10 @@ export interface ConfiguratorPositionEvent {
     position?: { left: number, top: number, width: number, height: number };
 }
 
+export interface ToolbarActionEvent {
+    action: string;
+}
+
 export interface Listener<T> {
     (event: T): any;
 }

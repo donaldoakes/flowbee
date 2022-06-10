@@ -88,7 +88,7 @@ export class Configurator {
         this.div.style.top = top + 'px';
     }
 
-    constructor(container?: HTMLElement) {
+    constructor(container?: HTMLElement, iconBase?: string) {
         this.container = container || document.body;
 
         // build html
@@ -105,6 +105,7 @@ export class Configurator {
         this.editDiv.onclick = _e => this.editData();
         this.editImg = document.createElement('input') as HTMLInputElement;
         this.editImg.type = 'image';
+        if (iconBase) this.editImg.src = `${iconBase}/edit.svg`;
         this.editImg.alt = this.editImg.title = 'Edit Data';
         this.editImg.setAttribute('data-icon', 'edit.svg');
         this.editDiv.appendChild(this.editImg);
@@ -116,6 +117,7 @@ export class Configurator {
         this.saveDiv.onclick = _e => this.saveData();
         this.saveImg = document.createElement('input') as HTMLInputElement;
         this.saveImg.type = 'image';
+        if (iconBase) this.saveImg.src = `${iconBase}/save.svg`;
         this.saveImg.alt = this.saveImg.title = 'Save Data';
         this.saveImg.setAttribute('data-icon', 'save.svg');
         this.saveDiv.appendChild(this.saveImg);
@@ -126,6 +128,7 @@ export class Configurator {
         close.onclick = _e => this.close();
         this.closeImg = document.createElement('input') as HTMLInputElement;
         this.closeImg.type = 'image';
+        if (iconBase) this.closeImg.src = `${iconBase}/close.svg`;
         this.closeImg.alt = this.closeImg.title = 'Close Configurator';
         this.closeImg.setAttribute('data-icon', 'close.svg');
         close.appendChild(this.closeImg);
@@ -178,12 +181,6 @@ export class Configurator {
         this.template = template;
         if (this.options.sourceTab) {
             this.template['Source'] = { widgets: [{ type: 'source' }] };
-        }
-
-        if (this.options.iconBase) {
-            this.editImg.src = `${this.options.iconBase}/edit.svg`;
-            this.saveImg.src = `${this.options.iconBase}/save.svg`;
-            this.closeImg.src = `${this.options.iconBase}/close.svg`;
         }
 
         // clear old tabs and content
@@ -430,14 +427,12 @@ export class Configurator {
                 if (widgets.length === 1) {
                     this.tabContent.style.gridAutoRows = ''; // fill entire tab
                 }
+                const textarea = document.createElement('textarea') as HTMLTextAreaElement;
+                textarea.value = value;
                 if (readonly) {
-                    const pre = document.createElement('pre') as HTMLPreElement;
-                    pre.textContent = value;
-                    pre.style.margin = '0';
-                    this.tabContent.appendChild(pre);
+                    textarea.readOnly = true;
+                    textarea.style.outline = 'none';
                 } else {
-                    const textarea = document.createElement('textarea') as HTMLTextAreaElement;
-                    textarea.value = value;
                     if (widget.label) {
                         textarea.placeholder = widget.label;
                     }
@@ -446,8 +441,8 @@ export class Configurator {
                     } else {
                         textarea.onchange = e => this.update(widget.attribute, textarea.value);
                     }
-                    this.tabContent.appendChild(textarea);
                 }
+                this.tabContent.appendChild(textarea);
             } else if (widget.type === 'code') {
                 if (widgets.length === 1) {
                     this.tabContent.style.gridAutoRows = ''; // fill entire tab
@@ -616,20 +611,24 @@ export class Configurator {
 
     editData() {
         this.editDiv.style.display = 'none';
-        const pre = this.tabContent.querySelector('pre');
-        if (pre) pre.contentEditable = 'true';
+        const textarea = this.tabContent.querySelector('textarea');
+        if (textarea) {
+            textarea.readOnly = false;
+            textarea.style.outline = '1px auto #005fcc'; // webkit default
+        }
         this.saveDiv.style.display = 'inline-block';
     }
 
     saveData() {
         this.saveDiv.style.display = 'none';
-        const pre = this.tabContent.querySelector('pre');
-        if (pre) {
+        const textarea = this.tabContent.querySelector('textarea');
+        if (textarea) {
             if (this.template && this.activeTab) {
                 const widget = this.template[this.activeTab.name].widgets.find(w => w.instanceEdit);
-                if (widget) this.action(widget.instanceProp, pre.innerText);
+                if (widget) this.action(widget.instanceProp, textarea.value);
             }
-            pre.contentEditable = 'false';
+            textarea.readOnly = true;
+            textarea.style.outline = 'none';
         }
         this.editDiv.style.display = 'inline-block';
     }
