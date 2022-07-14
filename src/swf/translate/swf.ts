@@ -190,7 +190,7 @@ export class SwfTranslator {
         if (
             step.path === 'typescript' ||
             step.path === 'request' ||
-            step.path === 'async-subflow' ||
+            step.path === 'subflow' ||
             step.path.endsWith('.ts')
         ) {
             stateType = 'operation';

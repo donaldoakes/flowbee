@@ -88,6 +88,7 @@ export interface OnEvent {
 }
 
 export interface EventState extends SwfState {
+    exclusive: boolean;
     onEvents: OnEvent[];
 }
 
