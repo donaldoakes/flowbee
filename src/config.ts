@@ -93,6 +93,8 @@ export class Configurator {
 
         // build html
         this.div = document.createElement('div') as HTMLDivElement;
+        this.div.id = 'flowbee-configurator';
+        this.div.style.display = 'none';
         this.header = document.createElement('div') as HTMLDivElement;
         this.header.className = 'flowbee-config-header';
         this.title = document.createElement('div') as HTMLDivElement;
@@ -498,7 +500,12 @@ export class Configurator {
                     table.onTableUpdate(tableUpdate => this.update(widget.attribute, tableUpdate.value));
                 }
                 table.onTableAction(tableAction => {
-                    this._onFlowElementUpdate.emit({ element: this.flowElement, action: { name: tableAction.action, value: tableAction.value } });
+                    const action: { name: string, value: string | string[] } = { name: tableAction.action, value: tableAction.value };
+                    if (tableAction.action.endsWith('...')) {
+                        // value needs to indicate rownum
+                        action.value = '' + tableAction.rownum;
+                    }
+                    this._onFlowElementUpdate.emit({ element: this.flowElement, action });
                 });
                 this.tabContent.appendChild(table.tableElement);
             } else if (widget.type === 'note') {

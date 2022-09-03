@@ -205,6 +205,8 @@ export class FlowDiagram {
         this.canvas.onmousemove = e => this.onMouseMove(e);
         this.canvas.onmouseout = e => this.onMouseOut(e);
         this.canvas.ondblclick = e => this.onDoubleClick(e);
+        // prevent double-click from selecting stuff
+        this.canvas.onselectstart = () => { return false; };
 
         this.canvas.ondragover = e => {
             if (!this.readonly) {

@@ -74,13 +74,34 @@ export class Table {
                         const anchor = document.createElement('a');
                         anchor.setAttribute('href', isHttp ? widget.action : '');
                         anchor.innerText = row[j];
-                        td.appendChild(anchor);
                         anchor.onclick = e => {
                             if (isHttp) {
                                 e.preventDefault();
                             }
                             this._onTableAction.emit({ action: widget.action, rownum: i, value: row });
                         };
+                        td.appendChild(anchor);
+                    }
+                } else if (widget.type === 'file') {
+                    if (i < this.rows.length && row[j]) {
+                        const valAnchor = document.createElement('a');
+                        valAnchor.setAttribute('href', '');
+                        valAnchor.innerText = row[j];
+                        valAnchor.onclick = e => {
+                            this._onTableAction.emit({ action: widget.action, rownum: i, value: row });
+                        };
+                        td.appendChild(valAnchor);
+                        valAnchor.style.visibility = row[j] ? 'visible' : 'hidden';
+                    }
+                    if (!this.readonly) {
+                        const selAnchor = document.createElement('a');
+                        selAnchor.setAttribute('href', '');
+                        selAnchor.innerText = '...';
+                        selAnchor.className = 'flowbee-table-select-link';
+                        selAnchor.onclick = e => {
+                            this._onTableAction.emit({ action: `${widget.action}...`, rownum: i, value: row});
+                        };
+                        td.appendChild(selAnchor);
                     }
                 } else if (widget.type === 'checkbox') {
                     const checkbox = document.createElement('input') as HTMLInputElement;
