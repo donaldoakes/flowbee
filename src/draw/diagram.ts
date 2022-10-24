@@ -1392,15 +1392,16 @@ export class Diagram extends Shape {
 
         if (destObj && destObj.type === 'step') {
           const srcStep = selObj as Step;
-          if (srcStep.canLinkFrom()) {
-            if (this.getStep(srcStep.id) && this.getStep(destObj.id)) {
-              chg = this.addLink(srcStep, destObj as Step).flowElement;
+          const destStep = destObj as Step;
+          if (srcStep.canLinkFrom() && destStep.canLinkTo()) {
+            if (this.getStep(srcStep.id) && this.getStep(destStep.id)) {
+              chg = this.addLink(srcStep, destStep).flowElement;
             } else {
               // src and dest must be in same subflow
               for (let i = 0; i < this.subflows.length; i++) {
                 const subflow = this.subflows[i];
-                if (subflow.getStep(srcStep.id) && subflow.getStep(destObj.id)) {
-                  chg = this.addLink(srcStep, destObj as Step).flowElement;
+                if (subflow.getStep(srcStep.id) && subflow.getStep(destStep.id)) {
+                  chg = this.addLink(srcStep, destStep).flowElement;
                   break;
                 }
               }

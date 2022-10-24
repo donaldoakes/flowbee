@@ -97,5 +97,6 @@ export interface DrawingOptions {
     highlight?: HighlightOptions;
     hyperlink?: { color?: string };
     multiLink?: boolean;
+    loopbackLink?: boolean;
 }
 

@@ -25,6 +25,11 @@ export interface Descriptor {
     multiLink?: boolean;
 
     /**
+     * Allows multiple inbound links.
+     */
+    loopbackLink?: boolean;
+
+    /**
      * Icon for the toolbox
      */
     icon?: string | {

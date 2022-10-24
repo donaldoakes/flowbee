@@ -226,8 +226,16 @@ export class Step extends Shape {
     return this.options.multiLink || this.descriptor.multiLink;
   }
 
+  isLoopbackLink() {
+    return this.options.loopbackLink || this.descriptor.loopbackLink;
+  }
+
   canLinkFrom(): boolean {
     return this.step.path !== 'stop' && ((this.step.links?.length || 0) === 0 || this.isMultiLink());
+  }
+
+  canLinkTo(): boolean {
+    return this.step.path !== 'start' && (this.diagram.getInLinks(this).length === 0 || this.isLoopbackLink());
   }
 
   highlight() {
