@@ -63,6 +63,10 @@ export class SwfTranslator {
 
         await this.addStates([firstStep]);
 
+        if (this.flow.notes) {
+            this.setMetadata(this.workflow, 'notes', JSON.stringify(this.flow.notes));
+        }
+
         return this.workflow;
     }
 

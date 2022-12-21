@@ -98,6 +98,10 @@ export class Note extends Shape {
     return display;
   }
 
+  getAnchor(_x: number, _y: number): number {
+    return -1; // resize not supported for notes
+  }
+
   move(deltaX: number, deltaY: number) {
     const x = this.display.x + deltaX;
     const y = this.display.y + deltaY;

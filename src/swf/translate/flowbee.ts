@@ -62,6 +62,11 @@ export class FlowbeeTranslator {
         await this.addSteps([start]);
         new FlowLayout(this.swf, this.flow).syncFromSwf(this.startStep);
 
+        const notes = this.metadata(this.swf, 'notes', '');
+        if (notes) {
+            this.flow.notes = JSON.parse(notes);
+        }
+
         return this.flow;
     }
 
