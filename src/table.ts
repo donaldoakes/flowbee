@@ -116,7 +116,7 @@ export class Table {
                     td.appendChild(checkbox);
                 } else {
                     if (!this.readonly) {
-                        td.contentEditable = 'true';
+                        td.contentEditable = 'plaintext-only';
                         td.onblur = (e: FocusEvent) => {
                             let rowIdx: string | null = null;
                             let colIdx: string | null = null;

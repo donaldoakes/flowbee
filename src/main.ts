@@ -24,3 +24,5 @@ export * from './draw/layout';
 export * from './draw/display';
 export * from './swf/translate/translate';
 export * from './swf/translate/options';
+export * from './values';
+export { resolve } from './resolve';

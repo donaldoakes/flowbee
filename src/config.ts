@@ -453,7 +453,7 @@ export class Configurator {
                 code.textContent = value;
                 code.style.margin = '0';
                 if (!readonly) {
-                    code.setAttribute('contenteditable', 'true');
+                    code.setAttribute('contenteditable', 'plaintext-only');
                     if (widget.action) {
                         code.oninput = e => this.action(widget.action, code.innerText);
                     } else {

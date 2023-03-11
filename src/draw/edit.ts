@@ -38,7 +38,7 @@ export class Edit {
 
         // render contenteditable element
         const textedit = document.createElement('p');
-        textedit.setAttribute('contenteditable', 'true');
+        textedit.setAttribute('contenteditable', 'plaintext-only');
         textedit.style.backgroundColor = this.backgroundColor;
         textedit.style.color = this.color;
         textedit.style.position = 'absolute';
