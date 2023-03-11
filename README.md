@@ -1,7 +1,7 @@
 # flowbee
 **Simple, flexible, open flow diagramming.**
 
-Docs are coming. In the meantime see [flowbee-demo](https://github.com/donaldoakes/flowbee-demo).
+See [flowbee-demo](https://github.com/donaldoakes/flowbee-demo).
 
 ## Install
 npm install --save flowbee

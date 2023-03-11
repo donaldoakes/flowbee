@@ -96,7 +96,8 @@ describe('state attributes', () => {
             name: 'Await\nSOA',
             type: 'event',
             onEvents: [],
-            metadata: { oldMeta: 'oldMetaVal', dueInterval: '8 hours' }
+            metadata: { oldMeta: 'oldMetaVal', dueInterval: '8 hours' },
+            exclusive: true
         };
 
         await attrs.applyAttrs('event', awaitSoaStep.attributes, eventState);
@@ -157,7 +158,8 @@ describe('state attributes', () => {
                     ]
                 }
             ],
-            metadata: { oldMeta: 'oldMetaVal' }
+            metadata: { oldMeta: 'oldMetaVal' },
+            exclusive: true
         };
 
         await attrs.applyAttrs('event', awaitSoaStep.attributes, eventState);

@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsc && rollup -c && node-sass src/css/style.scss -o dist/css && cp dist/main.d.ts dist/nostyles.d.ts",
     "watch": "rollup --watch -c",
-    "css": "node-sass src/css/style.scss -o dist/css"
+    "css": "node-sass src/css/style.scss -o dist/css",
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
