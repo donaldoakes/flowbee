@@ -43,7 +43,7 @@ export class ValuesAccess {
         }
     }
 
-    async evaluate(expression: string, trusted: boolean): Promise<string | undefined> {
+    evaluate(expression: string, trusted: boolean): string | undefined {
         if (!expression.startsWith('${~)') && !expression.startsWith('${@')) {
             const res = resolve.resolve(expression, this.values, trusted);
             if (!res.startsWith('${')) {

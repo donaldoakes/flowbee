@@ -1,3 +1,4 @@
+import { decorate, Decorator, undecorate } from './decoration';
 import { Disposable, Listener, TypedEvent } from './event';
 import { dateTime } from './format';
 import { Widget } from './model/template';
@@ -10,6 +11,18 @@ export interface TableActionEvent {
     action: string;
     rownum: number;
     value: string[];
+}
+
+export interface TableOptions {
+    readonly?: boolean;
+    /**
+     * Cannot add new rows
+     */
+    fixedRows?: boolean;
+    /**
+     * Cell values cannot be multiline
+     */
+    singleLine?: boolean;
 }
 
 export class Table {
@@ -27,8 +40,13 @@ export class Table {
         return this._onTableAction.on(listener);
     }
 
+    private _decorators: Decorator[] = [];
+    addDecorator(decorator: Decorator) {
+        this._decorators.push(decorator);
+        this.setRows(); // apply decorators
+    }
 
-    constructor(readonly widgets: Widget[], value: string, readonly readonly: boolean, readonly fixedRows = false ) {
+    constructor(readonly widgets: Widget[], value: string, readonly options?: TableOptions) {
         this.tableElement = document.createElement('table') as HTMLTableElement;
         // header
         const headRow = document.createElement('tr') as HTMLTableRowElement;
@@ -55,7 +73,7 @@ export class Table {
 
         // add rows from value (extra row for entry)
         let tabIndex = 100;
-        const rowCount = this.readonly || this.fixedRows ? this.rows.length : this.rows.length + 1;
+        const rowCount = this.options?.readonly || this.options.fixedRows ? this.rows.length : this.rows.length + 1;
         for (let i = 0; i < rowCount; i++) {
             const row = this.rows[i];
             const rowElement = document.createElement('tr') as HTMLTableRowElement;
@@ -93,7 +111,7 @@ export class Table {
                         td.appendChild(valAnchor);
                         valAnchor.style.visibility = row[j] ? 'visible' : 'hidden';
                     }
-                    if (!this.readonly) {
+                    if (!this.options.readonly) {
                         const selAnchor = document.createElement('a');
                         selAnchor.setAttribute('href', '');
                         selAnchor.innerText = '...';
@@ -108,14 +126,14 @@ export class Table {
                     checkbox.type = 'checkbox';
                     checkbox.style.accentColor = 'transparent';
                     checkbox.checked = row && row[j] ? ('' + row[j]) === 'true' : false;
-                    if (this.readonly) {
+                    if (this.options.readonly) {
                         checkbox.readOnly = true;
                     } else {
                         checkbox.onclick = e => this.update();
                     }
                     td.appendChild(checkbox);
                 } else {
-                    if (!this.readonly) {
+                    if (!this.options.readonly) {
                         td.contentEditable = 'plaintext-only';
                         td.onblur = (e: FocusEvent) => {
                             let rowIdx: string | null = null;
@@ -134,9 +152,17 @@ export class Table {
                                 cellVal = dateTime(new Date(cellVal));
                             }
                         }
-                        td.textContent = cellVal;
+
+                        decorate(td, cellVal, this._decorators);
                     }
                 }
+                td.onkeydown = (e: KeyboardEvent) => {
+                    if (e.key === 'Tab') {
+                        // console.log("TAB BABY");
+                    } else if (e.key === 'Enter' && this.options.singleLine) {
+                        e.preventDefault();
+                    }
+                };
                 rowElement.appendChild(td);
             }
             this.rowElements.push(rowElement);
@@ -164,7 +190,17 @@ export class Table {
                 if (checkbox) {
                     val = (checkbox as HTMLInputElement).checked ? 'true' : '';
                 } else {
-                    val = td.textContent;
+                    // val = undecorate(td);
+                    if (td.firstChild?.nodeName === 'DIV') {
+                        // multiline
+                        val = '';
+                        td.childNodes.forEach(child => {
+                            if (val) val += '\n';
+                            val += child.textContent;
+                        });
+                    } else {
+                        val = td.textContent;
+                    }
                 }
                 if (val) {
                     rowHasVal = true;
