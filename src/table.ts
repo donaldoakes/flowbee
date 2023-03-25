@@ -190,17 +190,7 @@ export class Table {
                 if (checkbox) {
                     val = (checkbox as HTMLInputElement).checked ? 'true' : '';
                 } else {
-                    // val = undecorate(td);
-                    if (td.firstChild?.nodeName === 'DIV') {
-                        // multiline
-                        val = '';
-                        td.childNodes.forEach(child => {
-                            if (val) val += '\n';
-                            val += child.textContent;
-                        });
-                    } else {
-                        val = td.textContent;
-                    }
+                    val = undecorate(td);
                 }
                 if (val) {
                     rowHasVal = true;

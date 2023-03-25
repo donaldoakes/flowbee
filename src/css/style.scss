@@ -516,7 +516,7 @@
     grid-template-columns: 80px auto;
     grid-gap: 10px 15px;
     width: 100%;
-    overflow: auto;
+    overflow: visible; // for tooltips
     padding: 10px;
     box-sizing: border-box;
   }
@@ -829,3 +829,69 @@
 .flowbee-menu-dark {
   @include menu;
 }
+
+.flowbee-tipped {
+  position: relative;
+}
+@mixin tooltip {
+  display: none;
+  position: absolute;
+  z-index: 100;
+  padding: 4px 8px 3px 8px;
+  line-height: 22px;
+  font-weight: 500;
+  .tooltip-label {
+    margin-right: 4px;
+    font-size: 12px;
+  }
+  .tooltip-value {
+    padding: 1px 3px;
+    font-family: Menlo, Monaco, "Courier New", monospace;
+  }
+}
+.flowbee-tooltip-light {
+  @include tooltip;
+  background-color: #f3f3f3;
+  color: #616161;
+  border: 1px solid #f3f3f3;
+
+  .tooltip-line {
+    border: 1px solid #dddddd;
+  }
+  .tooltip-value {
+    background-color: #eaeaea;
+    color: #a31516;
+  }
+  .tooltip-link {
+    color: #217dba;
+  }
+}
+.flowbee-tipped:hover .flowbee-tooltip-light {
+  display: block;
+  transition-delay: 200ms;
+}
+.flowbee-tooltip-dark {
+  @include tooltip;
+  background-color: #252526;
+  color: #cccccc;
+  border: 1px solid #454545;
+
+  .tooltip-line {
+    border-bottom: 1px solid #353536;
+  }
+  .tooltip-value {
+    background-color: #1a1a1b;
+    color: #d7ba7d;
+    font-family: Menlo, Monaco, "Courier New", monospace;
+  }
+  .tooltip-link {
+    color: #3794ff;
+  }
+}
+.flowbee-tipped:hover .flowbee-tooltip-dark {
+  display: block;
+  transition-delay: 200ms;
+}
+
+
+

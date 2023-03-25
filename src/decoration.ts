@@ -7,9 +7,26 @@ export interface Range {
     end: number;
 }
 
+export interface HoverLine {
+    label?: string;
+    value?: string;
+    link?: {
+        label: string;
+        action: string;
+    }
+}
+export interface Hover {
+    /**
+     * Overrides flowbee default (flowbee-tooltip-box)
+     */
+    className?: string;
+    lines: HoverLine[];
+}
+
 export interface Decoration {
     range: Range;
-    className: string;
+    className?: string;
+    hover?: Hover;
 }
 
 export type Decorator = (text: string) => Decoration[];
@@ -39,41 +56,50 @@ export const decorate = (element: HTMLElement, text: string, decs: Decorator[] |
                 });
 
                 // apply decorations
-                const lines = text.split(/\r?\n/);
-                const lineDecs: { line: string, decorations: Decoration[] }[] = lines.reduce((decs, line, i) => {
+                let lines = text.split(/\r?\n/);
+                // trim trailing line sep
+                if (lines.length > 1 && !lines[lines.length - 1].trim()) lines = lines.slice(0, lines.length - 1);
+                const lineDecs: { i: number, line: string, decorations: Decoration[] }[] = lines.reduce((decs, line, i) => {
                     const lineDecorations = decorations.filter(dec => dec.range.line === i);
-                    if (lineDecorations.length) decs.push({ line, decorations: lineDecorations });
+                    if (lineDecorations.length) decs.push({ i, line, decorations: lineDecorations });
                     return decs;
                 }, []);
 
                 if (lineDecs.length) {
-                    for (const lineDecorations of lineDecs) {
-                        const line = lineDecorations.line;
-                        const decs = lineDecorations.decorations;
+                    for (const [i, line] of lines.entries()) {
                         const outer = document.createElement('div') as HTMLDivElement;
-                        if (decs.length) {
-                            let leftOff = -1;
-                            for (const lineDec of decs) {
-                                if (lineDec.range.start < leftOff) {
-                                    throw new Error(`Overlapping range: ${lineDec.range}`);
-                                }
-                                // text preceding decoration
-                                if (lineDec.range.start > leftOff) {
-                                    addSpan(outer, line.substring(leftOff + 1, lineDec.range.start));
-                                }
-                                // decorated text
-                                addSpan(outer, line.substring(lineDec.range.start, lineDec.range.end + 1), lineDec.className);
+                        const lineDecoration = lineDecs.find(ld => ld.i === i);
+                        if (lineDecoration) {
+                            const line = lineDecoration.line;
+                            const decs = lineDecoration.decorations;
+                            outer.className = 'flowbee-decked';
+                            if (decs.length) {
+                                let leftOff = -1;
+                                for (const lineDec of decs) {
+                                    if (lineDec.range.start < leftOff) {
+                                        throw new Error(`Overlapping range: ${lineDec.range}`);
+                                    }
+                                    // text preceding decoration
+                                    if (lineDec.range.start > 0 && lineDec.range.start > leftOff) {
+                                        addSpan(outer, line.substring(leftOff + 1, lineDec.range.start));
+                                    }
+                                    // decorated text
+                                    addSpan(outer, line.substring(lineDec.range.start, lineDec.range.end + 1), lineDec);
 
-                                leftOff = lineDec.range.end;
-                            }
-                            if (leftOff < line.length - 1) {
-                                addSpan(outer, line.substring(leftOff + 1));
+                                    leftOff = lineDec.range.end;
+                                }
+                                if (leftOff < line.length - 1) {
+                                    addSpan(outer, line.substring(leftOff + 1));
+                                }
+                            } else {
+                                outer.textContent = line;
                             }
                         } else {
                             outer.textContent = line;
                         }
                         element.appendChild(outer);
                     }
+
                 }
             } else {
                 element.textContent = text;
@@ -85,10 +111,47 @@ export const decorate = (element: HTMLElement, text: string, decs: Decorator[] |
 
 };
 
-const addSpan = (parent: HTMLElement, text: string, className?: string) => {
+const addSpan = (parent: HTMLElement, text: string, decoration?: Decoration) => {
     const span = document.createElement('span') as HTMLSpanElement;
-    if (className) span.className = className;
-    span.textContent = text;
+    if (decoration?.className) span.className = decoration.className;
+    span.appendChild(document.createTextNode(text));
+
+    if (decoration?.hover) {
+        span.className += (span.className ? ' ' : '') + 'flowbee-tipped';
+        const tooltip = document.createElement('div') as HTMLDivElement;
+        tooltip.className = decoration.hover.className || 'flowbee-tooltip-dark'; // TODO
+        for (const [i, hoverLine] of decoration.hover.lines.entries()) {
+            const line = document.createElement('div') as HTMLDivElement;
+            line.className = 'tooltip-line';
+            if (hoverLine.label) {
+                const label = document.createElement('span') as HTMLSpanElement;
+                label.className = 'tooltip-label';
+                label.innerText = hoverLine.label;
+                line.appendChild(label);
+            }
+            if (hoverLine.value) {
+                const value = document.createElement('span') as HTMLSpanElement;
+                value.className = 'tooltip-value';
+                value.innerText = hoverLine.value;
+                line.appendChild(value);
+            }
+            if (hoverLine.link) {
+                const link = document.createElement('a') as HTMLAnchorElement;
+                link.className = 'tooltip-link';
+                // link.setAttribute('src', '');
+                link.innerText = hoverLine.link.label;
+                link.onclick = () => console.log('TODO clicked: ' + hoverLine.link.action);
+                line.appendChild(link);
+            }
+            if (i === decoration.hover.lines.length - 1) {
+                line.style.borderBottom = '1px solid transparent';
+            }
+            tooltip.appendChild(line);
+        }
+        tooltip.style.top = `-${(decoration.hover.lines.length) * 22 + 6}px`;
+        tooltip.style.left = '10px';
+        span.appendChild(tooltip);
+    }
     parent.appendChild(span);
 };
 
@@ -97,14 +160,32 @@ const addSpan = (parent: HTMLElement, text: string, className?: string) => {
  */
 export const undecorate = (element: HTMLElement): string => {
     let val: string;
-    if (element.firstChild?.nodeName === 'DIV') {
-        // multiline
+    const firstChild = element.firstChild;
+    if (firstChild?.nodeName === 'DIV') {
+        // expression line(s)
         val = '';
         element.childNodes.forEach(child => {
             if (val) val += '\n';
-            val += child.textContent;
+            if ((child as HTMLElement).classList?.contains('flowbee-decked')) {
+                const firstGrand = child.firstChild as HTMLElement;
+                if (firstGrand?.nodeName === 'SPAN') {
+                    // segments
+                    child.childNodes.forEach((grand: HTMLElement) => {
+                        if (grand.classList?.contains('flowbee-tipped') && grand.firstChild?.nodeType === Node.TEXT_NODE) {
+                            val += grand.firstChild.textContent;
+                        } else {
+                            val += grand.textContent;
+                        }
+                    });
+                } else {
+                    val += child.textContent;
+                }
+            } else {
+                val += child.textContent;
+            }
         });
     } else {
+        // compatibility
         val = element.textContent;
     }
     return val;

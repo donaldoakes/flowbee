@@ -59,7 +59,7 @@ import * as flowbee from '../node_modules/flowbee/dist/nostyles.js';
 ```
 Then you'd want to separately include Flowbee's css in your HTML:
 ```html
-  <link href="${flowbeeCssUri}" rel="../node_modules/flowbee/dist/css/style.css" />
+  <link href="flowbee/dist/css/style.css" rel="stylesheet" />
 ```
 
 
