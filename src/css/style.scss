@@ -516,7 +516,7 @@
     grid-template-columns: 80px auto;
     grid-gap: 10px 15px;
     width: 100%;
-    overflow: visible; // for tooltips
+    overflow: auto; // scrolled content (eg: source tab)
     padding: 10px;
     box-sizing: border-box;
   }
