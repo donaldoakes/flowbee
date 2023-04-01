@@ -868,7 +868,6 @@
 }
 .flowbee-tipped:hover .flowbee-tooltip-light {
   display: block;
-  transition-delay: 200ms;
 }
 .flowbee-tooltip-dark {
   @include tooltip;

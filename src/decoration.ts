@@ -31,6 +31,7 @@ export interface Decoration {
     range: Range;
     className?: string;
     hover?: Hover;
+    onHover?: (element: HTMLElement, tooltip: HTMLElement) => void;
 }
 
 export type Decorator = (text: string) => Decoration[];
@@ -124,6 +125,11 @@ const addSpan = (parent: HTMLElement, text: string, decoration?: Decoration) => 
         span.className += (span.className ? ' ' : '') + 'flowbee-tipped';
         const tooltip = document.createElement('div') as HTMLDivElement;
         tooltip.className = decoration.hover.className || 'flowbee-tooltip-dark'; // TODO
+        if (decoration.onHover) {
+            span.onmousemove = (_evt: MouseEvent) => {
+                decoration.onHover(span, tooltip);
+            };
+        }
         for (const [i, hoverLine] of decoration.hover.lines.entries()) {
             const line = document.createElement('div') as HTMLDivElement;
             line.className = 'tooltip-line';
