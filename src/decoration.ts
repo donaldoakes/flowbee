@@ -21,6 +21,10 @@ export interface Hover {
      */
     className?: string;
     lines: HoverLine[];
+    location?: {
+        top?: string;
+        left?: string;
+    }
 }
 
 export interface Decoration {
@@ -148,8 +152,16 @@ const addSpan = (parent: HTMLElement, text: string, decoration?: Decoration) => 
             }
             tooltip.appendChild(line);
         }
-        tooltip.style.top = `-${(decoration.hover.lines.length) * 22 + 6}px`;
-        tooltip.style.left = '10px';
+        if (decoration.hover.location?.top) {
+            tooltip.style.top = decoration.hover.location.top;
+        } else {
+            tooltip.style.top = `-${(decoration.hover.lines.length) * 22 + 6}px`;
+        }
+        if (decoration.hover.location?.left) {
+            tooltip.style.left = decoration.hover.location.left;
+        } else {
+            tooltip.style.left = '10px';
+        }
         span.appendChild(tooltip);
     }
     parent.appendChild(span);
