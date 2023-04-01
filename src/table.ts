@@ -40,10 +40,10 @@ export class Table {
         return this._onTableAction.on(listener);
     }
 
-    private _decorators: Decorator[] = [];
-    addDecorator(decorator: Decorator) {
-        this._decorators.push(decorator);
-        this.setRows(); // apply decorators
+    private _decorator?: Decorator;
+    setDecorator(decorator: Decorator) {
+        this._decorator = decorator;
+        this.setRows(); // apply decorator
     }
 
     constructor(readonly widgets: Widget[], value: string, readonly options?: TableOptions) {
@@ -153,7 +153,7 @@ export class Table {
                             }
                         }
 
-                        decorate(td, cellVal, this._decorators);
+                        decorate(td, cellVal, this._decorator ? [this._decorator] : []);
                     }
                 }
                 td.onkeydown = (e: KeyboardEvent) => {
