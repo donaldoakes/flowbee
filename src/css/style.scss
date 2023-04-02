@@ -848,6 +848,9 @@
     padding: 1px 3px;
     font-family: Menlo, Monaco, "Courier New", monospace;
   }
+  .tooltip-link {
+    cursor: pointer;
+  }
 }
 .flowbee-tooltip-light {
   @include tooltip;
@@ -889,7 +892,6 @@
 }
 .flowbee-tipped:hover .flowbee-tooltip-dark {
   display: block;
-  transition-delay: 200ms;
 }
 
 

@@ -158,7 +158,7 @@ export class Table {
                 }
                 td.onkeydown = (e: KeyboardEvent) => {
                     if (e.key === 'Tab') {
-                        // console.log("TAB BABY");
+                        console.log("TAB BABY");
                     } else if (e.key === 'Enter' && this.options.singleLine) {
                         e.preventDefault();
                     }

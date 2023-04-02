@@ -7,12 +7,18 @@ export interface Range {
     end: number;
 }
 
+export interface HoverAction {
+    name: string;
+    args?: { [key: string]: string };
+}
+
 export interface HoverLine {
     label?: string;
     value?: string;
     link?: {
         label: string;
-        action: string;
+        action: HoverAction;
+        title?: string;
     }
 }
 export interface Hover {
@@ -21,6 +27,7 @@ export interface Hover {
      */
     className?: string;
     lines: HoverLine[];
+    onAction?: (action: HoverAction ) => void;
     location?: {
         top?: string;
         left?: string;
@@ -90,7 +97,6 @@ export const decorate = (element: HTMLElement, text: string, decs: Decorator[] |
                                     }
                                     // decorated text
                                     addSpan(outer, line.substring(lineDec.range.start, lineDec.range.end + 1), lineDec);
-
                                     leftOff = lineDec.range.end;
                                 }
                                 if (leftOff < line.length - 1) {
@@ -148,9 +154,14 @@ const addSpan = (parent: HTMLElement, text: string, decoration?: Decoration) => 
             if (hoverLine.link) {
                 const link = document.createElement('a') as HTMLAnchorElement;
                 link.className = 'tooltip-link';
-                // link.setAttribute('src', '');
+                if (hoverLine.link) link.title = hoverLine.link.title;
                 link.innerText = hoverLine.link.label;
-                link.onclick = () => console.log('TODO clicked: ' + hoverLine.link.action);
+                if (decoration.hover.onAction) {
+                    link.onclick = (evt) => {
+                        evt.preventDefault();
+                        decoration.hover.onAction(hoverLine.link.action);
+                    };
+                }
                 line.appendChild(link);
             }
             if (i === decoration.hover.lines.length - 1) {
