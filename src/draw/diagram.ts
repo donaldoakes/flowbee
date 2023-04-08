@@ -87,12 +87,17 @@ export class Diagram extends Shape {
     }
   }
 
+  // TEMP LOGGING
+  private resizeLogged = false;
   resizeCanvas(canvasDisplay: Display) {
+    if (!this.resizeLogged) {
+      console.debug(`Resizing based on dbRatio: ${this.dpRatio} (platform=${navigator.platform})`);
+      this.resizeLogged = true;
+    }
     if (this.dpRatio === 1) {
       this.canvas.width = canvasDisplay.w;
       this.canvas.height = canvasDisplay.h;
-    }
-    else {
+    } else {
       // fix blurriness on retina displays
       this.canvas.width = canvasDisplay.w * this.dpRatio;
       this.canvas.height = canvasDisplay.h * this.dpRatio;

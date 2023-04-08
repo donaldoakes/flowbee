@@ -73,7 +73,7 @@ export class Table {
 
         // add rows from value (extra row for entry)
         let tabIndex = 100;
-        const rowCount = this.options?.readonly || this.options.fixedRows ? this.rows.length : this.rows.length + 1;
+        const rowCount = this.options?.readonly || this.options?.fixedRows ? this.rows.length : this.rows.length + 1;
         for (let i = 0; i < rowCount; i++) {
             const row = this.rows[i];
             const rowElement = document.createElement('tr') as HTMLTableRowElement;
@@ -111,7 +111,7 @@ export class Table {
                         td.appendChild(valAnchor);
                         valAnchor.style.visibility = row[j] ? 'visible' : 'hidden';
                     }
-                    if (!this.options.readonly) {
+                    if (!this.options?.readonly) {
                         const selAnchor = document.createElement('a');
                         selAnchor.setAttribute('href', '');
                         selAnchor.innerText = '...';
@@ -126,14 +126,14 @@ export class Table {
                     checkbox.type = 'checkbox';
                     checkbox.style.accentColor = 'transparent';
                     checkbox.checked = row && row[j] ? ('' + row[j]) === 'true' : false;
-                    if (this.options.readonly) {
+                    if (this.options?.readonly) {
                         checkbox.readOnly = true;
                     } else {
                         checkbox.onclick = e => this.update();
                     }
                     td.appendChild(checkbox);
                 } else {
-                    if (!this.options.readonly) {
+                    if (!this.options?.readonly) {
                         td.contentEditable = 'plaintext-only';
                         td.onblur = (e: FocusEvent) => {
                             let rowIdx: string | null = null;
@@ -159,7 +159,7 @@ export class Table {
                 td.onkeydown = (e: KeyboardEvent) => {
                     if (e.key === 'Tab') {
                         console.log("TAB BABY");
-                    } else if (e.key === 'Enter' && this.options.singleLine) {
+                    } else if (e.key === 'Enter' && this.options?.singleLine) {
                         e.preventDefault();
                     }
                 };
