@@ -1,31 +1,35 @@
-export const resolve = (input: string, context: any, trusted = false): string => {
-    if (trusted) return resolveTrusted(input, context);
-    if (input.startsWith('${~')) return input; // ignore regex
+export const resolve = (expression: string, context: any, trusted = false): string => {
+    if (trusted) return resolveTrusted(expression, context);
+    if (expression.startsWith('${~')) return expression; // ignore regex
 
+    return '' + safeEval(expression, context);
+};
+
+export const safeEval = (expression: string, context: any): any => {
     // escape all \
-    let path = input.replace(/\\/g, '\\\\');
+    let path = expression.replace(/\\/g, '\\\\');
     // trim ${ and }
     path = path.substring(2, path.length - 1);
 
     // directly contains expression (flat obj or user-entered values in vscode)
     const type = typeof context[path];
     if (type === 'string' || type === 'number' || type === 'boolean') {
-        return '' + context[path];
+        return context[path];
     }
 
     let res: any = context;
     for (const seg of tokenize(path, context)) {
-        if (!res[seg]) return input;
+        if (!res[seg]) return expression;
         res = res[seg];
     }
 
-    return '' + res;
+    return res;
 };
 
-export const resolveTrusted = (input: string, context: any): string => {
-    if (input.startsWith('${~')) return input; // ignore regex
+export const resolveTrusted = (expression: string, context: any): string => {
+    if (expression.startsWith('${~')) return expression; // ignore regex
 
-    let expr = input;
+    let expr = expression;
     if (!(expr.startsWith('${') && expr.endsWith('}'))) {
         expr = '${' + expr + '}';
     }
