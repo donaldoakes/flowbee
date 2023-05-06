@@ -32,6 +32,7 @@ export interface Hover {
         top?: string;
         left?: string;
     }
+    theme: 'light' | 'dark';
 }
 
 export interface Decoration {
@@ -130,7 +131,7 @@ const addSpan = (parent: HTMLElement, text: string, decoration?: Decoration) => 
     if (decoration?.hover) {
         span.className += (span.className ? ' ' : '') + 'flowbee-tipped';
         const tooltip = document.createElement('div') as HTMLDivElement;
-        tooltip.className = decoration.hover.className || 'flowbee-tooltip-dark'; // TODO
+        tooltip.className = decoration.hover.className || `flowbee-tooltip-${decoration.hover.theme}`;
         if (decoration.onHover) {
             span.onmousemove = (_evt: MouseEvent) => {
                 decoration.onHover(span, tooltip);
@@ -154,7 +155,7 @@ const addSpan = (parent: HTMLElement, text: string, decoration?: Decoration) => 
             if (hoverLine.link) {
                 const link = document.createElement('a') as HTMLAnchorElement;
                 link.className = 'tooltip-link';
-                if (hoverLine.link) link.title = hoverLine.link.title;
+                if (hoverLine.link?.title) link.title = hoverLine.link.title;
                 link.innerText = hoverLine.link.label;
                 if (decoration.hover.onAction) {
                     link.onclick = (evt) => {
