@@ -38,6 +38,7 @@ export interface Hover {
 export interface Decoration {
     range: Range;
     className?: string;
+    glyphClassName?: string;
     hover?: Hover;
     onHover?: (element: HTMLElement, tooltip: HTMLElement) => void;
 }
