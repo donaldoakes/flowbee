@@ -1,6 +1,6 @@
 {
   "name": "flowbee",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Flow Diagramming",
   "main": "dist/index.js",
   "module": "dist/main.js",
@@ -32,7 +32,6 @@
     "sass-graph": "^4.0.1"
   },
   "dependencies": {
-    "@types/traverse": "^0.6.32",
     "js-yaml": "^4.1.0",
     "merge-anything": "^5.1.4",
     "semver": "^7.3.8",
@@ -47,6 +46,7 @@
     "@types/mocha": "^10.0.1",
     "@types/resize-observer-browser": "^0.1.7",
     "@types/semver": "^7.3.13",
+    "@types/traverse": "^0.6.32",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
     "chai": "^4.3.7",

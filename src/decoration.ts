@@ -35,6 +35,18 @@ export interface Hover {
     theme: 'light' | 'dark';
 }
 
+export interface LensAction {
+    name: string;
+    path: string;
+    artifact: string;
+}
+
+export interface Lens {
+    range: Range;
+    label: string;
+    action: LensAction;
+}
+
 export interface Decoration {
     range: Range;
     className?: string;
