@@ -26,5 +26,5 @@ export * from './swf/translate/translate';
 export * from './swf/translate/options';
 export * from './values';
 export { resolve, safeEval } from './resolve';
-export { Decoration, Decorator, Hover, HoverLine, HoverAction, Range, decorate, undecorate } from './decoration';
+export { Decoration, Decorator, Lens, LensAction, Hover, HoverLine, HoverAction, Range, decorate, undecorate } from './decoration';
 export * from './expression';
