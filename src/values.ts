@@ -1,102 +1,212 @@
-import { mergeAndConcat as merge } from 'merge-anything';
-import * as _traverse from 'traverse';
-// https://github.com/rollup/rollup/issues/1267
-const traverse = (_traverse as any).default || _traverse;
+import { merge } from 'merge-anything';
+import { valuesDefault, ValuesOptions } from './options';
+import { Styles } from './style/style';
+import { Theme } from './theme';
+import { Table } from './table';
+import { Disposable, Listener, TypedEvent } from './event';
+import { ExpressionValue, UserValues } from './model/value';
 
-import * as resolve from './resolve';
+export type OpenValuesEvent = { expression: string };
+export type ValuesActionEvent = { action: string, values: UserValues };
 
-export type ValueType = string | number | boolean | Date | null;
-export type EnvironmentVariables = { [key: string]: string | undefined };
+export class ValuesPopup {
 
-export interface ValueLocation {
-    path: string;  // file or url
-    line?: number; // someday maybe
-}
+    private styles: Styles;
+    private stylesObj: object;
 
-export class ValuesAccess {
-    /**
-     * Merged values
-     */
-    readonly values: any = {};
-    private valuesObjects?: { [path: string]: any };
-    private readonly valueLocations: { [expression: string]: ValueLocation } = {};
+    private div: HTMLDivElement;
+    private header: HTMLDivElement;
+    private title: HTMLSpanElement;
+    private help: {
+        link: HTMLAnchorElement;
+        image: HTMLImageElement;
+    };
+    private closeImg: HTMLInputElement;
+    private content: HTMLDivElement;
+    private footer: HTMLDivElement;
 
-    /**
-     * @param pathVals path to contents or object
-     * (raw contents required for future location line numbers)
-     * @param envVars environment variables
-     */
-    constructor(pathVals: { [path: string]: string | object }, private envVars: EnvironmentVariables = {}) {
-        this.valuesObjects = {};
-        for (const path of Object.keys(pathVals)) {
-            let vals = pathVals[path];
-            if (typeof vals === 'string') {
-                try {
-                    vals = JSON.parse(vals);
-                } catch (err: any) {
-                    throw new Error(`Cannot parse values file: ${location} (${err.message})`);
-                }
-            }
-            vals = this.substEnvVars(vals);
-            this.valuesObjects[path] = vals;
-            this.values = merge(this.values, vals);
-        }
+    private container: HTMLElement;
+    private options: ValuesOptions;
+
+    private values: UserValues = { values: [] };
+
+    private _onOpenValues = new TypedEvent<OpenValuesEvent>();
+    onOpenValues(listener: Listener<OpenValuesEvent>): Disposable {
+        return this._onOpenValues.on(listener);
     }
 
-    evaluate(expression: string, trusted: boolean): string | undefined {
-        if (!expression.startsWith('${~)') && !expression.startsWith('${@')) {
-            const res = resolve.resolve(expression, this.values, trusted);
-            if (!res.startsWith('${')) {
-                return res;
-            }
-        }
+    private _onValuesAction = new TypedEvent<ValuesActionEvent>();
+    onValuesAction(listener: Listener<ValuesActionEvent>): Disposable {
+        return this._onValuesAction.on(listener);
     }
 
-    getLocation(expression: string, trusted = false): ValueLocation | undefined {
-        let location: ValueLocation | undefined = this.valueLocations[expression];
-        if (!location) {
-            location = this.findLocation(expression, trusted);
-            if (location) this.valueLocations[expression] = location;
-        }
-        return location;
-    }
+    constructor(container?: HTMLElement) {
+        this.container = container || document.body;
 
-    private findLocation(expression: string, trusted: boolean): ValueLocation | undefined {
-        if (!expression.startsWith('${~)') && !expression.startsWith('${@')) {
-            // reverse so later overrides
-            const paths = Object.keys(this.valuesObjects).reverse();
-            for (const path of paths) {
-                const obj = this.valuesObjects[path];
-                const res = resolve.resolve(expression, obj, trusted);
-                if (!res.startsWith('${')) {
-                    return { path };
-                }
-            }
-        }
-    }
+        this.div = document.createElement('div') as HTMLDivElement;
+        this.div.id = 'flowbee-configurator';
+        this.div.style.display = 'none';
 
-    private substEnvVars(values: any): any {
-        // operate on a clone
-        const vals = JSON.parse(JSON.stringify(values));
-        const envVars = this.envVars;
-        traverse(vals).forEach(function (val) {
-            if (typeof val === 'string') {
-                const envVar = val.match(/^\$\{.+?}/);
-                if (envVar && envVar.length === 1) {
-                    const varName = envVar[0].substring(2, envVar[0].length - 1);
-                    let varVal: any = envVars[varName];
-                    if (typeof varVal === 'undefined' && val.trim().length > varName.length + 3) {
-                        // fallback specified?
-                        const extra = val.substring(envVar[0].length).trim();
-                        if (extra.startsWith('||')) {
-                            varVal = extra.substring(1).trim();
-                        }
+        // header
+        this.header = document.createElement('div') as HTMLDivElement;
+        this.header.className = 'flowbee-values-header';
+        const titleElem = document.createElement('div') as HTMLDivElement;
+        titleElem.className = 'flowbee-values-title';
+        this.title = document.createElement('span') as HTMLSpanElement;
+        titleElem.appendChild(this.title);
+        this.help = {
+            link: document.createElement('a') as HTMLAnchorElement,
+            image: document.createElement('img') as HTMLImageElement
+        };
+        this.help.link.className = 'flowbee-values-help';
+        this.help.image.alt = 'Values help';
+        this.help.image.title = 'Values help';
+        this.help.link.style.display = 'none';
+        this.help.link.appendChild(this.help.image);
+        titleElem.appendChild(this.help.link);
+        this.header.appendChild(titleElem);
+
+        const close = document.createElement('div') as HTMLDivElement;
+        close.className = 'flowbee-values-close';
+        close.onclick = (_e) => {
+            this.close();
+        };
+        this.closeImg = document.createElement('input') as HTMLInputElement;
+        this.closeImg.type = 'image';
+        this.closeImg.alt = this.closeImg.title = 'Close';
+        this.closeImg.src = `${this.options.iconBase}/close.svg`;
+        this.closeImg.style.display = 'none';
+        close.appendChild(this.closeImg);
+        this.header.appendChild(close);
+        this.div.appendChild(this.header);
+
+        // content
+        this.content = document.createElement('div') as HTMLDivElement;
+        this.content.className = 'flowbee-values-content';
+        this.div.appendChild(this.content);
+
+        // footer
+        this.footer = document.createElement('div') as HTMLDivElement;
+        this.footer.className = 'flowbee-values-footer';
+        this.div.appendChild(this.footer);
+
+        this.container.appendChild(this.div);
+     }
+
+    render(values: UserValues, options?: ValuesOptions) {
+        this.values = values;
+        this.options = merge(valuesDefault, options);
+
+        // loading styles is expensive, so only load if theme has changed
+        if (!this.styles || !this.stylesObj || (options.theme && options.theme !== this.styles.theme.name)) {
+            this.styles = new Styles('flowbee-values', new Theme(options.theme), this.div);
+            this.stylesObj = this.styles.getObject();
+            this.div.className = `flowbee-values flowbee-values-${this.options.theme || ''}`;
+        }
+
+        this.title.innerText = this.options.title;
+        if (options.help) {
+            this.help.link.style.display = 'inline';
+            this.help.link.href = options.help.link;
+            this.help.image.alt = options.help.title || 'Values help';
+            this.help.image.title = options.help.title || 'Values help';
+            this.help.image.src = `${this.options.iconBase}/${this.options.help.icon || 'help.svg'}`;
+        } else {
+            this.help.link.style.display = 'none';
+        }
+
+        this.closeImg.style.display = 'inline-block';
+
+        this.content.innerHTML = '';
+        const table = this.renderTable();
+        this.content.appendChild(table.tableElement);
+
+        this.footer.innerHTML = '';
+        if (options.actions) {
+            for (const action of options.actions) {
+                const actionButton = document.createElement('input') as HTMLInputElement;
+                actionButton.type = 'button';
+                actionButton.value = action.label || action.name;
+                actionButton.onclick = () => {
+                    if (action.close) {
+                        this.div.style.display = 'none';
                     }
-                    this.update(varVal);
-                }
+                    this._onValuesAction.emit({ action: action.name, values: this.values });
+                };
+                actionButton.className = 'flow-values-files';
+                this.footer.appendChild(actionButton);
+            }
+        }
+
+        this.div.style.display = 'flex';
+    }
+
+    renderTable(): Table {
+        const table = new Table(
+            [
+                { type: 'link', label: 'Expression', action: 'openValues' },
+                { type: 'text', label: 'Value' },
+                { type: 'text', label: 'Override' }
+            ],
+            this.toString()
+        );
+        this.markRequiredValues(table);
+        this.addLocationTitles(table);
+
+        // TODO: dispose listeners
+        table.onTableAction((actionEvent) => {
+            if (actionEvent.action === 'openValues') {
+                this._onOpenValues.emit({ expression: actionEvent.value[0] });
             }
         });
-        return vals;
+
+
+        table.onTableUpdate((updateEvent) => {
+            this.values = this.fromString(updateEvent.value);
+        });
+
+        return table;
     }
 
+    private markRequiredValues(table: Table) {
+        // TODO: highlight required values
+    }
+
+    private addLocationTitles(table: Table) {
+        // TODO: set td title to location for hover
+    }
+
+    close() {
+        this.div.style.display = 'none';
+        this.div.innerHTML = '';
+    }
+
+    toString(): string {
+        const rows = this.values.values.map((value) => {
+            const row = [ value.expression, value.value ];
+            if (this.values.overrides) {
+                row[2] = this.values.overrides[value.expression];
+            }
+            return row;
+        });
+        return JSON.stringify(rows);
+    }
+
+    fromString(tableVal: string): UserValues {
+        const rows = JSON.parse(tableVal);
+        const userValues: UserValues = { values: [] };
+        for (const row of rows) {
+            const userValue: ExpressionValue = { expression: row[0], value: row[1] };
+            const override = row[2];
+            if (override) {
+                if (!userValues.overrides) userValues.overrides = {};
+                userValues.overrides[row[0]] = override;
+            }
+            const thisValue = this.values.values.find(v => v.expression === row[0]);
+            userValue.required = thisValue.required;
+            userValue.location = thisValue.location;
+            userValues.values.push(userValue);
+        }
+        return userValues;
+    }
 }

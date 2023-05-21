@@ -5,6 +5,14 @@ export const resolve = (expression: string, context: any, trusted = false): stri
     return '' + safeEval(expression, context);
 };
 
+/**
+ * Same as resolve(), but returns undefined if unresolved
+ */
+export const resolveIf = (expression: string, context: any, trusted = false): string | undefined => {
+    const res = resolve(expression, context, trusted);
+    return res.startsWith('${') ? undefined : res;
+};
+
 export const safeEval = (expression: string, context: any): any => {
     // escape all \
     let path = expression.replace(/\\/g, '\\\\');

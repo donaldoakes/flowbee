@@ -1,3 +1,4 @@
+import { ValuesAction } from './model/value';
 import { Icon } from './style/icon';
 
 export type Mode = 'select' | 'connect' | 'runtime';
@@ -77,6 +78,21 @@ export interface MenuOptions {
     iconBase?: string;
 }
 export const menuDefault: MenuOptions = {
+    theme: 'light'
+};
+
+export interface ValuesOptions {
+    title: string;
+    theme?: string;
+    iconBase?: string;
+    help?: {
+        link: string;
+        title?: string;
+        icon?: string;
+    }
+    actions?: ValuesAction[];
+}
+export const valuesDefault: ValuesOptions = {
     theme: 'light',
-    iconBase: null
+    title: ''
 };
