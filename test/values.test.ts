@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ValuesAccess } from '../src/values';
+import { ValuesAccess } from '../src/values/access';
 
 describe('values', () => {
     const vals1 = {
@@ -57,4 +57,29 @@ describe('values', () => {
         expect(values.getLocation('${greeting.salutation}')?.path).to.be.equal('vals2');
         expect(values.getLocation('${greeting.user.name}')?.path).to.be.equal('vals2');
     });
+
+    it('resolves ref expression', () => {
+        const refVals = {
+            __ply_results: {
+                s7: {
+                    response: {
+                        status: {
+                          code: 201,
+                          message: 'Created'
+                        },
+                        body: {
+                          id: '435b30ad',
+                          title: 'The Case of the Howling Dog',
+                          year: 1934
+                        }
+                    }
+                }
+            }
+        };
+
+        const access = new ValuesAccess({}, {}, { refHolder: '__ply_results' }, refVals);
+        const result = access.evaluate('${@s7.response.body.id}');
+        expect(result).to.be.equal('435b30ad');
+    });
+
 });

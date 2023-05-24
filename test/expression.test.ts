@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { findExpressions } from '../src/expression';
+import { findExpressions } from '../src/values/expression';
 
 describe('expression', () => {
     it('finds one expression', () => {

@@ -19,6 +19,9 @@ export interface ValueOptions {
     refHolder?: string;
 }
 
+/**
+ * TODO: flow value objects
+ */
 export class ValuesAccess {
     /**
      * Merged values
@@ -58,7 +61,7 @@ export class ValuesAccess {
     evaluate(expression: string): string | undefined {
         if (isRef(expression)) {
             if (this.refVals && this.options.refHolder) {
-                return resolve.resolveIf(replaceRefs(expression, this.options?.refHolder), this.refVals, this.options?.trusted);
+                return resolve.resolveIf(replaceRefs(expression, this.options.refHolder), this.refVals, this.options?.trusted);
             }
         } else if (!isRegex(expression)) {
             return resolve.resolveIf(expression, this.values, this.options?.trusted);

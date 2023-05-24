@@ -1,6 +1,8 @@
+import { isRegex } from './expression';
+
 export const resolve = (expression: string, context: any, trusted = false): string => {
     if (trusted) return resolveTrusted(expression, context);
-    if (expression.startsWith('${~')) return expression; // ignore regex
+    if (isRegex(expression)) return expression;
 
     return '' + safeEval(expression, context);
 };

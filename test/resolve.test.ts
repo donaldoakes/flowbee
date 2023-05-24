@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { resolve, tokenize } from '../src/resolve';
+import { resolve, tokenize } from '../src/values/resolve';
 
 describe('resolve', () => {
     it('tokenizes complex expressions', () => {

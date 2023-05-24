@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { expect } from 'chai';
-import { loadFileSync, options } from './shared';
+import { options } from './shared';
 import { FlowTranslator } from '../src/swf/translate/translate';
 import * as yaml from '../src/yaml';
 
