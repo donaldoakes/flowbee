@@ -7,7 +7,6 @@ export * from './model/note';
 export * from './model/milestone';
 export * from './model/element';
 export * from './model/template';
-export * from './model/request';
 export * from './model/value';
 export { Descriptor, FlowItemDescriptor, StandardDescriptors,
     start, stop, pause, decide, embedded, note } from './model/descriptor';
@@ -27,8 +26,5 @@ export * from './draw/display';
 export * from './swf/translate/translate';
 export * from './swf/translate/options';
 export * from './values';
-export * from './values/access';
-export { resolve, resolveIf, safeEval } from './values/resolve';
 export { Decoration, Decorator, Lens, LensAction, Hover, HoverLine, HoverAction, Range, decorate, undecorate } from './decoration';
-export * from './values/expression';
 

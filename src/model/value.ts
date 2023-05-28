@@ -15,3 +15,5 @@ export interface ValuesAction {
     label?: string;
     close?: boolean;
 }
+
+export type ValueType = string | number | boolean | Date | null;

@@ -6,7 +6,9 @@
   "module": "dist/main.js",
   "browser": "dist/index.js",
   "style": "dist/css/style.css",
-  "files": [ "dist" ],
+  "files": [
+    "dist"
+  ],
   "types": "dist/main.d.ts",
   "scripts": {
     "build": "tsc && rollup -c && node-sass src/css/style.scss -o dist/css && cp dist/main.d.ts dist/nostyles.d.ts",
@@ -33,9 +35,8 @@
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
-    "merge-anything": "^5.1.4",
-    "semver": "^7.5.1",
-    "traverse": "^0.6.7"
+    "merge-anything": "^5.1.7",
+    "semver": "^7.5.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.1.0",
@@ -46,7 +47,6 @@
     "@types/mocha": "^10.0.1",
     "@types/resize-observer-browser": "^0.1.7",
     "@types/semver": "^7.5.0",
-    "@types/traverse": "^0.6.32",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
     "chai": "^4.3.7",
