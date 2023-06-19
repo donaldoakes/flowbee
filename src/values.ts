@@ -98,7 +98,7 @@ export class ValuesPopup {
         this.footer.className = 'flowbee-values-footer';
         this.div.appendChild(this.footer);
 
-        this.container.appendChild(this.div);
+        document.body.appendChild(this.div);
      }
 
     render(values: UserValues, options?: ValuesOptions) {
@@ -187,17 +187,17 @@ export class ValuesPopup {
     }
 
     close() {
-        // if (this.container) {
-        //     this.container.style.opacity = '1';
-        // }
+        if (this.container) {
+            this.container.style.opacity = '1';
+        }
         this.div.style.display = 'none';
     }
 
     open() {
-        // if (this.container) {
-        //     this.container.style.opacity = '0.5';
-        // }
         this.div.style.display = 'flex';
+        if (this.container) {
+            this.container.style.opacity = '0.5';
+        }
     }
 
     get isOpen(): boolean {
