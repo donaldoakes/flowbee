@@ -708,6 +708,7 @@
 
 @mixin values {
   display: none;
+  z-index: 100;
   position: absolute;
   width: calc(100% - 260px);
   height: calc(100% - 100px);

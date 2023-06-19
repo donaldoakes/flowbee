@@ -84,7 +84,6 @@ export const menuDefault: MenuOptions = {
 export interface ValuesOptions {
     title: string;
     theme?: string;
-    iconBase?: string;
     help?: {
         link: string;
         title?: string;

@@ -5,9 +5,10 @@ import { Theme } from './theme';
 import { Table } from './table';
 import { Disposable, Listener, TypedEvent } from './event';
 import { ExpressionValue, UserValues } from './model/value';
+import { Decorator } from './decoration';
 
-export type OpenValuesEvent = { expression: string };
-export type ValuesActionEvent = { action: string, values: UserValues };
+export type OpenValuesEvent = { path: string };
+export type ValuesActionEvent = { action: string, values?: UserValues };
 
 export class ValuesPopup {
 
@@ -30,6 +31,8 @@ export class ValuesPopup {
 
     private values: UserValues = { values: [] };
 
+    private table?: Table;
+
     private _onOpenValues = new TypedEvent<OpenValuesEvent>();
     onOpenValues(listener: Listener<OpenValuesEvent>): Disposable {
         return this._onOpenValues.on(listener);
@@ -40,11 +43,15 @@ export class ValuesPopup {
         return this._onValuesAction.on(listener);
     }
 
-    constructor(container?: HTMLElement) {
+    setDecorator(decorator: Decorator) {
+        this.table?.setDecorator(decorator);
+    }
+
+    constructor(container?: HTMLElement, private iconBase?: string) {
         this.container = container || document.body;
 
         this.div = document.createElement('div') as HTMLDivElement;
-        this.div.id = 'flowbee-configurator';
+        this.div.id = 'flowbee-values';
         this.div.style.display = 'none';
 
         // header
@@ -70,11 +77,12 @@ export class ValuesPopup {
         close.className = 'flowbee-values-close';
         close.onclick = (_e) => {
             this.close();
+            this._onValuesAction.emit({ action: 'close' });
         };
         this.closeImg = document.createElement('input') as HTMLInputElement;
         this.closeImg.type = 'image';
         this.closeImg.alt = this.closeImg.title = 'Close';
-        this.closeImg.src = `${this.options.iconBase}/close.svg`;
+        this.closeImg.src = `${iconBase}/close.svg`;
         this.closeImg.style.display = 'none';
         close.appendChild(this.closeImg);
         this.header.appendChild(close);
@@ -110,7 +118,7 @@ export class ValuesPopup {
             this.help.link.href = options.help.link;
             this.help.image.alt = options.help.title || 'Values help';
             this.help.image.title = options.help.title || 'Values help';
-            this.help.image.src = `${this.options.iconBase}/${this.options.help.icon || 'help.svg'}`;
+            this.help.image.src = `${this.iconBase}/${this.options.help.icon || 'help.svg'}`;
         } else {
             this.help.link.style.display = 'none';
         }
@@ -118,8 +126,8 @@ export class ValuesPopup {
         this.closeImg.style.display = 'inline-block';
 
         this.content.innerHTML = '';
-        const table = this.renderTable();
-        this.content.appendChild(table.tableElement);
+        this.table = this.renderTable();
+        this.content.appendChild(this.table.tableElement);
 
         this.footer.innerHTML = '';
         if (options.actions) {
@@ -138,17 +146,19 @@ export class ValuesPopup {
             }
         }
 
-        this.div.style.display = 'flex';
+        this.open();
     }
 
     renderTable(): Table {
         const table = new Table(
             [
-                { type: 'link', label: 'Expression', action: 'openValues' },
-                { type: 'text', label: 'Value' },
+                { type: 'text', label: 'Expression', readonly: true },
+                { type: 'text', label: 'Value', readonly: true },
+                { type: 'link', label: 'From', action: 'openValues', readonly: true },
                 { type: 'text', label: 'Override' }
             ],
-            this.toString()
+            this.toString(),
+            { fixedRows: true }
         );
         this.markRequiredValues(table);
         this.addLocationTitles(table);
@@ -156,7 +166,7 @@ export class ValuesPopup {
         // TODO: dispose listeners
         table.onTableAction((actionEvent) => {
             if (actionEvent.action === 'openValues') {
-                this._onOpenValues.emit({ expression: actionEvent.value[0] });
+                this._onOpenValues.emit({ path: actionEvent.value[2] });
             }
         });
 
@@ -177,15 +187,31 @@ export class ValuesPopup {
     }
 
     close() {
+        // if (this.container) {
+        //     this.container.style.opacity = '1';
+        // }
         this.div.style.display = 'none';
-        this.div.innerHTML = '';
+    }
+
+    open() {
+        // if (this.container) {
+        //     this.container.style.opacity = '0.5';
+        // }
+        this.div.style.display = 'flex';
+    }
+
+    get isOpen(): boolean {
+        return this.div.style.display === 'flex';
     }
 
     toString(): string {
         const rows = this.values.values.map((value) => {
             const row = [ value.expression, value.value ];
+            if (value.location) {
+                row[2] = value.location;
+            }
             if (this.values.overrides) {
-                row[2] = this.values.overrides[value.expression];
+                row[3] = this.values.overrides[value.expression];
             }
             return row;
         });

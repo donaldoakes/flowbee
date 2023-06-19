@@ -126,14 +126,14 @@ export class Table {
                     checkbox.type = 'checkbox';
                     checkbox.style.accentColor = 'transparent';
                     checkbox.checked = row && row[j] ? ('' + row[j]) === 'true' : false;
-                    if (this.options?.readonly) {
+                    if (this.options?.readonly || widget.readonly) {
                         checkbox.readOnly = true;
                     } else {
                         checkbox.onclick = e => this.update();
                     }
                     td.appendChild(checkbox);
                 } else {
-                    if (!this.options?.readonly) {
+                    if (!this.options?.readonly && !widget.readonly) {
                         td.contentEditable = 'plaintext-only';
                         td.onblur = (e: FocusEvent) => {
                             let rowIdx: string | null = null;
