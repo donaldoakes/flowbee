@@ -16,6 +16,7 @@ export { FlowTree, FileTree, FileItemType, FlowTreeSelectEvent } from './tree';
 export { TypedEvent, Listener, Disposable, FlowChangeEvent, FlowElementEvent, FlowElementSelectEvent, FlowElementInstance } from './event';
 export { DiagramOptions, FlowDumpOptions, ToolboxOptions, FlowTreeOptions, ConfiguratorOptions, ValuesOptions, Mode } from './options';
 export { DrawingOptions } from './draw/options';
+export { FlowEventHandler } from './draw/handler';
 export { MenuItem, ContextMenuProvider, DefaultMenuProvider, ContextMenuSelectEvent } from './menu';
 export { DialogMessage, DialogProvider, DefaultDialog } from './dialog';
 export { Configurator, SourceLink } from './config';

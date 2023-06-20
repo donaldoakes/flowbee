@@ -22,7 +22,7 @@ import { TranslatorOptions } from './main';
 
 export class FlowDiagram {
 
-    private diagram: Diagram;
+    readonly diagram: Diagram;
     theme: string;
     drawingOptions: DrawingOptions;
     flow: Flow;
