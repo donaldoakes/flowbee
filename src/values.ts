@@ -98,6 +98,15 @@ export class ValuesPopup {
         this.footer.className = 'flowbee-values-footer';
         this.div.appendChild(this.footer);
 
+        // TODO options for width and height (or margins)
+        if (this.container !== document.body) {
+            const rect = this.container.getBoundingClientRect();
+            this.div.style.width = (rect.right - rect.left - 260) + 'px';
+            this.div.style.height = (rect.bottom - rect.top - 100) + 'px';
+            this.div.style.left = (rect.left + 50) + 'px';
+            this.div.style.top = (rect.top + 50) + 'px';
+        }
+
         document.body.appendChild(this.div);
      }
 
