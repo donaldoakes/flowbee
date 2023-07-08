@@ -111,7 +111,7 @@ export class Table {
                         td.appendChild(valAnchor);
                         valAnchor.style.visibility = row[j] ? 'visible' : 'hidden';
                     }
-                    if (!this.options?.readonly) {
+                    if (!this.options?.readonly && !widget.readonly) {
                         const selAnchor = document.createElement('a');
                         selAnchor.setAttribute('href', '');
                         selAnchor.innerText = '...';

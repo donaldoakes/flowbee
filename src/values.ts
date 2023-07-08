@@ -6,6 +6,7 @@ import { Table } from './table';
 import { Disposable, Listener, TypedEvent } from './event';
 import { ExpressionValue, UserValues } from './model/value';
 import { Decorator } from './decoration';
+import { Widget } from './model/template';
 
 export type OpenValuesEvent = { path: string };
 export type ValuesActionEvent = { action: string, values?: UserValues };
@@ -159,11 +160,15 @@ export class ValuesPopup {
     }
 
     renderTable(): Table {
+        const link: Widget = { type: 'link', label: 'From', action: 'openValues', readonly: true };
+        if (this.options.valuesFileBaseUrl) {
+            link.action = this.options.valuesFileBaseUrl; // just a flag to preventDefault
+        }
         const table = new Table(
             [
                 { type: 'text', label: 'Expression', readonly: true },
                 { type: 'text', label: 'Value', readonly: true },
-                { type: 'link', label: 'From', action: 'openValues', readonly: true },
+                link,
                 { type: 'text', label: 'Override' }
             ],
             this.toString(),
