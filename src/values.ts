@@ -161,8 +161,8 @@ export class ValuesPopup {
 
     renderTable(): Table {
         const link: Widget = { type: 'link', label: 'From', action: 'openValues', readonly: true };
-        if (this.options.valuesFileBaseUrl) {
-            link.action = this.options.valuesFileBaseUrl; // just a flag to preventDefault
+        if (this.options.valuesBaseUrl) {
+            link.action = this.options.valuesBaseUrl; // just a flag to preventDefault
         }
         const table = new Table(
             [

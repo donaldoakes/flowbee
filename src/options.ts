@@ -89,7 +89,7 @@ export interface ValuesOptions {
         title?: string;
         icon?: string;
     }
-    valuesFileBaseUrl?: string;
+    valuesBaseUrl?: string;
     actions?: ValuesAction[];
 }
 export const valuesDefault: ValuesOptions = {
