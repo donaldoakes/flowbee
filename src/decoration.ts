@@ -52,7 +52,7 @@ export interface Decoration {
     className?: string;
     glyphClassName?: string;
     hover?: Hover;
-    onHover?: (element: HTMLElement, tooltip: HTMLElement) => void;
+    onHover?: (element: HTMLElement, tooltip: HTMLElement, evt: MouseEvent) => void;
 }
 
 export type Decorator = (text: string) => Decoration[];
@@ -146,8 +146,8 @@ const addSpan = (parent: HTMLElement, text: string, decoration?: Decoration) => 
         const tooltip = document.createElement('div') as HTMLDivElement;
         tooltip.className = decoration.hover.className || `flowbee-tooltip-${decoration.hover.theme}`;
         if (decoration.onHover) {
-            span.onmousemove = (_evt: MouseEvent) => {
-                decoration.onHover(span, tooltip);
+            span.onmousemove = (evt: MouseEvent) => {
+                decoration.onHover(span, tooltip, evt);
             };
         }
         for (const [i, hoverLine] of decoration.hover.lines.entries()) {
