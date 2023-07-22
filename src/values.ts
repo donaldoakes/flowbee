@@ -31,6 +31,14 @@ export class ValuesPopup {
     private options: ValuesOptions;
 
     private values: UserValues = { values: [] };
+    getValues(): UserValues {
+        return this.values;
+    }
+    setValues(values: UserValues) {
+        this.values = values;
+        this.table = this.updateTable();
+        this.content.appendChild(this.table.tableElement);
+    }
 
     private table?: Table;
 
@@ -159,6 +167,11 @@ export class ValuesPopup {
         this.open();
     }
 
+    updateTable(): Table {
+        this.content.removeChild(this.table?.tableElement);
+        return this.renderTable();
+    }
+
     renderTable(): Table {
         const link: Widget = { type: 'link', label: 'From', action: 'openValues', readonly: true };
         if (this.options.valuesBaseUrl) {
@@ -214,6 +227,11 @@ export class ValuesPopup {
         }
     }
 
+    clear() {
+        const { overrides: _overrides, ...values } = this.values;
+        this.setValues({ ...values, overrides: {} });
+    }
+
     get isOpen(): boolean {
         return this.div.style.display === 'flex';
     }
@@ -237,7 +255,7 @@ export class ValuesPopup {
         const userValues: UserValues = { values: [] };
         for (const row of rows) {
             const userValue: ExpressionValue = { expression: row[0], value: row[1] };
-            const override = row[2];
+            const override = row[3];
             if (override) {
                 if (!userValues.overrides) userValues.overrides = {};
                 userValues.overrides[row[0]] = override;
