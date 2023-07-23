@@ -62,6 +62,13 @@ export class ValuesPopup {
         this.div = document.createElement('div') as HTMLDivElement;
         this.div.id = 'flowbee-values';
         this.div.style.display = 'none';
+        this.div.tabIndex = 0;
+        this.div.onkeydown = (ev: KeyboardEvent) => {
+            if (ev.key === 'Escape' && this.isOpen) {
+              this.close();
+              this._onValuesAction.emit({ action: 'close' });
+            }
+        };
 
         // header
         this.header = document.createElement('div') as HTMLDivElement;
@@ -225,6 +232,7 @@ export class ValuesPopup {
         if (this.container) {
             this.container.style.opacity = '0.5';
         }
+        this.div.focus();
     }
 
     clear() {
