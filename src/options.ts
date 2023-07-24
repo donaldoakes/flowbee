@@ -91,8 +91,20 @@ export interface ValuesOptions {
     }
     valuesBaseUrl?: string;
     actions?: ValuesAction[];
+    margins?: {
+        top: number;
+        right: number;
+        bottom: number;
+        left: number;
+    }
 }
 export const valuesDefault: ValuesOptions = {
     theme: 'light',
-    title: ''
+    title: '',
+    margins: {
+        top: 75,
+        right: 100,
+        bottom: 75,
+        left: 100
+    }
 };

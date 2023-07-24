@@ -34,8 +34,9 @@ export class Configurator {
     private header: HTMLDivElement;
     private title: HTMLDivElement;
     private content: HTMLDivElement;
-    private tabs: HTMLUListElement;
+    private tabsList: HTMLUListElement;
     private tabContent: HTMLDivElement;
+    private tabs: HTMLLIElement[] = [];
     private activeTab?: { name: string, tab: HTMLLIElement };
 
     flowElement: FlowElement;
@@ -141,9 +142,9 @@ export class Configurator {
         this.content.className = 'flowbee-config-content';
         const tabbedContent = document.createElement('div') as HTMLDivElement;
         tabbedContent.className = 'flowbee-config-tabbed-content';
-        this.tabs = document.createElement('ul') as HTMLUListElement;
-        this.tabs.className = 'flowbee-config-tabs';
-        tabbedContent.appendChild(this.tabs);
+        this.tabsList = document.createElement('ul') as HTMLUListElement;
+        this.tabsList.className = 'flowbee-config-tabs';
+        tabbedContent.appendChild(this.tabsList);
         this.tabContent = document.createElement('div') as HTMLDivElement;
         this.tabContent.className = 'flowbee-config-tab-content';
         tabbedContent.appendChild(this.tabContent);
@@ -186,7 +187,8 @@ export class Configurator {
         }
 
         // clear old tabs and content
-        this.tabs.innerHTML = '';
+        this.tabs = [];
+        this.tabsList.innerHTML = '';
 
         // title
         if (source) {
@@ -211,6 +213,7 @@ export class Configurator {
             for (let i = 0; i < keys.length; i++) {
                 const tabName = keys[i];
                 const tab = this.addTab(tabName);
+                this.tabs.push(tab);
                 if (i === 0) this.activate(tabName, tab);
             }
         } else {
@@ -282,11 +285,11 @@ export class Configurator {
                 if (this.edge) {
                     document.body.style.cursor = this.edge.cursor;
                     this.header.style.cursor = this.edge.cursor;
-                    this.tabs.querySelectorAll('.flowbee-config-tab').forEach((t: HTMLElement) => t.style.cursor = this.edge.cursor);
+                    this.tabsList.querySelectorAll('.flowbee-config-tab').forEach((t: HTMLElement) => t.style.cursor = this.edge.cursor);
                 } else {
                     document.body.style.cursor = 'default';
                     this.header.style.cursor = 'move';
-                    this.tabs.querySelectorAll('.flowbee-config-tab').forEach((t: HTMLElement) => t.style.cursor = 'pointer');
+                    this.tabsList.querySelectorAll('.flowbee-config-tab').forEach((t: HTMLElement) => t.style.cursor = 'pointer');
                 }
             };
             document.body.onmouseleave = _e => {
@@ -305,8 +308,15 @@ export class Configurator {
         tab.onclick = e => {
             this.activate(label, e.target as HTMLLIElement);
         };
-        this.tabs.appendChild(tab);
+        this.tabsList.appendChild(tab);
         return tab;
+    }
+
+    setTab(tabName: string) {
+        const tab = this.tabs.find(t => t.innerText === tabName);
+        if (tab) {
+            this.activate(tabName, tab);
+        }
     }
 
     activate(tabName: string, tab: HTMLLIElement) {

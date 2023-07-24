@@ -114,15 +114,6 @@ export class ValuesPopup {
         this.footer.className = 'flowbee-values-footer';
         this.div.appendChild(this.footer);
 
-        // TODO options for width and height (or margins)
-        if (this.container !== document.body) {
-            const rect = this.container.getBoundingClientRect();
-            this.div.style.width = (rect.right - rect.left - 260) + 'px';
-            this.div.style.height = (rect.bottom - rect.top - 100) + 'px';
-            this.div.style.left = (rect.left + 50) + 'px';
-            this.div.style.top = (rect.top + 50) + 'px';
-        }
-
         document.body.appendChild(this.div);
      }
 
@@ -135,6 +126,15 @@ export class ValuesPopup {
             this.styles = new Styles('flowbee-values', new Theme(options.theme), this.div);
             this.stylesObj = this.styles.getObject();
             this.div.className = `flowbee-values flowbee-values-${this.options.theme || ''}`;
+        }
+
+        if (this.container !== document.body) {
+            const margins = this.options.margins as { top: number, right: number, bottom: number, left: number};
+            const rect = this.container.getBoundingClientRect();
+            this.div.style.width = (rect.width - (margins.left + margins.right)) + 'px';
+            this.div.style.height = (rect.height - (margins.top + margins.bottom)) + 'px';
+            this.div.style.left = (rect.left + margins.left) + 'px';
+            this.div.style.top = (rect.top + margins.top) + 'px';
         }
 
         this.title.innerText = this.options.title;
@@ -166,7 +166,6 @@ export class ValuesPopup {
                     }
                     this._onValuesAction.emit({ action: action.name, values: this.values });
                 };
-                actionButton.className = 'flow-values-files';
                 this.footer.appendChild(actionButton);
             }
         }
