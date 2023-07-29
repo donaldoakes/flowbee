@@ -65,6 +65,10 @@ export interface Widget {
     min?: number;
     max?: number;
 
+    /**
+     * For select: multiple select
+     * For table: multiple lines (defaults to true)
+     */
     multi?: boolean;
 
     action?: string;

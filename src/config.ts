@@ -503,7 +503,7 @@ export class Configurator {
                 if (widgets.length === 1) {
                     this.tabContent.style.gridAutoRows = ''; // fill entire tab
                 }
-                const table = new Table(widget.widgets, value, { readonly });
+                const table = new Table(widget.widgets, value, { readonly, singleLine: widget.multi === false });
                 if (widget.action) {
                     table.onTableUpdate(tableUpdate => this.action(widget.action, tableUpdate.value));
                 } else {
