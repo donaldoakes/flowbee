@@ -784,10 +784,10 @@
   .flowbee-values-footer {
     display: flex;
     justify-content: flex-end;
-    height: 32px;
+    height: 36px;
     background-color: #e6e6e6;
     color: #616161;
-    border-top: 1px solid #c8c8c8;
+    border-top: 1px solid #c0c0c0;
     padding: 5px;
     font-weight: 500;
     box-sizing: border-box;
@@ -826,7 +826,7 @@
   .flowbee-values-footer {
     background-color: #323232;
     color: #c8c8c8;
-    border-bottom: 1px solid #454545;
+    border-top: 1px solid #454545;
   }
   .flowbee-values-footer input[type=button] {
     background-color: #c8c8c8;

@@ -193,8 +193,6 @@ export class ValuesPopup {
             this.toString(),
             { fixedRows: true }
         );
-        this.markRequiredValues(table);
-        this.addLocationTitles(table);
 
         // TODO: dispose listeners
         table.onTableAction((actionEvent) => {
@@ -209,14 +207,6 @@ export class ValuesPopup {
         });
 
         return table;
-    }
-
-    private markRequiredValues(table: Table) {
-        // TODO: highlight required values
-    }
-
-    private addLocationTitles(table: Table) {
-        // TODO: set td title to location for hover
     }
 
     close() {
