@@ -1,7 +1,6 @@
 export interface ExpressionValue {
     expression: string;
     value?: string;
-    required?: boolean;
     location?: string;
 }
 

@@ -72,4 +72,17 @@ export interface Widget {
     multi?: boolean;
 
     action?: string;
+
+    /**
+     * HTML title (only for readonly, non-decorated)
+     */
+    title?: string | ((val?: string) => string | undefined);
 }
+
+export const getTitle = (widget: Widget, value?: string): string | undefined => {
+    if (typeof widget.title === 'string') {
+        return value || undefined;
+    } else if (typeof widget.title === 'function') {
+        return widget.title(value || undefined);
+    }
+};

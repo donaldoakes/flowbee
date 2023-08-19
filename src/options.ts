@@ -96,7 +96,8 @@ export interface ValuesOptions {
         right: number;
         bottom: number;
         left: number;
-    }
+    },
+    abbreviateLocations?: boolean
 }
 export const valuesDefault: ValuesOptions = {
     theme: 'light',

@@ -36,8 +36,50 @@ export class ValuesPopup {
     }
     setValues(values: UserValues) {
         this.values = values;
+        this.abbreviatedLocations = {};
         this.table = this.updateTable();
         this.content.appendChild(this.table.tableElement);
+    }
+
+    private abbreviatedLocations: { [abbrev: string]: string } = {};
+
+    /**
+     * Assumes forward slash path sep.
+     * Only works if abbrevs are unique across all expressions.
+     */
+    abbreviateLocations(expressionValues: ExpressionValue[]): ExpressionValue[] {
+        const abbrevLocs: { [abbrev: string]: string } = {};
+        const abbrevExprVals: ExpressionValue[] = [];
+        for (const exprVal of expressionValues) {
+            const abbrevExprVal = { ...exprVal };
+            if (exprVal.location) {
+                const slash = exprVal.location.lastIndexOf('/');
+                if (slash && slash < exprVal.location.length - 2) {
+                    const abbr = exprVal.location.substring(slash + 1);
+                    if (abbrevLocs[abbr]) {
+                        // not unique
+                        this.abbreviatedLocations = {};
+                        return expressionValues;
+                    } else {
+                        abbrevLocs[abbr] = exprVal.location;
+                        abbrevExprVal.location = abbr;
+                    }
+                }
+            }
+            abbrevExprVals.push(abbrevExprVal);
+        }
+        this.abbreviatedLocations = abbrevLocs;
+        return abbrevExprVals;
+    }
+
+    unabbreviateLocations(abbrevExprVals: ExpressionValue[]): ExpressionValue[] {
+        return abbrevExprVals.map(abbrevExprVal => {
+            const expressionValue = { ...abbrevExprVal };
+            if (abbrevExprVal.location && this.abbreviatedLocations[abbrevExprVal.location]) {
+                expressionValue.location = this.abbreviatedLocations[abbrevExprVal.location];
+            }
+            return expressionValue;
+        });
     }
 
     private table?: Table;
@@ -180,6 +222,9 @@ export class ValuesPopup {
 
     renderTable(): Table {
         const link: Widget = { type: 'link', label: 'From', action: 'openValues', readonly: true };
+        if (this.options.abbreviateLocations) {
+            link.title = (val?: string) => this.abbreviatedLocations[val];
+        }
         if (this.options.valuesBaseUrl) {
             link.action = this.options.valuesBaseUrl; // just a flag to preventDefault
         }
@@ -197,7 +242,11 @@ export class ValuesPopup {
         // TODO: dispose listeners
         table.onTableAction((actionEvent) => {
             if (actionEvent.action === 'openValues') {
-                this._onOpenValues.emit({ path: actionEvent.value[2] });
+                let path = actionEvent.value[2];
+                if (this.options.abbreviateLocations && this.abbreviatedLocations[path]) {
+                    path = this.abbreviatedLocations[path];
+                }
+                this._onOpenValues.emit({ path });
             }
         });
 
@@ -234,7 +283,11 @@ export class ValuesPopup {
     }
 
     toString(): string {
-        const rows = this.values.values.map((value) => {
+        let tableVals = this.values.values;
+        if (this.options.abbreviateLocations) {
+            tableVals = this.abbreviateLocations(tableVals);
+        }
+        const rows = tableVals.map((value) => {
             const row = [ value.expression, value.value ];
             if (value.location) {
                 row[2] = value.location;
@@ -258,10 +311,13 @@ export class ValuesPopup {
                 userValues.overrides[row[0]] = override;
             }
             const thisValue = this.values.values.find(v => v.expression === row[0]);
-            userValue.required = thisValue.required;
             userValue.location = thisValue.location;
             userValues.values.push(userValue);
         }
-        return userValues;
+        if (this.options.abbreviateLocations) {
+            return { ...userValues, values: this.unabbreviateLocations(userValues.values) };
+        } else {
+            return userValues;
+        }
     }
 }

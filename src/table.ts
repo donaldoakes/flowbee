@@ -1,7 +1,7 @@
 import { decorate, Decorator, undecorate } from './decoration';
 import { Disposable, Listener, TypedEvent } from './event';
 import { dateTime } from './format';
-import { Widget } from './model/template';
+import { getTitle, Widget } from './model/template';
 
 export interface TableUpdateEvent {
     value: string;
@@ -23,6 +23,8 @@ export interface TableOptions {
      * Cell values cannot be multiline
      */
     singleLine?: boolean;
+
+    titles?: string[];
 }
 
 export class Table {
@@ -92,6 +94,7 @@ export class Table {
                         const anchor = document.createElement('a');
                         anchor.setAttribute('href', isHttp ? widget.action : '');
                         anchor.innerText = row[j];
+                        anchor.title = getTitle(widget, row[j]);
                         anchor.onclick = e => {
                             if (isHttp) {
                                 e.preventDefault();
@@ -105,6 +108,7 @@ export class Table {
                         const valAnchor = document.createElement('a');
                         valAnchor.setAttribute('href', '');
                         valAnchor.innerText = row[j];
+                        valAnchor.title = getTitle(widget, row[j]);
                         valAnchor.onclick = e => {
                             this._onTableAction.emit({ action: widget.action, rownum: i, value: row });
                         };
@@ -126,6 +130,7 @@ export class Table {
                     checkbox.type = 'checkbox';
                     checkbox.style.accentColor = 'transparent';
                     checkbox.checked = row && row[j] ? ('' + row[j]) === 'true' : false;
+                    checkbox.title = getTitle(widget, row[j]);
                     if (this.options?.readonly || widget.readonly) {
                         checkbox.readOnly = true;
                     } else {
@@ -151,6 +156,9 @@ export class Table {
                             if (widget.type === 'datetime') {
                                 cellVal = dateTime(new Date(cellVal));
                             }
+                            if ((this.options?.readonly || widget.readonly) && !this._decorator) {
+                                td.title = getTitle(widget, cellVal);
+                            }
                         }
 
                         decorate(td, cellVal, this._decorator ? [this._decorator] : []);
@@ -158,7 +166,7 @@ export class Table {
                 }
                 td.onkeydown = (e: KeyboardEvent) => {
                     if (e.key === 'Tab') {
-                        console.log("TAB BABY");
+                        // console.log("TAB BABY");
                     } else if (e.key === 'Enter' && this.options?.singleLine) {
                         e.preventDefault();
                     }
