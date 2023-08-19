@@ -2,7 +2,7 @@ import * as jsYaml from 'js-yaml';
 import { merge } from 'merge-anything';
 import { ConfiguratorPositionEvent, Disposable, FlowElementInstance, FlowElementUpdateEvent, Listener, TypedEvent } from './event';
 import { FlowElement, getLabel } from './model/element';
-import { ConfigTemplate, getTitle } from './model/template';
+import { ConfigTemplate, setTitle } from './model/template';
 import { configuratorDefault, ConfiguratorOptions } from './options';
 import { Styles } from './style/style';
 import { Theme } from './theme';
@@ -377,7 +377,7 @@ export class Configurator {
                     input.readOnly = true;
                     input.style.borderColor = 'transparent';
                     input.style.outline = 'none';
-                    input.title = getTitle(input, widget, input.value);
+                    setTitle(input, widget, input.value);
                 } else {
                     if (widget.action) {
                         input.onchange = e => this.action(widget.action, input.value);
@@ -389,7 +389,7 @@ export class Configurator {
             } else if (widget.type === 'button') {
                 const button = document.createElement('button') as HTMLButtonElement;
                 button.innerText = widget.label;
-                button.title = getTitle(widget, widget.label);
+                setTitle(button, widget, widget.label);
                 button.onclick = e => {
                     this._onFlowElementUpdate.emit({ element: this.flowElement, action: value });
                 };
@@ -398,7 +398,7 @@ export class Configurator {
                 const checkbox = document.createElement('input') as HTMLInputElement;
                 checkbox.type = 'checkbox';
                 checkbox.checked = value === 'true';
-                checkbox.title = getTitle(widget, value);
+                setTitle(checkbox, widget, value);
                 if (readonly) {
                     checkbox.readOnly = true;
                 } else {
@@ -423,7 +423,7 @@ export class Configurator {
                         if (opt === value) {
                             radio.checked = true;
                         }
-                        radio.title = getTitle(widget, value);
+                        setTitle(radio, widget, value);
                         if (!readonly) {
                             if (widget.action) {
                                 radio.onchange = e => this.action(widget.action, opt);
@@ -448,7 +448,7 @@ export class Configurator {
                 if (readonly) {
                     textarea.readOnly = true;
                     textarea.style.outline = 'none';
-                    textarea.title = getTitle(widget, value);
+                    setTitle(textarea, widget, value);
                 } else {
                     if (widget.label) {
                         textarea.placeholder = widget.label;
@@ -468,7 +468,7 @@ export class Configurator {
                 code.textContent = value;
                 code.style.margin = '0';
                 if (readonly) {
-                    code.title = getTitle(widget, value);
+                    setTitle(code, widget, value);
                 } else {
                     code.setAttribute('contenteditable', 'plaintext-only');
                     if (widget.action) {
@@ -498,7 +498,7 @@ export class Configurator {
                 } else {
                     select.selectedIndex = 0;
                 }
-                select.title = getTitle(widget, value);
+                setTitle(select, widget, value);
                 if (!readonly) {
                     if (widget.action) {
                         select.onchange = e => this.action(widget.action, widget.options[select.selectedIndex]);
@@ -529,14 +529,14 @@ export class Configurator {
             } else if (widget.type === 'note') {
                 const span = document.createElement('span');
                 span.innerText = widget.label;
-                span.title = getTitle(widget, widget.label);
+                setTitle(span, widget, widget.label);
                 this.tabContent.appendChild(span);
             } else if (widget.type === 'link' && value) {
                 const isHttp = value.startsWith('http://') || value.startsWith('https://');
                 const anchor = document.createElement('a');
                 anchor.setAttribute('href', isHttp ? value : '');
                 anchor.innerText = widget.label;
-                anchor.title = getTitle(widget, widget.label);
+                setTitle(anchor, widget, widget.label);
                 this.tabContent.appendChild(anchor);
                 anchor.onclick = e => {
                     if (isHttp) {
@@ -550,7 +550,7 @@ export class Configurator {
                     const anchor = document.createElement('a');
                     anchor.setAttribute('href', '');
                     anchor.innerText = value;
-                    anchor.title = getTitle(widget, value);
+                    setTitle(anchor, widget, value);
                     anchor.onclick = e => {
                         this._onFlowElementUpdate.emit({ element: this.flowElement, action: value });
                     };
@@ -602,7 +602,7 @@ export class Configurator {
                     pre.textContent = JSON.stringify(sourceObj, null, indent);
                 }
                 pre.style.margin = '0';
-                pre.title = getTitle(widget, pre.textContent);
+                setTitle(pre, widget, pre.textContent);
                 this.tabContent.appendChild(pre);
             }
         }

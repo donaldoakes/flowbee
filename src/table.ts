@@ -1,7 +1,7 @@
 import { decorate, Decorator, undecorate } from './decoration';
 import { Disposable, Listener, TypedEvent } from './event';
 import { dateTime } from './format';
-import { getTitle, Widget } from './model/template';
+import { setTitle, Widget } from './model/template';
 
 export interface TableUpdateEvent {
     value: string;
@@ -94,7 +94,7 @@ export class Table {
                         const anchor = document.createElement('a');
                         anchor.setAttribute('href', isHttp ? widget.action : '');
                         anchor.innerText = row[j];
-                        anchor.title = getTitle(widget, row[j]);
+                        setTitle(anchor, widget, row[j]);
                         anchor.onclick = e => {
                             if (isHttp) {
                                 e.preventDefault();
@@ -108,7 +108,7 @@ export class Table {
                         const valAnchor = document.createElement('a');
                         valAnchor.setAttribute('href', '');
                         valAnchor.innerText = row[j];
-                        valAnchor.title = getTitle(widget, row[j]);
+                        setTitle(valAnchor, widget, row[j]);
                         valAnchor.onclick = e => {
                             this._onTableAction.emit({ action: widget.action, rownum: i, value: row });
                         };
@@ -130,7 +130,7 @@ export class Table {
                     checkbox.type = 'checkbox';
                     checkbox.style.accentColor = 'transparent';
                     checkbox.checked = row && row[j] ? ('' + row[j]) === 'true' : false;
-                    checkbox.title = getTitle(widget, row[j]);
+                    setTitle(checkbox, widget, row[j]);
                     if (this.options?.readonly || widget.readonly) {
                         checkbox.readOnly = true;
                     } else {
@@ -157,7 +157,7 @@ export class Table {
                                 cellVal = dateTime(new Date(cellVal));
                             }
                             if ((this.options?.readonly || widget.readonly) && !this._decorator) {
-                                td.title = getTitle(widget, cellVal);
+                                setTitle(td, widget, cellVal);
                             }
                         }
 

@@ -79,10 +79,12 @@ export interface Widget {
     title?: string | ((val?: string) => string | undefined);
 }
 
-export const getTitle = (widget: Widget, value?: string): string | undefined => {
-    if (typeof widget.title === 'string') {
-        return value || undefined;
-    } else if (typeof widget.title === 'function') {
-        return widget.title(value || undefined);
+export const setTitle = (elem: HTMLElement, widget: Widget, value?: string) => {
+    if (value) {
+        if (typeof widget.title === 'string') {
+            elem.title = value;
+        } else if (typeof widget.title === 'function') {
+            elem.title = widget.title(value || undefined);
+        }
     }
 };
