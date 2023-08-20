@@ -130,7 +130,7 @@ export class Table {
                     checkbox.type = 'checkbox';
                     checkbox.style.accentColor = 'transparent';
                     checkbox.checked = row && row[j] ? ('' + row[j]) === 'true' : false;
-                    setTitle(checkbox, widget, row[j]);
+                    if (row && row[j]) setTitle(checkbox, widget, row[j]);
                     if (this.options?.readonly || widget.readonly) {
                         checkbox.readOnly = true;
                     } else {
