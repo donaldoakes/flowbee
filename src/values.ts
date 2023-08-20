@@ -56,7 +56,7 @@ export class ValuesPopup {
                 const slash = exprVal.location.lastIndexOf('/');
                 if (slash && slash < exprVal.location.length - 2) {
                     const abbr = exprVal.location.substring(slash + 1);
-                    if (abbrevLocs[abbr]) {
+                    if (abbrevLocs[abbr] && abbrevLocs[abbr] !== exprVal.location) {
                         // not unique
                         this.abbreviatedLocations = {};
                         return expressionValues;
