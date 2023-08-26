@@ -140,6 +140,7 @@ export class Table {
                 } else {
                     if (!this.options?.readonly && !widget.readonly) {
                         td.contentEditable = 'plaintext-only';
+                        td.style.textOverflow = 'clip'; // override any ellipses
                         td.onblur = (e: FocusEvent) => {
                             let rowIdx: string | null = null;
                             let colIdx: string | null = null;
