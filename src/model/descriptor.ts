@@ -108,8 +108,8 @@ export const decide = new FlowItemDescriptor({
 });
 
 export const embedded = new FlowItemDescriptor({
-    path: 'subflow',
-    name: 'Subflow',
+    path: 'embedded',
+    name: 'Embedded',
     type: 'subflow',
     icon: 'embedded.png'
 });
