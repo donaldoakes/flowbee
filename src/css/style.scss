@@ -724,7 +724,7 @@
   box-sizing: border-box;
   outline: none;
 
-  .flowbee-values-header {
+  .flowbee-popup-header {
     display: flex;
     height: 30px;
     background-color: #f8f8f8;
@@ -734,28 +734,28 @@
     font-weight: 500;
     box-sizing: border-box;
   }
-  .flowbee-values-title {
+  .flowbee-popup-title {
     flex-grow: 1;
     user-select: none;
   }
-  .flowbee-values-title a {
+  .flowbee-popup-title a {
     text-decoration: none;
     margin-left: 7px;
     font-weight: normal;
   }
-  .flowbee-values-help {
+  .flowbee-popup-help {
     margin-left: 10px;
     vertical-align: middle;
     outline: none;
   }
-  .flowbee-values-help:focus {
+  .flowbee-popup-help:focus {
     outline: none;
   }
-  .flowbee-values-close {
+  .flowbee-popup-close {
     cursor: pointer;
     user-select: none;
   }
-  .flowbee-values-content {
+  .flowbee-popup-content {
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -765,7 +765,7 @@
     padding: 10px;
     background-color: #ffffff;
   }
-  .flowbee-values-content table {
+  .flowbee-popup-content table {
     width: 100%;
     grid-column: 1/3;
     border-spacing: 0;
@@ -774,7 +774,7 @@
     margin-bottom: 10px;
     height: fit-content;
   }
-  .flowbee-values-content th, td {
+  .flowbee-popup-content th, td {
     border: 1px solid #e0e0e0;
     text-align: left;
     padding-left: 3px;
@@ -784,7 +784,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .flowbee-values-footer {
+  .flowbee-popup-footer {
     display: flex;
     justify-content: flex-end;
     height: 36px;
@@ -795,43 +795,43 @@
     font-weight: 500;
     box-sizing: border-box;
   }
-  .flowbee-values-footer input[type=button] {
+  .flowbee-popup-footer input[type=button] {
     border-width: 1px;
     margin-right: 10px;
   }
 }
 
-.flowbee-values-light {
+.flowbee-popup-light {
   @include values;
 }
-.flowbee-values-dark {
+.flowbee-popup-dark {
   @include values;
   background-color: #1e1e1e;
   color: #cccccc;
   border: 1px solid #454545;
   box-shadow: 0 2px 8px #000000;
 
-  .flowbee-values-header {
+  .flowbee-popup-header {
     background-color: #323232;
     color: #c8c8c8;
     border-bottom: 1px solid #454545;
   }
-  .flowbee-values-content {
+  .flowbee-popup-content {
     background-color: #252526;
   }
-  .flowbee-values-content table {
+  .flowbee-popup-content table {
     background-color: #3c3c3c;
     color: #cccccc;
   }
-  .flowbee-values-content th, td {
+  .flowbee-popup-content th, td {
     border: 1px solid #606060;
   }
-  .flowbee-values-footer {
+  .flowbee-popup-footer {
     background-color: #323232;
     color: #c8c8c8;
     border-top: 1px solid #454545;
   }
-  .flowbee-values-footer input[type=button] {
+  .flowbee-popup-footer input[type=button] {
     background-color: #c8c8c8;
   }
 }

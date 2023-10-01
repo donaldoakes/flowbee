@@ -33,7 +33,7 @@ export interface Widget {
      */
     attribute?: string;
     /**
-     * Instance property
+     * Prop name for instance value
      */
     instanceProp?: string;
     instanceEdit?: boolean;
@@ -57,8 +57,7 @@ export interface Widget {
     readonly?: boolean;
     /**
      * Default value.
-     * Set this for selects so that attribute will
-     * be populated with first value.
+     * Set this for selects so that attribute will be populated with first value.
      */
     default?: string | ((element: { attributes?: {[key: string]: string} }) => string);
 

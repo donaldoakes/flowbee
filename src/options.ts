@@ -1,4 +1,3 @@
-import { ValuesAction } from './model/value';
 import { Icon } from './style/icon';
 
 export type Mode = 'select' | 'connect' | 'runtime';
@@ -81,7 +80,13 @@ export const menuDefault: MenuOptions = {
     theme: 'light'
 };
 
-export interface ValuesOptions {
+export interface PopupAction {
+    name: string;
+    label?: string;
+    close?: boolean;
+}
+
+export interface PopupOptions {
     title: string;
     theme?: string;
     help?: {
@@ -89,17 +94,21 @@ export interface ValuesOptions {
         title?: string;
         icon?: string;
     }
-    valuesBaseUrl?: string;
-    actions?: ValuesAction[];
     margins?: {
         top: number;
         right: number;
         bottom: number;
         left: number;
     },
+    actions?: PopupAction[];
+}
+
+export interface ValuesOptions extends PopupOptions {
+    valuesBaseUrl?: string;
     abbreviateLocations?: boolean
 }
-export const valuesDefault: ValuesOptions = {
+
+export const popupDefaults: PopupOptions = {
     theme: 'light',
     title: '',
     margins: {
