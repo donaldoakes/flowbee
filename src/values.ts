@@ -76,7 +76,7 @@ export class ValuesPopup extends Popup {
         this.table?.setDecorator(decorator);
     }
 
-    constructor(container?: HTMLElement, readonly iconBase?: string) {
+    constructor(container?: HTMLElement, public iconBase?: string) {
         super(container, iconBase);
      }
 

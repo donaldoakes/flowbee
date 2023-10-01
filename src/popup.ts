@@ -30,7 +30,7 @@ export class Popup {
         return this._onPopupAction.on(listener);
     }
 
-    constructor(container?: HTMLElement, readonly iconBase?: string) {
+    constructor(container?: HTMLElement, public iconBase?: string) {
         this.container = container || document.body;
 
         this.div = document.createElement('div') as HTMLDivElement;
@@ -99,7 +99,7 @@ export class Popup {
 
         this.title.innerText = this.options.title;
         this.renderHelp();
-        this.closeImg.style.display = 'inline-block';
+        this.renderClose();
 
         this.content.innerHTML = '';
         this.renderContent();
@@ -129,6 +129,11 @@ export class Popup {
         } else {
             this.help.link.style.display = 'none';
         }
+    }
+
+    protected renderClose() {
+        this.closeImg.src = `${this.iconBase}/close.svg`;
+        this.closeImg.style.display = 'inline-block';
     }
 
     protected doLayout() {
