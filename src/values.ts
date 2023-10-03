@@ -78,7 +78,7 @@ export class ValuesPopup extends Popup {
 
     constructor(container?: HTMLElement, public iconBase?: string) {
         super(container, iconBase);
-     }
+    }
 
     render(spec: { values: UserValues, options?: ValuesOptions }) {
         this.values = spec.values;

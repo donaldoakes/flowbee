@@ -14,7 +14,7 @@ export { FlowElement as FlowItem, FlowElementType as FlowItemType, getFlowName }
 export { Toolbox } from './toolbox';
 export { FlowTree, FileTree, FileItemType, FlowTreeSelectEvent } from './tree';
 export { TypedEvent, Listener, Disposable, FlowChangeEvent, FlowElementEvent, FlowElementSelectEvent, FlowElementInstance } from './event';
-export { DiagramOptions, FlowDumpOptions, ToolboxOptions, FlowTreeOptions, ConfiguratorOptions, ValuesOptions, Mode } from './options';
+export * from './options';
 export { DrawingOptions } from './draw/options';
 export { FlowEventHandler } from './draw/handler';
 export { MenuItem, ContextMenuProvider, DefaultMenuProvider, ContextMenuSelectEvent } from './menu';
@@ -26,6 +26,7 @@ export * from './draw/layout';
 export * from './draw/display';
 export * from './swf/translate/translate';
 export * from './swf/translate/options';
+export * from './popup';
 export * from './values';
 export { Decoration, Decorator, Lens, LensAction, Hover, HoverLine, HoverAction, Range, decorate, undecorate } from './decoration';
 

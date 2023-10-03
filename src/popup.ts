@@ -86,6 +86,7 @@ export class Popup {
         // footer
         this.footer = document.createElement('div') as HTMLDivElement;
         this.footer.className = 'flowbee-popup-footer';
+        this.footer.style.display = 'none';
         this.div.appendChild(this.footer);
 
         document.body.appendChild(this.div);
@@ -165,6 +166,7 @@ export class Popup {
                 };
                 this.footer.appendChild(actionButton);
             }
+            this.footer.style.display = 'flex';
         }
     }
 

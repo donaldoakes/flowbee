@@ -94,7 +94,7 @@ export class FlowDiagram {
             this.drawingOptions = diagramStyle.getDrawingOptions(options.theme);
         }
         this.diagram.options = merge(diagramDefault, this.drawingOptions, options);
-        console.debug(`merged options: ${JSON.stringify(this.diagram.options, null, 2)}`);
+        // console.debug(`merged options: ${JSON.stringify(this.diagram.options, null, 2)}`);
         this.diagram.readonly = this.readonly;
         this.canvas.style.backgroundColor = this.diagram.options.backgroundColor;
         this.draw(this.flow, animate);
