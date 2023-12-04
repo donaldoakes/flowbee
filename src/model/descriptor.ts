@@ -1,6 +1,6 @@
 import { ConfigTemplate } from './template';
 
-export type DescriptorType = 'step' | 'subflow' | 'note';
+export type DescriptorType = 'flow' | 'step' | 'subflow' | 'note';
 
 export interface Descriptor {
     /**
